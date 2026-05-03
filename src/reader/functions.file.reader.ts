@@ -1,3 +1,4 @@
+import { WorkSpace } from "../engine/work.space";
 import { FunctionParser } from "../parser/function.parser";
 import type { FunctionDefinition } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
@@ -33,7 +34,13 @@ export class FunctionsFileReader extends AbstractFileReader {
 
     protected options: Partial<FunctionsFileReaderOptions>;
 
-    functionParser: FunctionParser;
+    protected functionParser: FunctionParser;
+
+    /**
+     * The workspace instance to which the parsed functions will be added. 
+     * This allows for functions to recognize earlier declared components.
+     */
+    protected workspace: WorkSpace;
 
     /**
      * Create a new instance of the FunctionsFileReader with the specified options for parsing functions from a file.
@@ -41,15 +48,17 @@ export class FunctionsFileReader extends AbstractFileReader {
      */
     constructor(options?: Partial<FunctionsFileReaderOptions>) {
         super({
-            read_by: options?.read_by || 'block'
+            read_by: options?.read_by || 'block',
+            workspace: options?.workspace,
         });
         this.options = {
             read_by: options?.read_by || 'block',
-            accept: options?.accept || 'partial',
+            accept: options?.accept || 'all',
             ...options
         };
         // console.debug(this.options);
-        this.functionParser = new FunctionParser({ workspace: options?.workspace });
+        this.workspace = this.options.workspace || new WorkSpace();
+        this.functionParser = new FunctionParser({ workspace: this.workspace });
     }
 
     /**
@@ -77,7 +86,12 @@ export class FunctionsFileReader extends AbstractFileReader {
             }
             const attempts: (FunctionDefinition | null)[] = syntaxes.map(syntax => {
                 try {
-                    return this.parseLine(syntax);
+                    const func = this.functionParser.parse(syntax);
+                    if (func) {
+                        this.workspace.getFunctionMemory().addFunction(func);
+                    }
+                    return func;
+
                 } catch (e) {
                     if (e instanceof Error) {
                         errors.push(e.message);
@@ -125,21 +139,6 @@ export class FunctionsFileReader extends AbstractFileReader {
 
         } catch (error) {
             throw new Error(`Failed to parse functions file: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
-
-    protected parseLine(content: string): FunctionDefinition | null {
-        // Parse a line defining a function, expected in the format "name(arg1: type, arg2: type) { body }"
-        try {
-            return this.functionParser.parse(content);
-        } catch (e) {
-            if (e instanceof Error) {
-                throw new Error(e.message);
-            } else if (e !== null && e !== undefined) {
-                throw new Error(String(e));
-            } else {
-                throw new Error(`Invalid function syntax: ${content}.`);
-            }
         }
     }
 

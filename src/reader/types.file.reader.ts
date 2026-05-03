@@ -1,11 +1,12 @@
 import type { RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
+import JSON5 from 'json5';
 
 export interface TypesFileResult {
     read: number;
     passed: number;
     failed: number;
-    types: RootType[];
+    types: Record<string, RootType>;
     errors: string[];
 }
 
@@ -39,12 +40,13 @@ export class TypesFileReader extends AbstractFileReader {
      */
     constructor(options?: Partial<TypesFileReaderOptions>) {
         super({
-            read_by: options?.read_by || 'block'
+            read_by: options?.read_by || 'block',
+            workspace: options?.workspace,
         });
 
         this.options = {
             read_by: options?.read_by || 'block',
-            accept: options?.accept || 'partial',
+            accept: options?.accept || 'all',
             ...options
         };
     }
@@ -85,7 +87,7 @@ export class TypesFileReader extends AbstractFileReader {
                     read,
                     passed: 0,
                     failed: read,
-                    types: [],
+                    types: {},
                     errors
                 };
             }
@@ -108,7 +110,7 @@ export class TypesFileReader extends AbstractFileReader {
                     read,
                     passed: 0,
                     failed: read,
-                    types: [],
+                    types: {},
                     errors
                 };
             }
@@ -119,9 +121,10 @@ export class TypesFileReader extends AbstractFileReader {
     }
 
     protected parseLine(content: string): RootType {
-
+        // Parse a line defining a type, expected in JSON format with at least a "key" property, 
+        // e.g. { "key": "Person", "properties": { "name": "string", "age": "number" } }
         try {
-            const json = JSON.parse(content);
+            const json = JSON5.parse(content);
             if (typeof json !== 'object' || json === null || Array.isArray(json)) {
                 throw new Error(`Type definition must be a JSON object: ${content}`);
             }
@@ -135,8 +138,8 @@ export class TypesFileReader extends AbstractFileReader {
         }
     }
 
-    protected collectDistinct(array: RootType[]): RootType[] {
-        const result: { [key: string]: RootType } = {};
+    protected collectDistinct(array: RootType[]): any {
+        const result: any = {};
         for (const item of array) {
             const key = item.key;
             if (result[key!] !== undefined) {
@@ -144,6 +147,6 @@ export class TypesFileReader extends AbstractFileReader {
             }
             result[key!] = item;
         }
-        return Object.values(result);
+        return result;
     }
 }

@@ -1,7 +1,5 @@
 ---
 title: Declared Components
-group: Rule engine
-# category: Caching And Stores
 ---
 
 # Declared Components

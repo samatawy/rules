@@ -4,7 +4,6 @@
         "src/index.ts"
     ],
     "projectDocuments": [
-        "src/help/index.md",
         "src/help/introduction.md",
         "src/help/declared.components.md"
     ],

@@ -27,25 +27,42 @@ export abstract class AbstractFileReader {
     protected options: Partial<FileReaderOptions>;
 
     constructor(options?: Partial<FileReaderOptions>) {
-        this.options = options || {};
+        this.options = { ...options };
     }
 
     public abstract parse(fileContent: string): any;
+
+    protected removeComments(content: string): string {
+        // Remove single-line comments starting with // or #
+        // Both at the start of a line or inline after code
+        return content.split('\n')
+            .map(line => {
+                const commentIndex = line.indexOf('//');
+                const hashIndex = line.indexOf('#');
+                const index = commentIndex !== -1 ? commentIndex : hashIndex;
+                if (index !== -1) {
+                    return line.slice(0, index).trim();
+                }
+                return line.trim();
+            })
+            // .filter(line => line.length > 0) // Remove empty lines
+            .join('\n');
+    }
 
     protected readLine(content: string): { line: string, remainder: string } {
         const newlineIndex = content.indexOf('\n');
         if (newlineIndex === -1) {
             return { line: content, remainder: '' };
         }
-        const line = content.slice(0, newlineIndex).trim();
-        const remainder = content.slice(newlineIndex + 1).trim();
-        // Ignore comments and empty lines
-        const isComment = line.startsWith('#') || line.startsWith('//');
+        let normalizedLine = content.slice(0, newlineIndex).trim();
+        normalizedLine = this.removeComments(normalizedLine);
 
-        if (line.length === 0 || isComment) {
+        const remainder = content.slice(newlineIndex + 1).trim();
+
+        if (normalizedLine.length === 0) {
             return this.readLine(remainder);
         } else {
-            return { line, remainder };
+            return { line: normalizedLine, remainder };
         }
     }
 
@@ -53,10 +70,8 @@ export abstract class AbstractFileReader {
         // Normalize line endings to \n for consistent processing
         let normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Remove comments
-        normalizedContent = normalizedContent.split('\n')
-            .filter(line => !line.trim().startsWith('#') && !line.trim().startsWith('//'))
-            .join('\n');
+        // Remove comments from the entire content before processing blocks
+        normalizedContent = this.removeComments(normalizedContent);
 
         // Find the first occurrence of an empty line (allowing whitespace)
         // This regex matches: \n + any whitespace + \n

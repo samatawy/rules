@@ -37,11 +37,12 @@ export class ConstantsFileReader extends AbstractFileReader {
      */
     constructor(options?: Partial<ConstantsFileReaderOptions>) {
         super({
-            read_by: options?.read_by || 'line'
+            read_by: options?.read_by || 'line',
+            workspace: options?.workspace,
         });
         this.options = {
             read_by: options?.read_by || 'line',
-            accept: options?.accept || 'partial',
+            accept: options?.accept || 'all',
             ...options
         }
     }

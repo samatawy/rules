@@ -1,7 +1,5 @@
 ---
 title: Introduction
-group: Rule engine
-# category: Caching And Stores
 ---
 
 ## What is a Rule Engine
@@ -65,4 +63,39 @@ To enable teams to benefit, and prevent failures from happening, the best rule e
 - Rich return data including original inputs, final outputs, and the rules invoked in order for a complete audit trail.
 
 ## Well-known Rule engines
+
+Rule engines vary widely in style. Some are lightweight libraries embedded in application code, while others are larger platforms with authoring tools, decision tables, and workflow or event-processing features.
+
+### TypeScript and JavaScript
+
+- `json-rules-engine` is one of the better-known JavaScript rule engines. It uses a JSON-based rule format with conditions and events, which makes it relatively easy to store and exchange rules, though it is less natural for business users than a purpose-built DSL.
+
+- `json-logic-js` is not a complete rule engine in the classic sense, but it is widely used for declarative conditional logic in JavaScript applications. It is often used as the expression layer underneath custom decision systems.
+
+- `durable_rules` has JavaScript support in addition to other languages. It is more event- and state-oriented than many small rule libraries and is often discussed in the context of forward chaining and reactive rule processing.
+
+- `nools` was a notable JavaScript rule engine inspired by Drools. It is still useful as a historical reference for DSL-style and Rete-style rule processing in the Node ecosystem, although it is no longer the obvious default choice for new projects.
+
+In the TypeScript and JavaScript ecosystem, it is still common for teams to build a custom or domain-specific rule layer instead of adopting a very large engine. That is one reason packages like this one can be useful: they can focus on application-friendly syntax, strong typing, and integration with a specific runtime model rather than trying to replicate a full enterprise rules platform.
+
+### Other languages and platforms
+
+- `Drools` is one of the best-known rule engines in the Java ecosystem. It supports production rules, decision tables, CEP-style features, and a large surrounding platform, and it is often the reference point when people discuss enterprise rule engines.
+
+- `CLIPS` is a long-standing expert-system and rule engine environment. It is older and lower-level than many modern libraries, but it remains an important reference in the history of production rule systems.
+
+- `Jess` is another well-known Java rule engine, historically influenced by CLIPS, and has been used in expert-system style applications for many years.
+
+- `OpenL Tablets` is a Java-based business rules platform focused on decision tables and spreadsheet-like authoring, which appeals to teams that want domain experts to contribute directly to rule definitions.
+
+- `Camunda DMN` and other DMN-focused engines are often relevant when the problem is less about forward-chaining rule execution and more about structured business decisions, decision tables, and process automation.
+
+These tools illustrate that “rule engine” can mean very different things:
+
+- some focus on production rules and inference
+- some focus on declarative expressions and condition evaluation
+- some focus on decision tables and business-user authoring
+- some combine rules with workflows, processes, or event streams
+
+This package is closer to the lightweight application-embedded end of that spectrum. It is intended to provide a programmable and typed rule engine for TypeScript projects without requiring the full operational footprint of a larger enterprise platform.
 

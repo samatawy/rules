@@ -64,5 +64,8 @@
         "typedoc": "^0.28.18",
         "typescript": "^5.9.2",
         "vitest": "^3.2.4"
+    },
+    "dependencies": {
+        "json5": "^2.2.3"
     }
 }

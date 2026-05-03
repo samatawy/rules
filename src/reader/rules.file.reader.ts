@@ -40,12 +40,13 @@ export class RulesFileReader extends AbstractFileReader {
      */
     constructor(options?: Partial<RulesFileReaderOptions>) {
         super({
-            read_by: options?.read_by || 'block'
+            read_by: options?.read_by || 'block',
+            workspace: options?.workspace,
         });
         this.ruleParser = new RuleParser({ workspace: options?.workspace });
         this.options = {
             read_by: options?.read_by || 'block',
-            accept: options?.accept || 'partial',
+            accept: options?.accept || 'all',
             ...options
         }
     }
