@@ -1,0 +1,29 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/index.ts"
+    ],
+    "projectDocuments": [
+        "src/help/index.md",
+        "src/help/introduction.md",
+        "src/help/declared.components.md"
+    ],
+    "tsconfig": "tsconfig.json",
+    "out": "docs",
+    "readme": "src/help/index.md",
+    "cleanOutputDir": true,
+    "excludePrivate": true,
+    "excludeInternal": true,
+    "searchInDocuments": true,
+    "navigation": {
+        "includeCategories": true,
+        "includeGroups": true,
+        "includeFolders": true,
+        "excludeReferences": false
+    },
+    "sort": [
+        "documents-first",
+        "source-order"
+    ],
+    "sortEntryPoints": false
+}
