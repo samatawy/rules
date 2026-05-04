@@ -103,18 +103,18 @@ describe('Types Test', () => {
       }
     });
 
-    const rule = IfThenRule.parse('if max([Person.age, 30]) > 18 then Person.isAdult = true');
+    const rule = IfThenRule.parse('if max(Person.age, 30) > 18 then Person.isAdult = true');
     const typeCheckResult = rule.checkTypes(types);
     // console.debug(typeCheckResult);
     expect(typeCheckResult.valid).toBe(true);
 
-    const invalidRule = IfThenRule.parse('if max([Person.height, 180]) > 180 then Person.isTall = true');
+    const invalidRule = IfThenRule.parse('if max(Person.height, 180) > 180 then Person.isTall = true');
     const invalidTypeCheckResult = invalidRule.checkTypes(types);
     // console.debug(invalidTypeCheckResult);
     expect(invalidTypeCheckResult.valid).toBe(false);
     expect(invalidTypeCheckResult.errors?.length).toBeGreaterThan(0);
 
-    const invalidParams = IfThenRule.parse('if max([Person.age, "thirty"]) > 18 then Person.isAdult = true');
+    const invalidParams = IfThenRule.parse('if max(Person.age, "thirty") > 18 then Person.isAdult = true');
     const invalidParamsTypeCheckResult = invalidParams.checkTypes(types);
     // console.debug(invalidParamsTypeCheckResult);
     expect(invalidParamsTypeCheckResult.valid).toBe(false);

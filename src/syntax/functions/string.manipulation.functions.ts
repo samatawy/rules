@@ -24,10 +24,9 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'firstChars':
             case 'lastChars':
                 return [{ type: 'string' }, { type: 'number' }];
+            case 'append':
             case 'replace':
                 return [{ type: 'string' }, { type: 'string' }];
-            case 'concat':
-                return [{ type: 'string[]' }];
             case 'toUpperCase':
             case 'toLowerCase':
                 return [{ type: 'string' }];
@@ -40,13 +39,7 @@ export class StringManipulationFunction extends StringFunctionExpression {
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         let targetValue = this.target_arg.evaluate(context);
-        if (this.name === 'concat') {
-            if (!Array.isArray(targetValue)) {
-                throw new Error(`Target argument for concat function must evaluate to an array of strings, but got ${typeof targetValue}`);
-            }
-            targetValue = targetValue.join('');
-        }
-        else if (typeof targetValue !== 'string') {
+        if (typeof targetValue !== 'string') {
             throw new Error(`Target argument for function ${this.name} did not evaluate to a string`);
         }
 
@@ -57,19 +50,18 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 return targetValue.substring(0, evaluatedArgs[0]);
             case 'lastChars':
                 return targetValue.substring(targetValue.length - evaluatedArgs[0]);
+            case 'append':
+                return targetValue + evaluatedArgs[0];
             case 'replace':
                 return targetValue.replace(evaluatedArgs[0], evaluatedArgs[1]);
             case 'toUpperCase':
                 return targetValue.toUpperCase();
             case 'toLowerCase':
                 return targetValue.toLowerCase();
-            case 'concat':
-                return targetValue;
-            // return targetValue.concat(...evaluatedArgs);
             default:
                 throw new Error(`Unknown string manipulation function: ${this.name}`);
         }
     }
 
-    static names = ['substring', 'firstChars', 'lastChars', 'replace', 'toUpperCase', 'toLowerCase', 'concat'];
+    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'toUpperCase', 'toLowerCase'];
 }

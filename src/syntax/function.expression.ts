@@ -1,5 +1,5 @@
 import type { ArrayType, AtomicType, ObjectArrayType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../types";
-import { getReturnType, isArrayType, mergeValidationResults } from "../utils";
+import { getArrayType, getReturnType, isArrayType, makeItemType, mergeValidationResults } from "../utils";
 import { Expression } from "./expression";
 
 export abstract class FunctionExpression extends Expression {
@@ -33,8 +33,22 @@ export abstract class FunctionExpression extends Expression {
      * Returns an array of expected parameters for this function, in order. 
      * Each parameter includes its expected type and whether it is optional.
      * This is used for type checking and validation of function arguments.
+     * 
+     * @returns an array of expected parameters for this function by type
      */
     public abstract expectsParameters(): TypedParameter[];
+
+    /**
+     * Check whether the function should convert any number of arguments into a single array argument for processing.
+     * By default this is not true.
+     * Functions that should convert arguments into an array for processing
+     * (e.g. sum, avg, concat) can override this method to indicate that they expect a parameter array.
+     * 
+     * @returns boolean indicating whether the function expects a parameter array
+     */
+    public expectsParameterArray(): boolean {
+        return false;
+    }
 
     /**
      * Returns the return type of the function.
@@ -56,6 +70,22 @@ export abstract class FunctionExpression extends Expression {
         }
 
         const expected = this.expectsParameters();
+
+        // If the function expects a parameter array, we check that all provided arguments match the expected type
+        if (this.expectsParameterArray()) {
+            const expectedType = expected[0]!.type;
+            const itemType = getArrayType(this.args, checker);
+            if (itemType !== expectedType) {
+                checks.push({
+                    valid: false,
+                    errors: [`All arguments for function ${this.name} must be of type ${expectedType}, but got ${itemType}`],
+                });
+            }
+
+            return mergeValidationResults(...checks);
+        }
+
+        // otherwise we check each item in order against the expected parameters
         let i = 0;
         for (const arg of this.args) {
             if (i >= expected.length) {

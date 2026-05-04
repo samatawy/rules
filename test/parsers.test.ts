@@ -46,8 +46,8 @@ describe('Parsers Tests', () => {
   it('parse functions', async () => {
     const space = new WorkSpace();
     space.addRule('if x < avogadro() then approx = floor(pi())');
-    space.addRule('if x > max([1, 2, 3]) then year = year(now())');
-    space.addRule('if x >= 10 then calc = max([5, 10, 15]) else result = min([5, 10])');
+    space.addRule('if x > max(1, 2, 3) then year = year(now())');
+    space.addRule('if x >= 10 then calc = max(5, 10, 15) else result = min(5, 10)');
 
     expect(space.checkTypes().valid).toBe(true);
 

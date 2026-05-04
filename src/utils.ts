@@ -158,7 +158,9 @@ export function getArrayType(array: ArrayExpression | Expression[], checker?: Ty
     }
     if (elementTypes.size === 1) {
         const [elementType] = elementTypes;
-        if (elementType === 'string' || elementType === 'number' || elementType === 'boolean' || elementType === 'date') {
+        if (elementType === 'string[]' || elementType === 'number[]' || elementType === 'boolean[]' || elementType === 'date[]') {
+            return elementType;
+        } else if (elementType === 'string' || elementType === 'number' || elementType === 'boolean' || elementType === 'date') {
             return elementType + '[]' as ArrayType;
         } else if (TypeParser.isValidObjectType(elementType)) {
             return { type: 'array', items: elementType } as ObjectArrayType;

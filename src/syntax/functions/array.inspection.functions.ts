@@ -1,6 +1,8 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import { ArrayExpression } from "../array.expression";
+import type { TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
 import type { Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { getReturnType, isArrayType, mergeValidationResults } from "../../utils";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
 
@@ -8,10 +10,13 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
 
     protected target_arg: Expression;
 
+    protected extra_args: Expression[];
+
     constructor(name: string, target: Expression, args: Expression[]) {
         super(name, [target, ...args]);
         this.name = name;
         this.target_arg = target;
+        this.extra_args = args;
     }
 
     public expectsParameters(): TypedParameter[] {
@@ -31,7 +36,20 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         }
     }
 
+    public expectsParameterArray(): boolean {
+        return ['sum', 'total', 'avg', 'average', 'min', 'max', 'range'].includes(this.name);
+    }
+
     public evaluate(context: WorkingContext): number {
+        // If this function expects a parameter array, we need to convert the target argument and extra arguments 
+        // into a single array argument for processing, unless the target is already an array.
+        if (this.expectsParameterArray()) {
+            const firstArg = this.target_arg.evaluate(context);
+            const isArray = this.target_arg instanceof ArrayExpression || Array.isArray(firstArg);
+            this.target_arg = isArray ? this.target_arg : new ArrayExpression([this.target_arg, ...this.extra_args]);
+            this.extra_args = [];
+        }
+
         const targetValue = this.target_arg.evaluate(context);
         if (!Array.isArray(targetValue)) {
             console.debug('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);

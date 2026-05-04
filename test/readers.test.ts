@@ -125,7 +125,7 @@ describe('Readers Tests', () => {
       sales_tax(total: number) {
         tax_rate = (total < 100)? 0.12 : 0.14;
         tax = total * tax_rate;
-        return max([1, tax])
+        return max(1, tax)
       }
       
       invalid syntax
