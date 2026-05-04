@@ -41,11 +41,11 @@ export abstract class AbstractFileReader {
                 const hashIndex = line.indexOf('#');
                 const index = commentIndex !== -1 ? commentIndex : hashIndex;
                 if (index !== -1) {
-                    return line.slice(0, index).trim();
+                    return line.slice(0, index).trim() || null; // Return null if the line is empty after removing comments
                 }
-                return line.trim();
+                return line.trim(); // Do not return null if the line was not a comment, even if empty
             })
-            // .filter(line => line.length > 0) // Remove empty lines
+            .filter(line => line !== null) // Remove comment lines but keep empty lines for block separation
             .join('\n');
     }
 

@@ -8,6 +8,7 @@ import { TernaryExpression } from "../syntax/ternary.expression";
 import { VariableExpression } from "../syntax/variable.expression";
 import type { ParserOptions } from "./rule.parser";
 import { LambdaExpression } from "../syntax/lambda.expression";
+import { ArrayExpression } from "../syntax/array.expression";
 
 /**
  * Parser class for parsing expressions from rule syntax.
@@ -40,13 +41,7 @@ export class ExpressionParser {
             throw new Error("Empty expression");
         }
 
-        // insert spaces around parentheses and operators to ensure they are treated as separate tokens
-        syntax = syntax.replace(/([()?:%*/+-])/g, ' $1 ');
-        // collapse multiple spaces into a single space
-        syntax = syntax.replace(/\s+/g, ' ').trim();
-
-        // split by spaces using simple regex
-        const tokens = syntax.split(/\s+/);
+        const tokens = this.tokenize(syntax);
         if (tokens.length === 0) {
             throw new Error("Empty expression");
         }
@@ -113,6 +108,12 @@ export class ExpressionParser {
             return literalExpr;
         }
 
+        const arrayExpr = this.readArrayExpression(tokens);
+        if (arrayExpr) {
+            // console.debug(`Parsed array expression: ${syntax}`);
+            return arrayExpr;
+        }
+
         const variableExpr = this.readVariableExpression(syntax);
         if (variableExpr) {
             // console.debug(`Parsed variable expression: ${syntax}`);
@@ -120,6 +121,49 @@ export class ExpressionParser {
         }
 
         throw new Error(`Unable to parse expression: ${syntax}`);
+    }
+
+    protected tokenize(syntax: string): string[] {
+        // insert spaces around parentheses and operators to ensure they are treated as separate tokens
+        // Take care to treat ==, !=, <=, >= as single operators and not split them into two tokens
+        syntax = syntax.replace(/(==|!=|<=|>=|[()\[\]?:,%+=*/])/g, ' $1 ');
+
+        // collapse multiple spaces into a single space
+        syntax = syntax.replace(/\s+/g, ' ').trim();
+
+        // split by spaces using simple regex
+        const tokens = syntax.split(/\s+/);
+        return tokens;
+    }
+
+
+    protected splitOperands(tokens: string[], operators: string[]): { left: string, operator: string, right: string } | null {
+        const stack: string[] = [];
+        const openers = ['(', '[', '{', '"', '\''];
+        const closers = [')', ']', '}', '"', '\''];
+        let latest: string | null = null;
+
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i]!;
+            if (closers.includes(token)) {
+                if (latest && closers.indexOf(token) === openers.indexOf(latest)) {
+                    stack.pop();
+                    latest = stack.length > 0 ? stack[stack.length - 1]! : null;
+                    continue;
+                }
+            }
+            if (openers.includes(token)) {
+                stack.push(token);
+                latest = token;
+                continue;
+            }
+            if (operators.includes(token) && stack.length === 0) {
+                const left = tokens.slice(0, i).join(' ');
+                const right = tokens.slice(i + 1).join(' ');
+                return { left, operator: token, right };
+            }
+        }
+        return null;
     }
 
     protected isEnclosedInParentheses(syntax: string): boolean {
@@ -140,6 +184,26 @@ export class ExpressionParser {
         }
 
         return parenthesesCount === 0;
+    }
+
+    protected isEnclosedInBrackets(syntax: string): boolean {
+        if (syntax.length < 2 || syntax[0] !== '[' || syntax[syntax.length - 1] !== ']') {
+            return false;
+        }
+
+        let bracketsCount = 0;
+        for (let i = 0; i < syntax.length; i++) {
+            if (syntax[i] === '[') {
+                bracketsCount++;
+            } else if (syntax[i] === ']') {
+                bracketsCount--;
+                if (bracketsCount === 0 && i !== syntax.length - 1) {
+                    return false;
+                }
+            }
+        }
+
+        return bracketsCount === 0;
     }
 
     protected stripEnclosingParentheses(syntax: string): string {
@@ -167,93 +231,43 @@ export class ExpressionParser {
     }
 
     protected splitArguments(argsSyntax: string): string[] {
-        const args: string[] = [];
-        let currentArg = '';
-        let parenthesesCount = 0;
-
-        for (let i = 0; i < argsSyntax.length; i++) {
-            const char = argsSyntax[i]!;
-            if (char === ',' && parenthesesCount === 0) {
-                args.push(currentArg.trim());
-                currentArg = '';
-            } else {
-                if (char === '(') {
-                    parenthesesCount++;
-                } else if (char === ')') {
-                    parenthesesCount--;
-                }
-                currentArg += char;
-            }
+        argsSyntax = argsSyntax.trim();
+        if (argsSyntax.length === 0) {
+            return [];
         }
-
-        if (currentArg.trim() !== '') {
-            args.push(currentArg.trim());
+        const { left, operator: comma, right } = this.splitOperands(argsSyntax.split(' '), [',']) || {};
+        if (left && comma && right) {
+            return [left, ...this.splitArguments(right)];
+        } else {
+            return [argsSyntax];
         }
-
-        return args;
     }
 
     protected readLogicalExpression(tokens: string[]): LogicalExpression | null {
-        let operatorIndex = -1;
-        let operator = null;
-        let parenthesesCount = 0;
-
-        for (let i = 0; i < tokens.length; i++) {
-            if (tokens[i] === '(') {
-                parenthesesCount++;
-            } else if (tokens[i] === ')') {
-                parenthesesCount--;
-            } else if (parenthesesCount === 0 && (tokens[i] === 'AND' || tokens[i] === 'OR' || tokens[i] === '&&' || tokens[i] === '||')) {
-                operatorIndex = i;
-                operator = tokens[i];
-                break;
-            }
-        }
-
-        if (operator && operatorIndex !== -1) {
-            const leftSyntax = tokens.slice(0, operatorIndex).join(' ');
-            const rightSyntax = tokens.slice(operatorIndex + 1).join(' ');
-            const leftExpr = this.parse(leftSyntax);
-            const rightExpr = this.parse(rightSyntax);
+        const { left, operator, right } = this.splitOperands(tokens, ['AND', 'OR', '&&', '||']) || {};
+        if (left && operator && right) {
+            const leftExpr = this.parse(left);
+            const rightExpr = this.parse(right);
             return new LogicalExpression(operator, leftExpr, rightExpr);
         }
         return null;
     }
 
     protected readTernaryExpression(tokens: string[]): TernaryExpression | null {
-        let questionMarkIndex = -1;
-        let colonIndex = -1;
-        let parenthesesCount = 0;
-
-        for (let i = 0; i < tokens.length; i++) {
-            if (tokens[i] === '(') {
-                parenthesesCount++;
-            } else if (tokens[i] === ')') {
-                parenthesesCount--;
-            } else if (parenthesesCount === 0) {
-                if (tokens[i] === '?') {
-                    questionMarkIndex = i;
-                } else if (tokens[i] === ':') {
-                    colonIndex = i;
-                    break;
-                }
+        const { left: conditionSyntax, operator: questionMark, right: remainder } = this.splitOperands(tokens, ['?']) || {};
+        if (conditionSyntax && questionMark && remainder) {
+            const { left: trueSyntax, operator: colon, right: falseSyntax } = this.splitOperands(remainder.split(' '), [':']) || {};
+            if (trueSyntax && colon && falseSyntax) {
+                const conditionExpr = this.parse(conditionSyntax);
+                const trueExpr = this.parse(trueSyntax);
+                const falseExpr = this.parse(falseSyntax);
+                return new TernaryExpression(conditionExpr, trueExpr, falseExpr);
             }
-        }
-
-        if (questionMarkIndex !== -1 && colonIndex !== -1 && questionMarkIndex < colonIndex) {
-            const conditionSyntax = tokens.slice(0, questionMarkIndex).join(' ');
-            const trueSyntax = tokens.slice(questionMarkIndex + 1, colonIndex).join(' ');
-            const falseSyntax = tokens.slice(colonIndex + 1).join(' ');
-            const conditionExpr = this.parse(conditionSyntax);
-            const trueExpr = this.parse(trueSyntax);
-            const falseExpr = this.parse(falseSyntax);
-            return new TernaryExpression(conditionExpr, trueExpr, falseExpr);
         }
         return null;
     }
 
     protected readLambdaExpression(tokens: string[]): LambdaExpression | null {
-
         const match = tokens.join(' ').match(/^(\w+)\s*:\s*(.*)$/);
         if (match) {
             const variableSyntax = match[1]!;
@@ -266,55 +280,31 @@ export class ExpressionParser {
     }
 
     protected readComparisonExpression(tokens: string[]): ComparisonExpression | null {
-        let operatorIndex = -1;
-        let operator = null;
-        let parenthesesCount = 0;
-
-        for (let i = 0; i < tokens.length; i++) {
-            if (tokens[i] === '(') {
-                parenthesesCount++;
-            } else if (tokens[i] === ')') {
-                parenthesesCount--;
-            } else if (parenthesesCount === 0 && (tokens[i] === '==' || tokens[i] === '!=' || tokens[i] === '<' || tokens[i] === '>' || tokens[i] === '<=' || tokens[i] === '>=')) {
-                operatorIndex = i;
-                operator = tokens[i];
-                break;
-            }
-        }
-
-        if (operator && operatorIndex !== -1) {
-            const leftSyntax = tokens.slice(0, operatorIndex).join(' ');
-            const rightSyntax = tokens.slice(operatorIndex + 1).join(' ');
-            const leftExpr = this.parse(leftSyntax);
-            const rightExpr = this.parse(rightSyntax);
+        const { left, operator, right } = this.splitOperands(tokens, ['==', '!=', '<=', '>=', '<', '>']) || {};
+        if (left && operator && right) {
+            const leftExpr = this.parse(left);
+            const rightExpr = this.parse(right);
             return new ComparisonExpression(operator, leftExpr, rightExpr);
         }
         return null;
     }
 
     public readArithmeticExpression(operators: string[], tokens: string[]): ArithmeticExpression | null {
-        let operatorIndex = -1;
-        let operator = null;
-        let parenthesesCount = 0;
-
-        for (let i = 0; i < tokens.length; i++) {
-            if (tokens[i] === '(') {
-                parenthesesCount++;
-            } else if (tokens[i] === ')') {
-                parenthesesCount--;
-            } else if (parenthesesCount === 0 && operators.includes(tokens[i]!)) {
-                operatorIndex = i;
-                operator = tokens[i];
-                break;
-            }
-        }
-
-        if (operator && operatorIndex !== -1) {
-            const leftSyntax = tokens.slice(0, operatorIndex).join(' ');
-            const rightSyntax = tokens.slice(operatorIndex + 1).join(' ');
-            const leftExpr = this.parse(leftSyntax);
-            const rightExpr = this.parse(rightSyntax);
+        const { left, operator, right } = this.splitOperands(tokens, operators) || {};
+        if (left && operator && right) {
+            const leftExpr = this.parse(left);
+            const rightExpr = this.parse(right);
             return new ArithmeticExpression(operator, leftExpr, rightExpr);
+        }
+        return null;
+    }
+
+    protected readArrayExpression(tokens: string[]): Expression | null {
+        if (this.isEnclosedInBrackets(tokens.join(' '))) {
+            const elementsSyntax = tokens.slice(1, -1).join(' ');
+            const elementParts = this.splitArguments(elementsSyntax);
+            const elementExpressions = elementParts.map(part => this.parse(part));
+            return new ArrayExpression(elementExpressions);
         }
         return null;
     }

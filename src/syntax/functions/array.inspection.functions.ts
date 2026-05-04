@@ -18,10 +18,12 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         switch (this.name) {
             case 'count':
                 return [{ type: 'array' }];
+            case 'sum':
             case 'total':
+            case 'avg':
             case 'average':
-            case 'smallest':
-            case 'largest':
+            case 'min':
+            case 'max':
             case 'range':
                 return [{ type: 'number[]' }];
             default:
@@ -39,13 +41,15 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         switch (this.name) {
             case 'count':
                 return targetValue.length;
+            case 'sum':
             case 'total':
                 return targetValue.reduce((acc, val) => acc + val, 0);
+            case 'avg':
             case 'average':
                 return targetValue.reduce((acc, val) => acc + val, 0) / targetValue.length;
-            case 'smallest':
+            case 'min':
                 return Math.min(...targetValue);
-            case 'largest':
+            case 'max':
                 return Math.max(...targetValue);
             case 'range':
                 return Math.max(...targetValue) - Math.min(...targetValue);
@@ -54,5 +58,5 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['count', 'total', 'average', 'smallest', 'largest', 'range'];
+    static names = ['count', 'sum', 'avg', 'min', 'max', 'range'];
 }

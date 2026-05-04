@@ -78,7 +78,6 @@ const reader = new GeneralFileReader({ workplace: myWorkplace });
 - It is safer to parse files in one step and assign them to your workplace only when all files have loaded without errors.
 
 
-
 ## Markdown Files
 
 You can also provide documentation for your business logic in markdown files.
@@ -170,7 +169,7 @@ Constants -> Functions -> Types -> Rules
 
 - Rules can have comments starting at any place in a line. Comments start with # or //.
 
-## Reading specific files 
+#### Reading specific files 
 
 You can load specific files using the general reader or specific readers. This is only a personal preference.
 

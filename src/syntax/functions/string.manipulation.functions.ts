@@ -25,8 +25,9 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'lastChars':
                 return [{ type: 'string' }, { type: 'number' }];
             case 'replace':
-            case 'concat':
                 return [{ type: 'string' }, { type: 'string' }];
+            case 'concat':
+                return [{ type: 'string[]' }];
             case 'toUpperCase':
             case 'toLowerCase':
                 return [{ type: 'string' }];
@@ -38,8 +39,14 @@ export class StringManipulationFunction extends StringFunctionExpression {
     public evaluate(context: WorkingContext): string {
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
-        const targetValue = this.target_arg.evaluate(context);
-        if (typeof targetValue !== 'string') {
+        let targetValue = this.target_arg.evaluate(context);
+        if (this.name === 'concat') {
+            if (!Array.isArray(targetValue)) {
+                throw new Error(`Target argument for concat function must evaluate to an array of strings, but got ${typeof targetValue}`);
+            }
+            targetValue = targetValue.join('');
+        }
+        else if (typeof targetValue !== 'string') {
             throw new Error(`Target argument for function ${this.name} did not evaluate to a string`);
         }
 
@@ -57,7 +64,8 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'toLowerCase':
                 return targetValue.toLowerCase();
             case 'concat':
-                return targetValue.concat(...evaluatedArgs);
+                return targetValue;
+            // return targetValue.concat(...evaluatedArgs);
             default:
                 throw new Error(`Unknown string manipulation function: ${this.name}`);
         }

@@ -31,17 +31,17 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'round':
                 return [{ type: 'number' }];
 
-            case 'max':
-            case 'min':
-            case 'avg':
-            case 'sum':
+            // case 'max':
+            // case 'min':
+            // case 'avg':
+            // case 'sum':
             case 'roundTo':
 
-            case 'add':
-            case 'subtract':
-            case 'multiply':
-            case 'divide':
-            case 'modulo':
+            // case 'add':
+            // case 'subtract':
+            // case 'multiply':
+            // case 'divide':
+            // case 'modulo':
             case 'power':
             case 'root':
                 return [{ type: 'number' }, { type: 'number' }];
@@ -80,36 +80,36 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'round':
                 return Math.round(targetValue);
 
-            case 'max':
-                return Math.max(targetValue, ...evaluatedArgs);
-            case 'min':
-                return Math.min(targetValue, ...evaluatedArgs);
-            case 'avg':
-                const sum = targetValue + evaluatedArgs.reduce((acc, val) => acc + val, 0);
-                return sum / (1 + evaluatedArgs.length);
-            case 'sum':
-                return targetValue + evaluatedArgs.reduce((acc, val) => acc + val, 0);
+            // case 'max':
+            //     return Math.max(targetValue, ...evaluatedArgs);
+            // case 'min':
+            //     return Math.min(targetValue, ...evaluatedArgs);
+            // case 'avg':
+            //     const sum = targetValue + evaluatedArgs.reduce((acc, val) => acc + val, 0);
+            //     return sum / (1 + evaluatedArgs.length);
+            // case 'sum':
+            //     return targetValue + evaluatedArgs.reduce((acc, val) => acc + val, 0);
 
             case 'roundTo':
                 const factor = Math.pow(10, evaluatedArgs[0]);
                 return Math.round(targetValue * factor) / factor;
 
-            case 'add':
-                return targetValue + evaluatedArgs[0];
-            case 'subtract':
-                return targetValue - evaluatedArgs[0];
-            case 'multiply':
-                return targetValue * evaluatedArgs[0];
-            case 'divide':
-                if (evaluatedArgs[0] === 0) {
-                    throw new Error("Division by zero");
-                }
-                return targetValue / evaluatedArgs[0];
-            case 'modulo':
-                if (evaluatedArgs[0] === 0) {
-                    throw new Error("Division by zero");
-                }
-                return targetValue % evaluatedArgs[0];
+            // case 'add':
+            //     return targetValue + evaluatedArgs[0];
+            // case 'subtract':
+            //     return targetValue - evaluatedArgs[0];
+            // case 'multiply':
+            //     return targetValue * evaluatedArgs[0];
+            // case 'divide':
+            //     if (evaluatedArgs[0] === 0) {
+            //         throw new Error("Division by zero");
+            //     }
+            //     return targetValue / evaluatedArgs[0];
+            // case 'modulo':
+            //     if (evaluatedArgs[0] === 0) {
+            //         throw new Error("Division by zero");
+            //     }
+            //     return targetValue % evaluatedArgs[0];
             case 'power':
                 return Math.pow(targetValue, evaluatedArgs[0]);
             case 'root':
@@ -120,5 +120,6 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['max', 'min', 'avg', 'sum', 'ceil', 'floor', 'round', 'roundTo', 'add', 'subtract', 'multiply', 'divide', 'modulo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
+    // static names = ['max', 'min', 'avg', 'sum', 'ceil', 'floor', 'round', 'roundTo', 'add', 'subtract', 'multiply', 'divide', 'modulo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
+    static names = ['ceil', 'floor', 'round', 'roundTo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
 }

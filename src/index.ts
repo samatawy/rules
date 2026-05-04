@@ -40,6 +40,7 @@ export * from './rules/conditional.rules';
 // Syntax components
 export * from './syntax/expression';
 export * from './syntax/arithmetic.expression';
+export * from './syntax/array.expression';
 export * from './syntax/comparison.expression';
 export * from './syntax/function.expression';
 export * from './syntax/lambda.expression';

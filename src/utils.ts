@@ -1,3 +1,5 @@
+import { TypeParser } from "./parser/type.parser";
+import { ArrayExpression } from "./syntax/array.expression";
 import { BooleanExpression, DateExpression, Expression, NumericExpression, StringExpression } from "./syntax/expression";
 import { BooleanFunctionExpression, DateFunctionExpression, FunctionExpression, NumericFunctionExpression, StringFunctionExpression } from "./syntax/function.expression";
 import { CustomFunctionExpression } from "./syntax/functions/custom.function";
@@ -110,6 +112,8 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
         if (checker) {
             return checker.getType(expression.getVariableName()) as AtomicType | ArrayType | ObjectType | ObjectArrayType | undefined;
         } else return undefined;
+    } else if (expression instanceof ArrayExpression) {
+        return getArrayType(expression, checker);
 
     } else if (expression instanceof FunctionExpression || expression instanceof CustomFunctionExpression) {
         return expression.returnsType(checker);
@@ -131,6 +135,36 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
     console.debug(`Unable to determine return type for expression: ${expression}`);
     // For other expression types, we would need to implement logic to determine the return type based on the expression structure and the types of its components.
     return undefined;
+}
+
+/**
+ * Get the type of an array of expressions, attempting to determine the type of the elements and returning an appropriate array type.
+ * 
+ * @param array the array expression or array of expressions to evaluate.
+ * @param checker an optional type checker to use for variable expressions.
+ * @returns the array type, or 'array' if the element types cannot be determined.
+ */
+export function getArrayType(array: ArrayExpression | Expression[], checker?: TypeChecker): ArrayType | ObjectArrayType {
+    if (array instanceof ArrayExpression) {
+        array = array.getElements();
+    }
+    // For arrays, we can attempt to determine the type of the elements and return an array type accordingly
+    const elementTypes = new Set<AtomicType | ArrayType | ObjectType | ObjectArrayType>();
+    for (const element of array) {
+        const elementType = getReturnType(element, checker);
+        if (elementType) {
+            elementTypes.add(elementType);
+        }
+    }
+    if (elementTypes.size === 1) {
+        const [elementType] = elementTypes;
+        if (elementType === 'string' || elementType === 'number' || elementType === 'boolean' || elementType === 'date') {
+            return elementType + '[]' as ArrayType;
+        } else if (TypeParser.isValidObjectType(elementType)) {
+            return { type: 'array', items: elementType } as ObjectArrayType;
+        }
+    }
+    return 'array';
 }
 
 /**

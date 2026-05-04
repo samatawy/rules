@@ -133,8 +133,8 @@ describe('rules test', () => {
   it('parse functions', async () => {
     const space = new WorkSpace();
     space.addRule('if x < avogadro() then approx = floor(pi())');
-    space.addRule('if x > max(1, max(2, 3)) then year = year(now())');
-    space.addRule('if x >= 10 then calc = max(10, 15) else result = min(5, 10)');
+    space.addRule('if x > max([1, 2, 3]) then year = year(now())');
+    space.addRule('if x >= 10 then calc = max([5, 10, 15]) else result = min([5, 10])');
 
     expect(space.checkTypes().valid).toBe(true);
 
@@ -360,7 +360,8 @@ describe('rules test', () => {
       // all_even(numbers: number[]) = numbers * 3
 
       join_spaced(s1: string, s2: string) { 
-        return concat(s1, concat("_", s2))
+        // return concat(s1, concat(" - () * ", s2))
+        return concat([s1, " ", s2])
       }
 
       round_double(n: number){ 
@@ -371,7 +372,7 @@ describe('rules test', () => {
       sales_tax(total: number) {
         tax_rate = (total < 100)? 0.12 : 0.14;
         tax = total * tax_rate;
-        return max(1, tax)
+        return max([1, tax])
       }
       
       invalid syntax
@@ -406,7 +407,7 @@ describe('rules test', () => {
     const output = space.process(ctx);
     // console.debug('Function evaluation output:', output);
     expect(output.tripled).toBe(12);
-    expect(output.greeting).toBe('Hello_world!');
+    expect(output.greeting).toBe('Hello world!');
     expect(output.rounded).toBe(6);
     expect(output.tax).toBe(6);
     expect(output.tax_rate).toBeUndefined();
@@ -541,18 +542,18 @@ describe('rules test', () => {
       }
     });
 
-    const rule = IfThenRule.parse('if max(Person.age, 30) > 18 then Person.isAdult = true');
+    const rule = IfThenRule.parse('if max([Person.age, 30]) > 18 then Person.isAdult = true');
     const typeCheckResult = rule.checkTypes(types);
     // console.debug(typeCheckResult);
     expect(typeCheckResult.valid).toBe(true);
 
-    const invalidRule = IfThenRule.parse('if max(Person.height, 180) > 180 then Person.isTall = true');
+    const invalidRule = IfThenRule.parse('if max([Person.height, 180]) > 180 then Person.isTall = true');
     const invalidTypeCheckResult = invalidRule.checkTypes(types);
     // console.debug(invalidTypeCheckResult);
     expect(invalidTypeCheckResult.valid).toBe(false);
     expect(invalidTypeCheckResult.errors?.length).toBeGreaterThan(0);
 
-    const invalidParams = IfThenRule.parse('if max(Person.age, "thirty") > 18 then Person.isAdult = true');
+    const invalidParams = IfThenRule.parse('if max([Person.age, "thirty"]) > 18 then Person.isAdult = true');
     const invalidParamsTypeCheckResult = invalidParams.checkTypes(types);
     // console.debug(invalidParamsTypeCheckResult);
     expect(invalidParamsTypeCheckResult.valid).toBe(false);
