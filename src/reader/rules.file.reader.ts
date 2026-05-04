@@ -31,8 +31,9 @@ export interface RulesFileReaderOptions extends FileReaderOptions {
  */
 export class RulesFileReader extends AbstractFileReader {
 
+    protected options: RulesFileReaderOptions;
+
     protected ruleParser: RuleParser;
-    protected options: Partial<RulesFileReaderOptions>;
 
     /**
      * Create a new instance of the RulesFileReader with the specified options for parsing rules from a file.

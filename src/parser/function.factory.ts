@@ -32,6 +32,13 @@ export class FunctionFactory {
         this.options = options;
     }
 
+    /**
+     * Create a FunctionExpression instance based on the provided function name and arguments.
+     * @param name The name of the function to create.
+     * @param args The arguments to pass to the function.
+     * @returns A FunctionExpression instance representing the specified function.
+     * @throws An error if the function name is unknown or if the arguments are invalid.
+     */
     public create(name: string, args: Expression[]): FunctionExpression {
 
         // Constants

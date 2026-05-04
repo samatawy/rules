@@ -29,7 +29,7 @@ export interface ConstantsFileReaderOptions extends FileReaderOptions {
  */
 export class ConstantsFileReader extends AbstractFileReader {
 
-    protected options: Partial<ConstantsFileReaderOptions>;
+    protected options: ConstantsFileReaderOptions;
 
     /**
      * Create a new instance of the ConstantsFileReader with the specified options for parsing constants from a file.

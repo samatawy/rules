@@ -352,6 +352,3 @@ export function getLiteralType(value: any): AtomicType | ArrayType {
     throw new Error(`Unsupported literal type: ${type}`);
 }
 
-// export function isComplexType(type: PropertyType | ComplexType): type is ComplexType {
-//     return type === 'object' || type === 'array';
-// }

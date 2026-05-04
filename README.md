@@ -2,8 +2,6 @@
 
 TypeScript utilities for parsing, validating, and executing declarative business rules.
 
-This package extracts the rule engine from the broader `@samatawy/checks` workspace into a standalone npm package so it can evolve and be published independently.
-
 ## Features
 
 - declarative `IF ... THEN ...` style rules

@@ -103,12 +103,14 @@ To ensure data validity, input (and optionally) output types can be declared bef
 
 They are declared as:
 ```
-person {
-    name: string,
-    age: number,
-    address: {
-        city: string,
-        state: string
+{   key: 'person',
+    properties: {
+        name: 'string',
+        age: 'number',
+        address: {
+            city: 'string',
+            state: 'string'
+        }
     }
 }
 ```

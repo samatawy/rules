@@ -1,6 +1,6 @@
+import { TypeParser } from "../parser/type.parser";
 import type { RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
-import JSON5 from 'json5';
 
 export interface TypesFileResult {
     read: number;
@@ -32,7 +32,9 @@ export interface TypesFileReaderOptions extends FileReaderOptions {
  */
 export class TypesFileReader extends AbstractFileReader {
 
-    protected options: Partial<TypesFileReaderOptions>;
+    protected options: TypesFileReaderOptions;
+
+    protected typeParser: TypeParser;
 
     /**
      * Create a new instance of the TypesFileReader with the specified options for parsing types from a file.
@@ -49,6 +51,7 @@ export class TypesFileReader extends AbstractFileReader {
             accept: options?.accept || 'all',
             ...options
         };
+        this.typeParser = new TypeParser({ workspace: options?.workspace });
     }
 
     /**
@@ -76,7 +79,7 @@ export class TypesFileReader extends AbstractFileReader {
             }
             const attempts: (RootType | null)[] = syntaxes.map(syntax => {
                 try {
-                    return this.parseLine(syntax);
+                    return this.parseType(syntax);
                 } catch (e) {
                     errors.push(`Failed to parse type syntax: ${syntax}. Error: ${e instanceof Error ? e.message : String(e)}`);
                     return null;
@@ -120,18 +123,21 @@ export class TypesFileReader extends AbstractFileReader {
         }
     }
 
-    protected parseLine(content: string): RootType {
+    protected parseType(content: string): RootType {
         // Parse a line defining a type, expected in JSON format with at least a "key" property, 
         // e.g. { "key": "Person", "properties": { "name": "string", "age": "number" } }
+        // Should also be able to read JSON5 format to allow for comments and more flexible syntax, e.g.
+        // {
+        //     // This is a comment
+        //     key: 'Person', // The unique key for this type
+        //     properties: { // The properties of the Person type
+        //         name: 'string', // The name property is a string
+        //         age: 'number', // The age property is a number
+        //         isAdult: 'boolean' // The isAdult property is a boolean
+        //     }
+        // }
         try {
-            const json = JSON5.parse(content);
-            if (typeof json !== 'object' || json === null || Array.isArray(json)) {
-                throw new Error(`Type definition must be a JSON object: ${content}`);
-            }
-            if (!json.hasOwnProperty('key')) {
-                throw new Error(`Type definition must have a "key" property: ${content}`);
-            }
-            return json as RootType;
+            return this.typeParser.parseRootType(content);
 
         } catch (e) {
             throw new Error(`Invalid type syntax: ${content}. Error: ${e instanceof Error ? e.message : String(e)}`);

@@ -1,10 +1,10 @@
 import { WorkSpace } from "../engine/work.space";
 import { FunctionParser } from "../parser/function.parser";
 import { RuleParser } from "../parser/rule.parser";
+import { TypeParser } from "../parser/type.parser";
 import type { AbstractRule } from "../rules/abstract.rule";
 import type { FunctionDefinition, RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
-import JSON5 from 'json5';
 
 export interface GeneralReaderResult {
     read: number;
@@ -44,6 +44,8 @@ export class GeneralFileReader extends AbstractFileReader {
 
     protected functionParser: FunctionParser;
 
+    protected typeParser: TypeParser;
+
     /**
      * The workspace instance to which the parsed rules, functions, types, and constants will be added. 
      * This allows for components to recognize earlier declared components.
@@ -68,6 +70,7 @@ export class GeneralFileReader extends AbstractFileReader {
         this.workspace = this.options.workspace || new WorkSpace();
         this.ruleParser = new RuleParser({ workspace: this.workspace });
         this.functionParser = new FunctionParser({ workspace: this.workspace });
+        this.typeParser = new TypeParser({ workspace: this.workspace });
     }
 
     /**
@@ -190,16 +193,17 @@ export class GeneralFileReader extends AbstractFileReader {
         // Parse a line defining a type, expected in JSON format with at least a "key" property, 
         // e.g. { "key": "Person", "properties": { "name": "string", "age": "number" } }
         // Should also be able to read JSON5 format to allow for comments and more flexible syntax, e.g.
-        // { key: 'Person', properties: { name: 'string', age: 'number', isAdult: 'boolean' } }
+        // {
+        //     // This is a comment
+        //     key: 'Person', // The unique key for this type
+        //     properties: { // The properties of the Person type
+        //         name: 'string', // The name property is a string
+        //         age: 'number', // The age property is a number
+        //         isAdult: 'boolean' // The isAdult property is a boolean
+        //     }
+        // }
         try {
-            const json = JSON5.parse(content);
-            if (typeof json !== 'object' || json === null || Array.isArray(json)) {
-                return null;
-            }
-            if (!json.hasOwnProperty('key')) {
-                throw new Error(`Type definition must have a "key" property: ${content}`);
-            }
-            return json as RootType;
+            return this.typeParser.parseRootType(content);
 
         } catch (e) {
             return null;

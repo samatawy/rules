@@ -32,7 +32,7 @@ export interface FunctionsFileReaderOptions extends FileReaderOptions {
  */
 export class FunctionsFileReader extends AbstractFileReader {
 
-    protected options: Partial<FunctionsFileReaderOptions>;
+    protected options: FunctionsFileReaderOptions;
 
     protected functionParser: FunctionParser;
 

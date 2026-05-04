@@ -4,8 +4,7 @@
         "src/index.ts"
     ],
     "projectDocuments": [
-        "src/help/introduction.md",
-        "src/help/declared.components.md"
+        "src/help/index.md",
     ],
     "tsconfig": "tsconfig.json",
     "out": "docs",

@@ -45,6 +45,7 @@ export class RuleParser {
      * Parse a rule from its syntax string and return the corresponding AbstractRule implementation.
      * @param syntax The syntax string of the rule to parse.
      * @returns The parsed implementation of AbstractRule object if successful, null otherwise.
+     * @throws An error if the syntax is invalid or if parsing fails for any reason.
      */
     public parse(syntax: string): AbstractRule | null {
 

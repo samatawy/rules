@@ -22,11 +22,13 @@ export * from './parser/executable.parser';
 export * from './parser/function.factory';
 export * from './parser/function.parser';
 export * from './parser/rule.parser';
+export * from './parser/type.parser';
 
 // Reader components
 export * from './reader/abstract.file.reader';
 export * from './reader/constants.file.reader';
 export * from './reader/functions.file.reader';
+export * from './reader/general.file.reader';
 export * from './reader/rules.file.reader';
 export * from './reader/types.file.reader';
 
