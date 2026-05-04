@@ -17,6 +17,7 @@ import { CustomFunctionExpression } from '../src/syntax/functions/custom.functio
 import { FunctionsFileReader } from '../src/reader/functions.file.reader';
 import { FunctionParser } from '../src/parser/function.parser';
 import { GeneralFileReader } from '../src/reader/general.file.reader';
+import { MarkdownFileReader } from '../src/reader/markdown.file.reader';
 
 describe('rules test', () => {
   it('add rules to graph', async () => {
@@ -624,6 +625,44 @@ describe('rules test', () => {
     `;
     const result = reader.parse(content);
     // console.debug('General file parsing result:', result);
+    expect(result.read).toBe(5);
+    expect(result.passed).toBe(4);
+    expect(result.failed).toBe(1);
+    expect(result.constants.PI).toBe('3.14159');
+    expect(result.functions.triple).toBeDefined();
+    expect(result.types.Person).toBeDefined();
+    expect(result.rules.length).toBe(1);
+    expect(result.errors.length).toBe(1);
+  });
+
+  it('read from markdown files with mixed content in code blocks', async () => {
+    const reader = new MarkdownFileReader({ accept: 'partial' });
+    const content = `
+      # This is a markdown file
+
+      Some text here.
+
+      \`\`\`
+      CONST PI = 3.14159
+
+      triple(n: number) = n * 3
+
+      if x > 10 then result = triple(x)
+
+      { key: "Person",
+        properties: {
+          name: 'string',
+          age: 'number',    // in years 
+        }
+      }
+
+      invalid syntax here
+      \`\`\`
+
+      - More text here.
+    `;
+    const result = reader.parse(content);
+    // console.debug('Markdown file parsing result:', result);
     expect(result.read).toBe(5);
     expect(result.passed).toBe(4);
     expect(result.failed).toBe(1);

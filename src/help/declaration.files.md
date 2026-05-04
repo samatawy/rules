@@ -6,7 +6,7 @@ title: Declaration Files
 
 To configure the Rule engine, you need to declare your business logic. You can provide persistent files to do this in more than one way.
 
-# General Files
+## General Files
 
 A general file contains mixed declarations. You can have one file for a specific type and its relevant rules.
 
@@ -36,7 +36,7 @@ ELSE THROW Invalid invoice amount
 
 This approach encourages separation of declarations into business-relevant areas such as a single file for every domain of interest.
 
-#### Reading A general file:
+#### Reading a general file:
 
 ```
 const fileContents = <load file as string>;
@@ -76,6 +76,32 @@ const reader = new GeneralFileReader({ workplace: myWorkplace });
 - File readers should ONLY use your workplace directly if you have already ensured all your files are valid. If not certain, bad files may fail to load all components and leave your workplace in an unhealthy state. 
 
 - It is safer to parse files in one step and assign them to your workplace only when all files have loaded without errors.
+
+
+
+## Markdown Files
+
+You can also provide documentation for your business logic in markdown files.
+
+Since the declarative syntax is human-readable, it can serve as documentation in itself. However logic may need to be explained further. Instead of maintaining documentation separate from your declarative code, you can keep both together.
+
+Use markdown files to document your logic. Declarative code must be placed in code blocks surrounded by triple ticks. This standard wrapper makes them appear highlighted in most readers and separates them from text you do not want to parse.
+
+````
+# Invoice Handling
+
+All invoices need tax to be applied as defined by state legislature.
+
+```
+    TAX_RATE = 0.14
+
+    TAX(total: number) = total * TAX_RATE
+```
+
+- This is maintained by John Smith in Accounting.
+````
+
+By submitting these files to the engine, it extracts and uses all code blocks to enforce your logic, ensuring your documentation is actually in-sync with what the engine is executing.
 
 
 ## Specific Files
