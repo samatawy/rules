@@ -4,6 +4,7 @@ import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
 import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
+import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
 import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
 import { ConstantDates, ConstantNumbers } from "../syntax/functions/constant.functions";
 import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
@@ -40,6 +41,7 @@ export class FunctionParser {
             ...ConstantNumbers.names,
             ...ConstantDates.names,
             ...ArrayInspectionFunction.names,
+            ...ArrayCollectionFunction.names,
             ...ArrayLambdaFunction.names,
             ...StringManipulationFunction.names,
             ...StringComparisonFunction.names,

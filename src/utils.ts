@@ -1,7 +1,7 @@
 import { TypeParser } from "./parser/type.parser";
 import { ArrayExpression } from "./syntax/array.expression";
 import { BooleanExpression, DateExpression, Expression, NumericExpression, StringExpression } from "./syntax/expression";
-import { BooleanFunctionExpression, DateFunctionExpression, FunctionExpression, NumericFunctionExpression, StringFunctionExpression } from "./syntax/function.expression";
+import { FunctionExpression } from "./syntax/function.expression";
 import { CustomFunctionExpression } from "./syntax/functions/custom.function";
 import { LambdaExpression } from "./syntax/lambda.expression";
 import { LiteralExpression } from "./syntax/literal.expression";

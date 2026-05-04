@@ -51,6 +51,7 @@ export * from './syntax/variable.expression';
 
 export * from './syntax/function.expression';
 export * from './syntax/functions/array.inspection.functions';
+export * from './syntax/functions/array.collection.functions';
 export * from './syntax/functions/array.lambda.functions';
 export * from './syntax/functions/constant.functions';
 export * from './syntax/functions/custom.function';

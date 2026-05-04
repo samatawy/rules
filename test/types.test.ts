@@ -1,0 +1,146 @@
+import { describe, expect, it } from 'vitest';
+import { IfThenRule } from '../src/rules/conditional.rules';
+import { TypeMemory } from '../src/engine/type.memory';
+import { getDefinedType, hasDefinedType } from '../src/utils';
+
+describe('Types Test', () => {
+
+  it('handles typed inputs and outputs', async () => {
+    const types = new TypeMemory({ strict_inputs: true, strict_outputs: true });
+    types.addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+        children: 'string[]',
+      }
+    });
+
+    expect(types.hasRootType('Person')).toBe(true);
+    const personType = types.getRootType('Person');
+    expect(personType).toBeDefined();
+    expect(personType!.properties!.name).toBe('string');
+    expect(personType!.properties!.age).toBe('number');
+
+    const validInput = { Person: { name: 'Alice', age: 30, children: ['Bob', 'Charlie'] } };
+    expect(types.validateData(validInput).valid).toBe(true);
+
+    const invalidArrayInput = { Person: { name: 'Alice', age: 30, children: [26, 'Bob'] } };
+    const invalidArrayResult = types.validateData(invalidArrayInput);
+    // console.debug(invalidArrayResult);
+    expect(invalidArrayResult.valid).toBe(false);
+    expect(invalidArrayResult.errors?.length).toBeGreaterThan(0);
+
+    const invalidInput = { Person: { name: 50, age: 'thirty' }, Extra: true };
+    const invalidResult = types.validateData(invalidInput);
+    // console.debug(invalidResult);
+    expect(invalidResult.valid).toBe(false);
+    expect(invalidResult.errors?.length).toBeGreaterThan(0);
+
+    // Check hasDefinedType and getDefinedType utilities
+    expect(hasDefinedType(personType!, 'name')).toBe(true);
+    expect(hasDefinedType(personType!, 'age')).toBe(true);
+    expect(hasDefinedType(personType!, 'nonexistent')).toBe(false);
+    expect(getDefinedType(personType!, 'name')).toBe('string');
+    expect(getDefinedType(personType!, 'age')).toBe('number');
+    expect(getDefinedType(personType!, 'nonexistent')).toBeUndefined();
+
+    // Check hasType and getType methods in TypeMemory
+    expect(types.hasType('Person')).toBe(true);
+    expect(types.hasType('Person.name')).toBe(true);
+    expect(types.getType('Person')).toBeDefined();
+    expect(types.getType('Person.name')).toBe('string');
+    expect(types.getType('Person.age')).toBe('number');
+    expect(types.hasType('Nonexistent')).toBe(false);
+    expect(types.getType('Nonexistent')).toBeUndefined();
+  });
+
+
+  it('handles type checking for rules', async () => {
+    const types = new TypeMemory({ strict_inputs: true, strict_outputs: false });
+    types.addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+        children: 'string[]',
+        ages: 'number[]',
+        family: {
+          type: 'array',
+          items: {
+            name: 'string',
+            age: 'number',
+          }
+        }
+      }
+    });
+
+    const rule = IfThenRule.parse('if Person.age > 18 then Person.isAdult = true');
+    const typeCheckResult = rule.checkTypes(types);
+    // console.debug(typeCheckResult);
+    expect(typeCheckResult.valid).toBe(true);
+
+    const arrayRule = IfThenRule.parse('if count(Person.children) > 2 then Person.hasManyChildren = true; Person.family_range = range(Person.family.age)');
+    const arrayTypeCheckResult = arrayRule.checkTypes(types);
+    // console.debug(arrayTypeCheckResult);
+    expect(arrayTypeCheckResult.valid).toBe(true);
+
+    const invalidRule = IfThenRule.parse('if Person.height > 180 then Person.isTall = true');
+    const invalidTypeCheckResult = invalidRule.checkTypes(types);
+    // console.debug(invalidTypeCheckResult);
+    expect(invalidTypeCheckResult.valid).toBe(false);
+    expect(invalidTypeCheckResult.errors?.length).toBeGreaterThan(0);
+  });
+
+
+  it('handles type checking for rules with functions', async () => {
+    const types = new TypeMemory({ strict_inputs: true, strict_outputs: false });
+    types.addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+      }
+    });
+
+    const rule = IfThenRule.parse('if max([Person.age, 30]) > 18 then Person.isAdult = true');
+    const typeCheckResult = rule.checkTypes(types);
+    // console.debug(typeCheckResult);
+    expect(typeCheckResult.valid).toBe(true);
+
+    const invalidRule = IfThenRule.parse('if max([Person.height, 180]) > 180 then Person.isTall = true');
+    const invalidTypeCheckResult = invalidRule.checkTypes(types);
+    // console.debug(invalidTypeCheckResult);
+    expect(invalidTypeCheckResult.valid).toBe(false);
+    expect(invalidTypeCheckResult.errors?.length).toBeGreaterThan(0);
+
+    const invalidParams = IfThenRule.parse('if max([Person.age, "thirty"]) > 18 then Person.isAdult = true');
+    const invalidParamsTypeCheckResult = invalidParams.checkTypes(types);
+    // console.debug(invalidParamsTypeCheckResult);
+    expect(invalidParamsTypeCheckResult.valid).toBe(false);
+    expect(invalidParamsTypeCheckResult.errors?.length).toBeGreaterThan(0);
+
+
+    const types2 = new TypeMemory({ strict_inputs: false, strict_outputs: true });
+    types2.addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+        isAdult: 'boolean',
+      }
+    });
+
+    const invalidOutput = IfThenRule.parse('if Person.age > 18 then Person.isAdult = true');
+    const invalidOutputCheckResult = invalidOutput.checkTypes(types2);
+    // console.debug(invalidOutputCheckResult);
+    expect(invalidOutputCheckResult.valid).toBe(true);
+
+    const invalidOutputType = IfThenRule.parse('if Person.age > 18 then Person.isAdult = "yes"');
+    const invalidOutputTypeCheckResult2 = invalidOutputType.checkTypes(types2);
+    // console.debug(invalidOutputTypeCheckResult2);
+    expect(invalidOutputTypeCheckResult2.valid).toBe(false);
+    expect(invalidOutputTypeCheckResult2.errors?.length).toBeGreaterThan(0);
+  });
+
+});

@@ -13,6 +13,7 @@ import { StringManipulationFunction } from "../syntax/functions/string.manipulat
 import type { ParserOptions } from "./rule.parser";
 import { CustomFunctionExpression } from "../syntax/functions/custom.function";
 import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
+import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
 import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
 
 /**
@@ -52,6 +53,9 @@ export class FunctionFactory {
         // Array functions
         if (ArrayInspectionFunction.names.includes(name)) {
             return new ArrayInspectionFunction(name, args[0] as Expression, args.slice(1));
+        }
+        if (ArrayCollectionFunction.names.includes(name)) {
+            return new ArrayCollectionFunction(name, args[0] as Expression, args.slice(1));
         }
         if (ArrayLambdaFunction.names.includes(name)) {
             return new ArrayLambdaFunction(name, args);
