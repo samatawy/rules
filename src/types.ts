@@ -170,6 +170,10 @@ export interface HasValidity {
     checkTypes(checker?: TypeChecker): ValidationResult;
 }
 
+export interface Clonable<T> {
+    clone(): T;
+}
+
 export type AtomicType = 'string' | 'number' | 'boolean' | 'date';
 
 export type ArrayType = 'array' | 'string[]' | 'number[]' | 'boolean[]' | 'date[]';

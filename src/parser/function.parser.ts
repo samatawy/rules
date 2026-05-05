@@ -6,6 +6,7 @@ import type { ParserOptions } from "./rule.parser";
 import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
 import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
 import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
+import { BooleanFunction } from "../syntax/functions/boolean.functions";
 import { ConstantDates, ConstantNumbers } from "../syntax/functions/constant.functions";
 import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
 import { StringComparisonFunction } from "../syntax/functions/string.comparison.functions";
@@ -43,6 +44,7 @@ export class FunctionParser {
             ...ArrayInspectionFunction.names,
             ...ArrayCollectionFunction.names,
             ...ArrayLambdaFunction.names,
+            ...BooleanFunction.names,
             ...StringManipulationFunction.names,
             ...StringComparisonFunction.names,
             ...StringInspectionFunction.names,
@@ -68,6 +70,7 @@ export class FunctionParser {
 
     /**
      * Parse a function definition from its syntax string and return the corresponding FunctionDefinition object.
+     * 
      * @param syntax The syntax string of the function to parse.
      * @returns The parsed FunctionDefinition object if successful, null otherwise.
      * @throws An error if the syntax is unrecognized or invalid, or if the function name is reserved.
@@ -92,6 +95,23 @@ export class FunctionParser {
         } else {
             throw new Error(`Unrecognized function syntax: ${syntax}`);
         }
+    }
+
+    /**
+     * Create a deep clone of a FunctionDefinition object by parsing its string representation.
+     * 
+     * @param original the original FunctionDefinition object to clone.
+     * @returns a new FunctionDefinition object that is a deep clone of the original.
+     * @throws an error if the original FunctionDefinition cannot be cloned for any reason.
+     */
+    public clone(original: FunctionDefinition): FunctionDefinition {
+        const cloned: FunctionDefinition = {
+            name: original.name,
+            parameters: original.parameters.map(param => ({ ...param })),
+            expression: this.expressionParser.parse(original.expression.toString()),
+            lines: original.lines ? original.lines.map(line => this.executableParser.parse(line.toString()) as any) : undefined
+        };
+        return cloned;
     }
 
     protected parseCustomFunction(syntax: string): FunctionDefinition | null {

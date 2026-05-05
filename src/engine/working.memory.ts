@@ -9,7 +9,6 @@ export interface LoggedRule {
     effect: RuleEffect;
 }
 
-
 export class WorkingMemory implements WorkingContext {
 
     private workspace: WorkSpace;

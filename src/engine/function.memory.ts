@@ -108,6 +108,18 @@ export class FunctionMemory {
         }
     }
 
+    /**
+     * Retrieve all function definitions stored in the memory.
+     * @returns A record of all function definitions, keyed by their names.
+     */
+    public getFunctions(): Record<string, FunctionDefinition> {
+        const result: Record<string, FunctionDefinition> = {};
+        for (const [key, value] of this.functions.entries()) {
+            result[key] = value;
+        }
+        return result;
+    }
+
     public checkTypes(checker: TypeChecker): ValidationResult[] {
         return Array.from(this.functions.values()).map(func => this.checkDefinitionTypes(func, checker));
     }

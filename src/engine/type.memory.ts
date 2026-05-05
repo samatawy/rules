@@ -69,6 +69,14 @@ export class TypeMemory implements TypeChecker {
         }
     }
 
+    public getRootTypes(): Record<string, RootType> {
+        const result: Record<string, RootType> = {};
+        for (const [key, value] of this.types.entries()) {
+            result[key] = value;
+        }
+        return result;
+    }
+
     public clear(): void {
         this.types.clear();
     }

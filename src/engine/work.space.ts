@@ -1,6 +1,6 @@
 import { AbstractRule } from "../rules/abstract.rule";
-import { mergeValidationResults, pathExists } from "../utils";
-import type { Executor, ValidationResult, WorkingContext } from "../types";
+import { cloneDeep, mergeValidationResults, pathExists } from "../utils";
+import type { Clonable, Executor, FunctionDefinition, ValidationResult, WorkingContext } from "../types";
 import { WorkingMemory } from "./working.memory";
 import { RuleGraph } from "./graph/rule.graph";
 import { CombinationNode, RuleNode, type AbstractNode } from "./graph/nodes";
@@ -8,6 +8,7 @@ import { RuleParser } from "../parser/rule.parser";
 import { RuleMemory } from "./rule.memory";
 import { TypeMemory } from "./type.memory";
 import { FunctionMemory } from "./function.memory";
+import { FunctionParser } from "../parser/function.parser";
 
 /**
  * Options for configuring the behavior of the WorkSpace, including debugging, conflict resolution, and iteration limits.
@@ -59,7 +60,7 @@ export interface WorkSpaceOptions {
  * It maintains a collection of rules, a graph structure for efficient rule retrieval, and a set of constants that can be used in rule evaluation.
  * The workspace provides methods for adding rules and constants, loading contexts for evaluation, and processing rules against given data.
  */
-export class WorkSpace {
+export class WorkSpace implements Clonable<WorkSpace> {
 
     protected rules: RuleMemory;
 
@@ -93,6 +94,54 @@ export class WorkSpace {
             max_iterations: 100,
             ...options
         };
+    }
+
+    /**
+     * Create a clone of the current WorkSpace instance, including all rules, constants, types, and functions.
+     * This is useful for creating isolated copies of the workspace for testing, experimentation, or parallel processing 
+     * without affecting the original workspace.
+     * You can safely mutate a cloned workspace without affecting the source, since no references are shared.
+     * 
+     * @returns a new WorkSpace instance that is a deep clone of the current workspace.
+     */
+    public clone(): WorkSpace {
+        const cloned = new WorkSpace(this.options);
+
+        // Clone constants
+        // Create a new object to ensure that the constants in the cloned workspace are not the same reference 
+        // as those in the original workspace, preventing unintended side effects from mutations.
+        cloned.addConstants({ ...this.constants });
+
+        // Clone types
+        // Create new RootType objects to ensure they are not the same reference 
+        // as those in the original workspace, preventing unintended side effects from mutations.
+        const clonedTypes = cloned.getTypeMemory();
+        clonedTypes.addRootTypes(cloneDeep(this.types.getRootTypes()));
+
+        // Clone functions
+        // Create new FunctionDefinition objects to ensure they are not the same reference 
+        // as those in the original workspace, preventing unintended side effects from mutations.
+        const clonedFunctions = cloned.getFunctionMemory();
+        const functionParser = new FunctionParser({ workspace: this });
+        for (const value of Object.values(this.functions.getFunctions())) try {
+            const clonedFunction = functionParser.clone(value);
+            clonedFunctions.addFunction(clonedFunction);
+        } catch (e) {
+            throw new Error(`Failed to clone function: ${value.name}. Error: ${e instanceof Error ? e.message : String(e)}`);
+        }
+
+        // Clone rules
+        // Create new rule objects to ensure they are not the same reference
+        // as those in the original workspace, preventing unintended side effects from mutations.
+        const ruleParser = new RuleParser({ workspace: this });
+        for (const rule of this.rules.getRules()) try {
+            const clonedRule = ruleParser.clone(rule);
+            cloned.addRule(clonedRule);
+        } catch (e) {
+            throw new Error(`Failed to clone rule: ${rule.getSyntax()}. Error: ${e instanceof Error ? e.message : String(e)}`);
+        }
+
+        return cloned;
     }
 
     /**
@@ -412,50 +461,6 @@ export class WorkSpace {
 
         return context.getOutput();
     }
-
-    // Legacy code that evaluates and executes rules in a non-batch manner, 
-    // which could lead to non-deterministic behavior if multiple rules change the same output key.
-    // public evaluate(context: WorkingMemory): any {
-    //     let applicable = this.applicableRules(context);
-    //     let iterate = (applicable.length > 0), iteration = 0;
-    //     const maxIterations = this.options.max_iterations;
-
-    //     while (iterate && iteration < maxIterations) {
-    //         this.debug(`Iteration ${iteration + 1}: Applicable rules:`, applicable.length);
-
-    //         iteration++;
-    //         iterate = false;
-
-    //         for (const rule of applicable) {
-    //             this.debug('Evaluating rule:', rule.toString());
-    //             const effect = rule.evaluate(context);
-    //             if (effect.changed) {
-    //                 this.debug(`Rule ${rule.toString()} changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
-    //                 iterate = true;
-    //             }
-    //         }
-
-    //         if (iterate) {
-    //             const lastApplicable = applicable;
-    //             const nextApplicable = this.applicableRules(context);
-    //             iterate = nextApplicable.map(rule => !lastApplicable.includes(rule)).some(changed => changed);
-
-    //             if (iterate) {
-    //                 applicable = nextApplicable;
-    //             }
-    //         }
-    //     }
-    //     if (iteration === maxIterations) {
-    //         console.warn(`Reached maximum iterations (${maxIterations}) while evaluating rules. There may be a cycle in the rules.`);
-    //     } else if (iteration > 1) {
-    //         this.debug(`Evaluation completed in ${iteration} iterations.`);
-    //     } else {
-    //         this.debug(`Evaluation completed in a single iteration.`);
-    //     }
-
-    //     this.debug('Final output after evaluation:', context.getOutput());
-    //     return context.getOutput();
-    // }    
 
     private debug(...args: any[]): void {
         if (this.options.debugging) {

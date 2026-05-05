@@ -1,5 +1,10 @@
 import type { DateExpression, Expression, NumericExpression, StringExpression } from "../syntax/expression";
 import type { FunctionExpression } from "../syntax/function.expression";
+import type { ParserOptions } from "./rule.parser";
+import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
+import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
+import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
+import { BooleanFunction } from "../syntax/functions/boolean.functions";
 import { DateTimeComparisonFunction } from "../syntax/functions/datetime.comparison.functions";
 import { DateTimeInspectionFunction } from "../syntax/functions/datetime.inspection.functions";
 import { DateTimeManipulationFunction } from "../syntax/functions/datetime.manipulation.functions";
@@ -10,11 +15,7 @@ import { TrigonomicFunction } from "../syntax/functions/numeric.trigonometric.fu
 import { StringComparisonFunction } from "../syntax/functions/string.comparison.functions";
 import { StringInspectionFunction } from "../syntax/functions/string.inspection.functions";
 import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
-import type { ParserOptions } from "./rule.parser";
 import { CustomFunctionExpression } from "../syntax/functions/custom.function";
-import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
-import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
-import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -59,6 +60,11 @@ export class FunctionFactory {
         }
         if (ArrayLambdaFunction.names.includes(name)) {
             return new ArrayLambdaFunction(name, args);
+        }
+
+        // Boolean functions
+        if (BooleanFunction.names.includes(name)) {
+            return new BooleanFunction(name, args[0] as Expression);
         }
 
         // Numeric functions
