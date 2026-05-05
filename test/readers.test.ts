@@ -146,7 +146,7 @@ describe('Readers Tests', () => {
     expect(strictResult.errors.length).toBe(1);
 
     const space = new WorkSpace({});
-    space.getFunctionMemory().addFunctions(result.functions);
+    space.functionRegistry().addFunctions(result.functions);
     space.addRule('SET tripled = triple(n)');
     space.addRule('SET greeting = join_spaced("Hello", name)');
     space.addRule('SET rounded = round_double(fp)');

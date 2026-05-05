@@ -97,6 +97,7 @@ Supported operators are:
 - `>`
 - `<=`
 - `>=`
+- `IN`
 
 Examples:
 
@@ -108,6 +109,12 @@ if attempts != 0 then can_retry = true
 if temperature > 38 then fever = true
 
 if age >= 21 then can_buy = true
+```
+
+The `IN` operator checks if the left value equals any value from the right side
+
+```
+if state IN ['active', 'current'] then allow_login = true
 ```
 
 Comparisons can use variables, literals, arithmetic, and functions:

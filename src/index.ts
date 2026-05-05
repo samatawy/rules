@@ -8,10 +8,10 @@ export * from './exception';
 
 // Engine and common entry components
 export * from './engine/work.space';
-export * from './engine/function.memory';
-export * from './engine/rule.memory';
+export * from './engine/function.registry';
+export * from './engine/rule.registry';
 export * from './engine/scope.memory';
-export * from './engine/type.memory';
+export * from './engine/workspace.type.checker';
 export * from './engine/working.memory';
 export * from './engine/graph/rule.graph';
 export * from './engine/graph/nodes';

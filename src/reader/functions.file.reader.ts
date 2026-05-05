@@ -88,7 +88,7 @@ export class FunctionsFileReader extends AbstractFileReader {
                 try {
                     const func = this.functionParser.parse(syntax);
                     if (func) {
-                        this.workspace.getFunctionMemory().addFunction(func);
+                        this.workspace.functionRegistry().addFunction(func);
                     }
                     return func;
 

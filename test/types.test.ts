@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { IfThenRule } from '../src/rules/conditional.rules';
-import { TypeMemory } from '../src/engine/type.memory';
+import { WorkspaceTypeChecker } from '../src/engine/workspace.type.checker';
 import { getDefinedType, hasDefinedType } from '../src/utils';
+import { TypeRegistry } from '../src/engine/type.registry';
 
 describe('Types Test', () => {
 
   it('handles typed inputs and outputs', async () => {
-    const types = new TypeMemory({ strict_inputs: true, strict_outputs: true });
-    types.addRootType({
+    const registry = new TypeRegistry();
+    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: true });
+    registry.addRootType({
       key: 'Person',
       properties: {
         name: 'string',
@@ -16,8 +18,8 @@ describe('Types Test', () => {
       }
     });
 
-    expect(types.hasRootType('Person')).toBe(true);
-    const personType = types.getRootType('Person');
+    expect(registry.hasRootType('Person')).toBe(true);
+    const personType = registry.getRootType('Person');
     expect(personType).toBeDefined();
     expect(personType!.properties!.name).toBe('string');
     expect(personType!.properties!.age).toBe('number');
@@ -45,7 +47,7 @@ describe('Types Test', () => {
     expect(getDefinedType(personType!, 'age')).toBe('number');
     expect(getDefinedType(personType!, 'nonexistent')).toBeUndefined();
 
-    // Check hasType and getType methods in TypeMemory
+    // Check hasType and getType methods in WorkspaceTypeChecker
     expect(types.hasType('Person')).toBe(true);
     expect(types.hasType('Person.name')).toBe(true);
     expect(types.getType('Person')).toBeDefined();
@@ -57,8 +59,9 @@ describe('Types Test', () => {
 
 
   it('handles type checking for rules', async () => {
-    const types = new TypeMemory({ strict_inputs: true, strict_outputs: false });
-    types.addRootType({
+    const registry = new TypeRegistry();
+    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
+    registry.addRootType({
       key: 'Person',
       properties: {
         name: 'string',
@@ -94,8 +97,9 @@ describe('Types Test', () => {
 
 
   it('handles type checking for rules with functions', async () => {
-    const types = new TypeMemory({ strict_inputs: true, strict_outputs: false });
-    types.addRootType({
+    const registry = new TypeRegistry();
+    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
+    registry.addRootType({
       key: 'Person',
       properties: {
         name: 'string',
@@ -120,9 +124,9 @@ describe('Types Test', () => {
     expect(invalidParamsTypeCheckResult.valid).toBe(false);
     expect(invalidParamsTypeCheckResult.errors?.length).toBeGreaterThan(0);
 
-
-    const types2 = new TypeMemory({ strict_inputs: false, strict_outputs: true });
-    types2.addRootType({
+    registry.clear();
+    const types2 = new WorkspaceTypeChecker(registry, { strict_inputs: false, strict_outputs: true });
+    registry.addRootType({
       key: 'Person',
       properties: {
         name: 'string',

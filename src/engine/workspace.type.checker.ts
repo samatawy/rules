@@ -1,113 +1,49 @@
 import type { AtomicType, PropertyType, RootType, ValidationResult, TypeChecker, ComplexType, ArrayType, ObjectArrayType, ObjectType } from "../types";
 import type { WorkSpaceOptions } from "./work.space";
-import { getDefinedType, hasDefinedType, isArrayType, isAtomicType, makeItemType } from "../utils";
+import { isArrayType, isAtomicType, makeItemType } from "../utils";
 import type { AbstractRule } from "../rules/abstract.rule";
+import { TypeRegistry } from "./type.registry";
 
-export class TypeMemory implements TypeChecker {
+export class WorkspaceTypeChecker implements TypeChecker {
 
-    private types: Map<string, RootType>;
+    protected types: TypeRegistry;
 
-    protected options: WorkSpaceOptions;
+    protected options: Partial<WorkSpaceOptions>;
 
-    constructor(options?: Partial<WorkSpaceOptions>) {
-        this.types = new Map<string, RootType>();
+    constructor(registry: TypeRegistry, options?: Partial<WorkSpaceOptions>) {
+        this.types = registry || new TypeRegistry(options);
 
         this.options = {
             debugging: false,
-            strict_conflicts: false,    // Ignored here
             strict_syntax: true,       // Ignored here
             strict_inputs: false,
             strict_outputs: false,   // Ignored here
-            max_iterations: 100,      // Ignored here
             ...options
         };
     }
 
     public strictSyntax(): boolean {
-        return this.options.strict_syntax;
+        return this.options.strict_syntax ?? true;
     }
 
     public strictInputs(): boolean {
-        return this.options.strict_inputs;
+        return this.options.strict_inputs ?? false;
     }
 
     public strictOutputs(): boolean {
-        return this.options.strict_outputs;
+        return this.options.strict_outputs ?? false;
     }
 
-    public hasRootType(key: string): boolean {
-        if (key.includes('.')) {
-            key = key.split('.')[0] || '';
-        }
-        return this.types.has(key);
-    }
-
-    public getRootType(key: string): RootType | undefined {
-        if (key.includes('.')) {
-            key = key.split('.')[0] || '';
-        }
-        return this.types.get(key);
-    }
-
-    public addRootType(type: RootType): void {
-        this.types.set(type.key, type);
-    }
-
-    public addRootTypes(types: Map<string, RootType> | Record<string, RootType> | RootType[]): void {
-        if (types instanceof Map) {
-            for (const type of types.values()) {
-                this.addRootType(type);
-            }
-        } else if (Array.isArray(types)) {
-            for (const type of types) {
-                this.addRootType(type);
-            }
-        } else {
-            for (const type of Object.values(types)) {
-                this.addRootType(type);
-            }
-        }
-    }
-
-    public getRootTypes(): Record<string, RootType> {
-        const result: Record<string, RootType> = {};
-        for (const [key, value] of this.types.entries()) {
-            result[key] = value;
-        }
-        return result;
-    }
-
-    public clear(): void {
-        this.types.clear();
+    public typeRegistry(): TypeRegistry {
+        return this.types;
     }
 
     public hasType(key: string): boolean {
-        const root = this.getRootType(key);
-        if (key.includes('.')) {
-            const remainingKey = key.split('.').slice(1).join('.');
-            return root ? hasDefinedType(root, remainingKey) : false;
-        } else {
-            return root !== undefined;
-        }
+        return this.types.hasType(key);
     }
 
     public getType(key: string): AtomicType | ArrayType | ComplexType | ObjectArrayType | undefined {
-        // console.debug(`Getting type for key: ${key}`);
-        const root = this.getRootType(key);
-        if (key.includes('.')) {
-            const remainingKey = key.split('.').slice(1).join('.');
-            const array_path = root?.type === 'array';
-            return root ? getDefinedType(root, remainingKey, array_path) : undefined;
-
-        } else if (root && root.type === 'array') {
-            return 'array';
-        } else if (root && root.type) {
-            return root.type as AtomicType | ArrayType | ComplexType;
-        } else if (root) {
-            return root.properties as ObjectType || undefined;
-        } else {
-            return undefined;
-        }
+        return this.types.getType(key);
     }
 
     public checkTypes(rule: AbstractRule): ValidationResult {
@@ -119,24 +55,20 @@ export class TypeMemory implements TypeChecker {
     }
 
     public validateData(input: any): ValidationResult {
-        // if (!this.options.strict_inputs) {
-        //     return { valid: true };
-        // }
 
         this.debug(`Validating input: ${JSON.stringify(input)} against type definitions.`, this.types);
         const errors: string[] = [];
 
         for (const [rootKey, data] of Object.entries(input)) {
-            if (this.types.has(rootKey)) {
+            if (this.types.hasRootType(rootKey)) {
                 this.debug(`Validating key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
 
-                const expectedType = this.types.get(rootKey);
+                const expectedType = this.types.getRootType(rootKey);
                 if (expectedType) {
                     const result = this.validateType(rootKey, data, expectedType);
                     if (!result.valid) {
                         // One of the properties did not match the expected type
                         errors.push(...(result.errors || []));
-                        // return { valid: false, errors: result.errors };
                     }
                 }
             } else {
@@ -268,7 +200,7 @@ export class TypeMemory implements TypeChecker {
 
     private debug(...args: any[]): void {
         if (this.options.debugging) {
-            console.debug('[TypeMemory DEBUG]', ...args);
+            console.debug('[WorkspaceTypeChecker DEBUG]', ...args);
         }
     }
 }

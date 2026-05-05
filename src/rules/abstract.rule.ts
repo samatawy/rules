@@ -1,4 +1,3 @@
-import { TypeMemory } from "../engine/type.memory";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker, ArrayType, AtomicType } from "../types";
 
 /**

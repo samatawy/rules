@@ -1,14 +1,15 @@
 import { AbstractRule } from "../rules/abstract.rule";
 import { cloneDeep, mergeValidationResults, pathExists } from "../utils";
-import type { Clonable, Executor, FunctionDefinition, ValidationResult, WorkingContext } from "../types";
+import type { Clonable, Executor, TypeChecker, ValidationResult, WorkingContext } from "../types";
 import { WorkingMemory } from "./working.memory";
 import { RuleGraph } from "./graph/rule.graph";
 import { CombinationNode, RuleNode, type AbstractNode } from "./graph/nodes";
 import { RuleParser } from "../parser/rule.parser";
-import { RuleMemory } from "./rule.memory";
-import { TypeMemory } from "./type.memory";
-import { FunctionMemory } from "./function.memory";
+import { RuleRegistry } from "./rule.registry";
+import { WorkspaceTypeChecker } from "./workspace.type.checker";
+import { FunctionRegistry } from "./function.registry";
 import { FunctionParser } from "../parser/function.parser";
+import { TypeRegistry } from "./type.registry";
 
 /**
  * Options for configuring the behavior of the WorkSpace, including debugging, conflict resolution, and iteration limits.
@@ -62,15 +63,17 @@ export interface WorkSpaceOptions {
  */
 export class WorkSpace implements Clonable<WorkSpace> {
 
-    protected rules: RuleMemory;
+    protected rules: RuleRegistry;
 
     protected graph: RuleGraph;
 
     protected constants: any;
 
-    protected types: TypeMemory;
+    protected type_checker: WorkspaceTypeChecker;
 
-    protected functions: FunctionMemory;
+    protected types: TypeRegistry;
+
+    protected functions: FunctionRegistry;
 
     protected options: WorkSpaceOptions;
 
@@ -79,11 +82,12 @@ export class WorkSpace implements Clonable<WorkSpace> {
      * @param options Optional configuration settings for the workspace.
      */
     constructor(options?: Partial<WorkSpaceOptions>) {
-        this.rules = new RuleMemory(options);
+        this.rules = new RuleRegistry(options);
         this.graph = new RuleGraph();
         this.constants = {};
-        this.types = new TypeMemory(options);
-        this.functions = new FunctionMemory(options);
+        this.types = new TypeRegistry(options);
+        this.type_checker = new WorkspaceTypeChecker(this.types, options);
+        this.functions = new FunctionRegistry(options);
 
         this.options = {
             debugging: false,
@@ -115,13 +119,13 @@ export class WorkSpace implements Clonable<WorkSpace> {
         // Clone types
         // Create new RootType objects to ensure they are not the same reference 
         // as those in the original workspace, preventing unintended side effects from mutations.
-        const clonedTypes = cloned.getTypeMemory();
+        const clonedTypes = cloned.typeRegistry();
         clonedTypes.addRootTypes(cloneDeep(this.types.getRootTypes()));
 
         // Clone functions
         // Create new FunctionDefinition objects to ensure they are not the same reference 
         // as those in the original workspace, preventing unintended side effects from mutations.
-        const clonedFunctions = cloned.getFunctionMemory();
+        const clonedFunctions = cloned.functionRegistry();
         const functionParser = new FunctionParser({ workspace: this });
         for (const value of Object.values(this.functions.getFunctions())) try {
             const clonedFunction = functionParser.clone(value);
@@ -243,25 +247,29 @@ export class WorkSpace implements Clonable<WorkSpace> {
     }
 
     /**
-     * Debugging method to get the type memory of the workspace, responsible for managing type definitions 
+     * Debugging method to get the type checker of the workspace, responsible for managing type definitions 
      * and performing type checks during rule evaluation.
-     * @returns the TypeMemory instance used by the workspace.
+     * @returns the TypeChecker instance used by the workspace.
      */
-    public getTypeMemory(): TypeMemory {
+    public typeChecker(): TypeChecker {
+        return this.type_checker;
+    }
+
+    public typeRegistry(): TypeRegistry {
         return this.types;
     }
 
-    public getFunctionMemory(): FunctionMemory {
+    public functionRegistry(): FunctionRegistry {
         return this.functions;
     }
 
     public checkTypes(): ValidationResult {
         const checks: ValidationResult[] = [];
 
-        checks.push(...this.functions.checkTypes(this.types));
+        checks.push(...this.functions.checkTypes(this.type_checker));
 
         for (const rule of this.rules.getRules()) {
-            const check = rule.checkTypes(this.types);
+            const check = rule.checkTypes(this.type_checker);
             if (!check.valid) {
                 // TODO: Should add each error separately to get more detailed error messages 
                 // or merge them into one message per rule?
@@ -375,7 +383,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
 
         context.clearLog();
 
-        const typeCheck = this.types.validateData(context.getOutput());
+        const typeCheck = this.type_checker.validateData(context.getOutput());
         if (typeCheck.valid) {
             this.debug('Input data passed type validation.');
         } else {

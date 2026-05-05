@@ -79,7 +79,7 @@ describe('Engine tests', () => {
     // console.debug('Custom function evaluation result:', triple.evaluate(ctx));
 
     const double = new FunctionParser({ workspace: space }).parse('double(n: number) = n * 2');
-    space.getFunctionMemory().addFunction(double!);
+    space.functionRegistry().addFunction(double!);
 
     space.addRule('if x < 5 then result = double(x)');
 

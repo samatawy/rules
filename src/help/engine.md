@@ -18,23 +18,39 @@ A Workspace holds a set of rules and any types, constants, and functions they ma
 
 - A Workspace internally handles forward chaining (running rules in iterations until no more changes are possible), checks declarations for type-safety, resolves conflicts in priorities (salient rules override less salient ones), and tracks executed actions and exceptions.
 
-- A Workspace holds and invokes its own rules, but uses other classes to manage components.
+- A Workspace provides methods to manage and invokes its rules, but uses other classes to manage other components.
 
-#### Type Memory
+#### Type Registry
 
-This class holds type definitions and helps identify the type of variables used in input or output (supporting validation). 
+This class holds type defintions to support validation.
 
 - This is where we register declared types for type-checking. If no types are to be registered we can configure a Workspace to skip `strict_inputs` and `strict_outputs` so types will be largely unnecessary (highly discouraged).
 
-#### Function Memory
+#### Type Checker
+
+This class uses the Type Registry to identify the type of variables used in input or output (supporting validation). 
+
+- This is what we use to validate rules for type-safety and validate input data.
+
+- This class must be passed to every method that requires type checking, e.g. in expressions, functions, etc.
+
+#### Function Registry
 
 This class holds function declarations and helps with the creation and validation of function calls.
 
 - This is where we register declared custom functions. It will guarantee name uniqueness.
 
+#### Rule Registry
+
+This class holds rules for use by a Workspace.
+
+- We register rules through the Workspace directly. You should not need to use this class directly.
+
 #### Rule Graph
 
-This class builds a graph of rules to enable faster selection of rules applicable to a given context. You should not normally have to deal with this class.
+This class builds a graph of rules to enable faster selection of rules applicable to a given context. 
+
+- You should not normally have to deal with this class.
 
 ## Working Context
 
@@ -62,10 +78,140 @@ There are multiple ways to provide declarations to a Workspace. You can parse de
 
 - Specific File Readers (if you decide to separate components into files by type: Constants, Functions, Types, and Rules)
 
-## Syntax Readers
+Read about [Declaration Files](declaration.files.md)
 
-If you decide to declare your components in code, you can pass the syntax directly into Rules, Types, or Custom Functions. These will use Parser classes to read each relevant syntax and build an in-memory object that can be used by a Workspace.
+## Syntax Parsers
 
-- Create a new Rule by using its constructor and passing the syntax.
+If you decide to declare components directly in code instead of loading files, the engine provides parser classes that translate syntax strings into in-memory objects.
 
-- Create a new ...
+In practice, parsers are the bridge between the declarative DSL and the executable classes used by a Workspace.
+
+#### Rule Parser
+
+The Rule Parser reads full rule syntax and creates concrete rule objects such as:
+
+- `IF ... THEN ...`
+- `IF ... THEN ... ELSE ...`
+- `IF ... THROW ...`
+- `SET x = ...`
+
+It also reads rule annotations such as `@name(...)`, `@description(...)`, and `@salience(...)`.
+
+Example:
+
+```
+const parser = new RuleParser({ workspace });
+const rule = parser.parse('@name(Adult Status) if person.age >= 18 then person.is_adult = true');
+
+workspace.addRule(rule!);
+```
+
+Read about [Rules Syntax](rules.syntax.md)
+
+Normally you do not need to instantiate a Rule Parser directly because `workspace.addRule()` accepts rule syntax and parses it for you.
+
+#### Expression Parser
+
+The Expression Parser reads expressions used inside conditions, assignments, function bodies, and lambdas.
+
+It supports:
+
+- literals and variables
+- arithmetic and comparisons
+- boolean logic
+- function calls
+- array literals
+- ternary expressions
+- switch expressions
+- lambda expressions
+
+Example:
+
+```
+const parser = new ExpressionParser({ workspace });
+const expr = parser.parse('x > 10 && (y < 5 || z == 0)');
+```
+
+Read about [Expression Syntax](expression.syntax.md)
+
+This parser is used internally by both the Rule Parser and the Executable Parser.
+
+#### Executable Parser
+
+The Executable Parser reads the action side of rules.
+
+It handles:
+
+- `SET x = value`
+- `x = value`
+- multiple actions separated by semicolons
+
+Example:
+
+```
+const parser = new ExecutableParser({ workspace });
+const action = parser.parse('person.child_count = count(person.children); person.family_size = "large"');
+```
+
+This parser is used by the Rule Parser for `then` and `else` branches, and by the Function Parser for intermediate lines in custom function bodies.
+
+#### Function Parser
+
+The Function Parser reads custom function declarations.
+
+It supports both simple single-expression forms and block forms with intermediate lines and a final `return`.
+
+Simple example:
+
+```
+const parser = new FunctionParser({ workspace });
+const func = parser.parse('greeting(name: string) = concat("Hello ", name)');
+
+workspace.functionRegistry().addFunction(func!);
+```
+
+Block example:
+
+```
+const parser = new FunctionParser({ workspace });
+const func = parser.parse(`sales_tax(total: number) {
+		tax_rate = total < 100 ? 0.12 : 0.14;
+		tax = total * tax_rate;
+		return max(1, tax)
+}`);
+```
+
+Read about [Custom Functions](custom.functions.md)
+
+The Function Parser uses the Expression Parser for returned expressions and the Executable Parser for intermediate body lines.
+
+#### Type Parser
+
+The Type Parser reads declared types from JSON or relaxed JSON5-style syntax.
+
+Example:
+
+```
+const parser = new TypeParser({ workspace });
+const type = parser.parseRootType(`{
+	key: 'Person',
+	properties: {
+		name: 'string',
+		age: 'number'
+	}
+}`);
+
+workspace.typeRegistry().addRootType(type);
+```
+
+This parser validates that the provided structure is a legal root type before returning it.
+
+#### When to Use Parsers Directly
+
+Use parser classes directly when:
+
+- building editor tooling or testing syntax fragments
+- validating declarations before loading them into a Workspace
+- creating custom loading flows outside the provided file readers
+
+If you are simply loading declarations into a Workspace, the higher-level APIs and file readers are usually the better entry point.

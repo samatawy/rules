@@ -167,7 +167,7 @@ export class ExpressionParser {
             if (operators.includes(token.toUpperCase()) && stack.length === 0) {
                 const left = tokens.slice(0, i).join(' ');
                 const right = tokens.slice(i + 1).join(' ');
-                return { left, operator: token, right };
+                return { left, operator: token.toUpperCase(), right };
             }
         }
         return null;

@@ -95,8 +95,11 @@ export class ComparisonExpression extends BooleanExpression {
             case 'IN':
                 if (Array.isArray(rightValue)) {
                     return rightValue.includes(leftValue);
+                } else {
+                    return leftValue == rightValue;
                 }
-                throw new Error(`Right operand of 'IN' operator must be an array, but got ${typeof rightValue}`);
+            // or should we throw an error if rightValue is not an array?
+            // throw new Error(`Right operand of 'IN' operator must be an array, but got ${typeof rightValue}`);
 
             default:
                 throw new Error(`Unknown operator: ${this.operator}`);

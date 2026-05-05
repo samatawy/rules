@@ -1,5 +1,3 @@
-import type { FunctionMemory } from "../engine/function.memory";
-import type { WorkSpace } from "../engine/work.space";
 import { CompositeAction, OutputAction, type ExecutableAction } from "../executable";
 import { ExpressionParser } from "./expression.parser";
 import type { ParserOptions } from "./rule.parser";

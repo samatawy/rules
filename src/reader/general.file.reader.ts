@@ -136,7 +136,7 @@ export class GeneralFileReader extends AbstractFileReader {
                     continue;
                 }
                 result.functions[key] = func;
-                this.workspace.getFunctionMemory().addFunction(func);
+                this.workspace.functionRegistry().addFunction(func);
                 result.passed++;
                 continue;
             }
@@ -149,7 +149,7 @@ export class GeneralFileReader extends AbstractFileReader {
                     continue;
                 }
                 result.types[type.key] = type;
-                this.workspace.getTypeMemory().addRootType(type);
+                this.workspace.typeRegistry().addRootType(type);
                 result.passed++;
                 continue;
             }

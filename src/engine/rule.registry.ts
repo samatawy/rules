@@ -2,20 +2,20 @@ import type { AbstractRule } from "../rules/abstract.rule";
 import type { WorkSpaceOptions } from "./work.space";
 
 /**
- * The RuleMemory class is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
+ * The RuleRegistry class is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
  * It provides methods to add, retrieve, list, and clear rules, as well as to sort them based on their salience. 
  * If strict conflict resolution is enabled, it also checks for potential conflicts where multiple rules change the same output key 
  * and resolves them by keeping only the rule with the highest salience.
  */
-export class RuleMemory {
+export class RuleRegistry {
 
     private rules: AbstractRule[];
     private options: WorkSpaceOptions;
 
     /**
-     * Create a new RuleMemory instance.
-     * You should normally not need to create a RuleMemory directly, as it is managed by the WorkSpace.
-     * @param options Optional configuration settings for the rule memory.
+     * Create a new RuleRegistry instance.
+     * You should normally not need to create a RuleRegistry directly, as it is managed by the WorkSpace.
+     * @param options Optional configuration settings for the rule registry.
      */
     constructor(options?: Partial<WorkSpaceOptions>) {
         this.rules = [];
@@ -32,16 +32,16 @@ export class RuleMemory {
     }
 
     /**
-     * Add a rule to the memory.
-     * @param rule the rule to be added to the memory.
+     * Add a rule to the registry.
+     * @param rule the rule to be added to the registry.
      */
     public addRule(rule: AbstractRule): void {
         this.rules.push(rule);
     }
 
     /**
-     * Add multiple rules to the memory.
-     * @param rules the rules to be added to the memory.
+     * Add multiple rules to the registry.
+     * @param rules the rules to be added to the registry.
      */
     public addRules(rules: AbstractRule[]): void {
         for (const rule of rules) {
@@ -52,22 +52,22 @@ export class RuleMemory {
     /**
      * Find a rule by its name.
      * @param name the name of the rule to find.
-     * @returns the rule with the given name, or undefined if no such rule exists in the memory.
+     * @returns the rule with the given name, or undefined if no such rule exists in the registry.
      */
     public getRule(name: string): AbstractRule | undefined {
         return this.rules.find(r => r.name === name);
     }
 
     /**
-     * List all rules currently stored in the memory.
-     * @returns an unsorted array of all rules in the memory.
+     * List all rules currently stored in the registry.
+     * @returns an unsorted array of all rules in the registry.
      */
     public getRules(): AbstractRule[] {
         return this.rules;
     }
 
     /**
-     * Clear all rules from the memory.
+     * Clear all rules from the registry.
      */
     public clear(): void {
         this.rules = [];
@@ -113,6 +113,7 @@ export class RuleMemory {
     /**
      * Sort the given rules based on their salience.
      * If strict conflict resolution is enabled, conflicts are checked and resolved before sorting.
+     * 
      * @param rules an array of rules to be sorted.
      * @returns a sorted array of rules, with higher salience rules appearing first.
      */
@@ -126,7 +127,7 @@ export class RuleMemory {
 
     protected debug(...args: any[]): void {
         if (this.options.debugging) {
-            console.log('[RuleMemory DEBUG]', ...args);
+            console.log('[RuleRegistry DEBUG]', ...args);
         }
     }
 }

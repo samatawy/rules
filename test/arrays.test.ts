@@ -5,7 +5,7 @@ describe('Engine tests', () => {
 
   it('handles arrays in rules and types', async () => {
     const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
-    space.getTypeMemory().addRootType({
+    space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
         name: 'string',
@@ -61,7 +61,7 @@ describe('Engine tests', () => {
 
   it('handles lambda expressions', async () => {
     const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
-    space.getTypeMemory().addRootType({
+    space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
         name: 'string',

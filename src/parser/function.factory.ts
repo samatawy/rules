@@ -101,7 +101,7 @@ export class FunctionFactory {
         }
 
         if (this.options.workspace) {
-            const customFunction = this.options.workspace.getFunctionMemory().getFunction(name);
+            const customFunction = this.options.workspace.functionRegistry().getFunction(name);
             if (customFunction) {
                 return CustomFunctionExpression.from(customFunction, args);
             }

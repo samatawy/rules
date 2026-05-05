@@ -5,24 +5,24 @@ import { ScopeTypeChecker } from "./scope.memory";
 import type { WorkSpaceOptions } from "./work.space";
 
 /**
- * FunctionMemory is responsible for storing and managing function definitions within the working context. 
+ * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
  * It allows adding, retrieving, and checking for the existence of function definitions. 
- * This memory is used during rule evaluation to resolve function calls and validate their usage 
+ * This registry is used during rule evaluation to resolve function calls and validate their usage 
  * against defined function signatures.
- * The FunctionMemory also respects the workspace options for strict input and output validation, 
+ * The FunctionRegistry also respects the workspace options for strict input and output validation, 
  * which can be used to enforce type safety and correctness when functions are called within rules and expressions.
  * 
  * TODO: Prevent custom functions from being added with the same name as built-in functions, to avoid conflicts and ensure predictable behavior.
  */
-export class FunctionMemory {
+export class FunctionRegistry {
 
     private functions: Map<string, FunctionDefinition>;
 
     protected options: WorkSpaceOptions;
 
     /**
-     * Create a new instance of FunctionMemory.
-     * @param options Optional workspace options to configure the behavior of the function memory.
+     * Create a new instance of FunctionRegistry.
+     * @param options Optional workspace options to configure the behavior of the function registry.
      */
     constructor(options?: Partial<WorkSpaceOptions>) {
         this.functions = new Map<string, FunctionDefinition>();
@@ -55,7 +55,7 @@ export class FunctionMemory {
     }
 
     /**
-     * Check if a function with the given name exists in the memory.
+     * Check if a function with the given name exists in the registry.
      * @param name The name of the function to check.
      * @returns True if the function exists, false otherwise.
      */
@@ -73,9 +73,9 @@ export class FunctionMemory {
     }
 
     /**
-     * Add a function definition to the memory.
+     * Add a function definition to the registry.
      * @param func The function definition to add.
-     * @throws Error if the function name is reserved or already exists in the memory.
+     * @throws Error if the function name is reserved or already exists in the registry.
      */
     public addFunction(func: FunctionDefinition): void {
         if (FunctionParser.isReservedName(func.name)) {
@@ -88,9 +88,9 @@ export class FunctionMemory {
     }
 
     /**
-     * Add multiple function definitions to the memory.
+     * Add multiple function definitions to the registry.
      * @param funcs The function definitions to add, can be a Map, Record, or array.
-     * @throws Error if any function name is reserved or already exists in the memory.
+     * @throws Error if any function name is reserved or already exists in the registry.
      */
     public addFunctions(funcs: Map<string, FunctionDefinition> | Record<string, FunctionDefinition> | FunctionDefinition[]): void {
         if (funcs instanceof Map) {
@@ -109,7 +109,7 @@ export class FunctionMemory {
     }
 
     /**
-     * Retrieve all function definitions stored in the memory.
+     * Retrieve all function definitions stored in the registry.
      * @returns A record of all function definitions, keyed by their names.
      */
     public getFunctions(): Record<string, FunctionDefinition> {
@@ -150,7 +150,7 @@ export class FunctionMemory {
     }
 
     /**
-     * Clear all function definitions from the memory.
+     * Clear all function definitions from the registry.
      */
     public clear(): void {
         this.functions.clear();
@@ -158,7 +158,7 @@ export class FunctionMemory {
 
     private debug(...args: any[]): void {
         if (this.options.debugging) {
-            console.debug('[FunctionMemory DEBUG]', ...args);
+            console.debug('[FunctionRegistry DEBUG]', ...args);
         }
     }
 }
