@@ -12,7 +12,7 @@ It separates business logic from the application code, enabling them to be edite
 
 It therefore enables stakeholders to change system behavior when requirements change, without needing full knowledge of the code or technology stack. 
 
-## When to use a Rule Engine
+### When to use a Rule Engine
 
 - If the logic is too complex that encoding it would lead to unreadable code or complex design.
 
@@ -22,7 +22,7 @@ It therefore enables stakeholders to change system behavior when requirements ch
 
 - If the system is designed to be generic enough to satisfy multiple scenarios, each with slightly different needs.
 
-## When can Rule engines fail
+### When can Rule engines fail
 
 - If the declarative syntax is too cumbersome or hard to maintain, the cost of keeping up rules can keep growing.
 
@@ -36,11 +36,11 @@ It therefore enables stakeholders to change system behavior when requirements ch
 
 - Too many rules can lead to poorly implemented engines slowing down and affecting system performance at every invocation.
 
-## Quality features of Rule engines
+### Quality features of Rule engines
 
 To enable teams to benefit, and prevent failures from happening, the best rule engines provide the following features:
 
-### At design time
+#### At design time
 
 - Clear and intuitive syntax for declaring rules.
 
@@ -50,7 +50,7 @@ To enable teams to benefit, and prevent failures from happening, the best rule e
 
 - Audit features such as a clear audit chain of invoked rules and debug logs for troubleshooting issues.
 
-### At run time
+#### At run time
 
 - Performant algorithms to ensure fast execution of only relevant rules.
 
@@ -62,11 +62,40 @@ To enable teams to benefit, and prevent failures from happening, the best rule e
 
 - Rich return data including original inputs, final outputs, and the rules invoked in order for a complete audit trail.
 
+## Rule Engines Vs AI
+
+You can certainly use AI to translate natural language into declarative rules, provided you supply the exact syntax definitions and rigorously review and test the output.
+
+But should you rely on AI instead of a rule engine in the first place?
+
+Rule engines deliver compounding value. They _ADD UP_. This acronym lets you remember how Rule Engines can sometimes be better than AI:
+
+- _Accurate_
+
+    Declarative rules are inherently precise, giving you direct control over output accuracy without relying on probabilistic generation.
+
+- _Deterministic_
+
+    Rule engines guarantee identical outputs for identical inputs. AI models, by design, are probabilistic and can yield varying results across runs—even with identical prompts.
+
+- _Defensible_
+
+    Rule engines generate clear audit trails of the logic executed. AI decisions often lack true explainability; model reasoning can be hallucinated, opaque, and difficult to audit or modify.
+
+- _User-controlled_
+
+    You can modify rules, constants, and formulas on your own schedule. AI models are updated exclusively by their publishers, leaving you to manage version drift, prompt adjustments, or unexpected behavioral shifts.
+
+- _Performant_
+
+    Rule engines execute locally or one your own server with minimal overhead. AI requires significant compute, network latency, and token-based pricing, making it slower and more resource-intensive for repetitive decision logic.
+
+
 ## Well-known Rule engines
 
 Rule engines vary widely in style. Some are lightweight libraries embedded in application code, while others are larger platforms with authoring tools, decision tables, and workflow or event-processing features.
 
-### TypeScript and JavaScript
+#### TypeScript and JavaScript
 
 - `json-rules-engine` is one of the better-known JavaScript rule engines. It uses a JSON-based rule format with conditions and events, which makes it relatively easy to store and exchange rules, though it is less natural for business users than a purpose-built DSL.
 
@@ -78,7 +107,7 @@ Rule engines vary widely in style. Some are lightweight libraries embedded in ap
 
 In the TypeScript and JavaScript ecosystem, it is still common for teams to build a custom or domain-specific rule layer instead of adopting a very large engine. That is one reason packages like this one can be useful: they can focus on application-friendly syntax, strong typing, and integration with a specific runtime model rather than trying to replicate a full enterprise rules platform.
 
-### Other languages and platforms
+#### Other languages and platforms
 
 - `Drools` is one of the best-known rule engines in the Java ecosystem. It supports production rules, decision tables, CEP-style features, and a large surrounding platform, and it is often the reference point when people discuss enterprise rule engines.
 

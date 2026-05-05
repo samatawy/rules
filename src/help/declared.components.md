@@ -91,8 +91,6 @@ greeting(name: string) = concat('Hello ', name)
 
 - Rules can then use functions in their syntax and pass in the correct parameters to get the return value.
 
-- Rules can be simple 
-
 - Functions cannot directly access inputs beyond the parameters passed to them. They also cannot directly change of affect output.
 
 - The engine already provides many built-in functions for common tasks. A custom function cannot override a built-in function to avoid unexpected behaviour from arising.

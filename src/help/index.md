@@ -2,8 +2,10 @@
 title: Rule engine
 children:
   - ./introduction.md
+  - ./engine.md
   - ./declared.components.md
   - ./declaration.files.md
+  - ./functions.md
 ---
 
 # Rule Engine
@@ -12,7 +14,8 @@ Use this section to understand the included Rule engine and how it works with yo
 
 Pages in this section:
 
-- [Introduction](introduction.md) for general concepts and usage advice
-- [Declared Components](declared.components.md) for a list of available declarative components
+- [Introduction](introduction.md) for general concepts and usage advice.
+- [Architecure](engine.md) for an understanding of how this engine works.
+- [Declared Components](declared.components.md) for a list of available declarative components.
 - [Declaration Files](declaration.files.md) for how to lead declarations from files.
-
+- [Functions](functions.md) for how to use built-in and custom functions.
