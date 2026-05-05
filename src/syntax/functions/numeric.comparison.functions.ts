@@ -19,13 +19,13 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
 
     public expectsParameters(): TypedParameter[] {
         switch (this.name) {
-            case 'equals':
-            case 'notEquals':
+            case 'equal':
             case 'greaterThan':
             case 'lessThan':
             case 'greaterThanOrEqual':
             case 'lessThanOrEqual':
                 return [{ type: 'number' }, { type: 'number' }];
+            case 'close':
             case 'between':
                 return [{ type: 'number' }, { type: 'number' }, { type: 'number' }];
             default:
@@ -46,10 +46,13 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         }
 
         switch (this.name) {
-            case 'equals':
+            case 'equal':
                 return targetValue === evaluatedArgs[0];
-            case 'notEquals':
-                return targetValue !== evaluatedArgs[0];
+            case 'closeTo':
+                if (evaluatedArgs.length < 2) {
+                    throw new Error(`Function ${this.name} requires two arguments for the target value and tolerance`);
+                }
+                return Math.abs(targetValue - evaluatedArgs[0]) <= Math.abs(evaluatedArgs[1]);
             case 'greaterThan':
                 return targetValue > evaluatedArgs[0];
             case 'lessThan':
@@ -71,5 +74,5 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['equals', 'notEquals', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
+    static names = ['equal', 'closeTo', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
 }

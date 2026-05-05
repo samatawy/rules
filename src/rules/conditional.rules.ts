@@ -168,7 +168,7 @@ export class IfThrowRule extends AbstractRule {
     }
 
     public toString(): string {
-        return `IF ${this.condition.toString()} THROW ${this.consequence.toString()}`;
+        return `IF ${this.condition.toString()} ${this.consequence.toString()}`;
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {

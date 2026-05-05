@@ -1,8 +1,7 @@
 import { ArrayExpression } from "../array.expression";
-import type { TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
+import type { TypedParameter, WorkingContext } from "../../types";
 import type { Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
-import { getReturnType, isArrayType, mergeValidationResults } from "../../utils";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
 

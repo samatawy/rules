@@ -32,8 +32,8 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
         switch (this.name) {
             case 'equals':
                 return leftValue === rightValue;
-            case 'notEquals':
-                return leftValue !== rightValue;
+            // case 'notEquals':
+            //     return leftValue !== rightValue;
             case 'contains':
                 return leftValue.includes(rightValue);
             case 'startsWith':
@@ -42,10 +42,21 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
                 return leftValue.endsWith(rightValue);
             case 'matches':
                 return new RegExp(rightValue).test(leftValue);
+
+            case 'equalsIgnoreCase':
+                return leftValue.toLowerCase() === rightValue.toLowerCase();
+            case 'containsIgnoreCase':
+                return leftValue.toLowerCase().includes(rightValue.toLowerCase());
+            case 'startsWithIgnoreCase':
+                return leftValue.toLowerCase().startsWith(rightValue.toLowerCase());
+            case 'endsWithIgnoreCase':
+                return leftValue.toLowerCase().endsWith(rightValue.toLowerCase());
+            case 'matchesIgnoreCase':
+                return new RegExp(rightValue, 'i').test(leftValue);
             default:
                 throw new Error(`Unknown string comparison function: ${this.name}`);
         }
     }
 
-    static names = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'matches'];
+    static names = ['equals', 'equalsIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'matches', 'matchesIgnoreCase'];
 }

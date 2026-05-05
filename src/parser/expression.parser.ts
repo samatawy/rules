@@ -9,6 +9,7 @@ import { VariableExpression } from "../syntax/variable.expression";
 import type { ParserOptions } from "./rule.parser";
 import { LambdaExpression } from "../syntax/lambda.expression";
 import { ArrayExpression } from "../syntax/array.expression";
+import { SwitchExpression } from "../syntax/switch.expression";
 
 /**
  * Parser class for parsing expressions from rule syntax.
@@ -76,6 +77,12 @@ export class ExpressionParser {
         if (ternaryExpr) {
             // console.debug(`Parsed ternary expression: ${syntax}`);
             return ternaryExpr;
+        }
+
+        const switchExpr = this.readSwitchExpression(tokens);
+        if (switchExpr) {
+            // console.debug(`Parsed switch expression: ${syntax}`);
+            return switchExpr;
         }
 
         const comparisonExpr = this.readComparisonExpression(tokens);
@@ -157,7 +164,7 @@ export class ExpressionParser {
                 latest = token;
                 continue;
             }
-            if (operators.includes(token) && stack.length === 0) {
+            if (operators.includes(token.toUpperCase()) && stack.length === 0) {
                 const left = tokens.slice(0, i).join(' ');
                 const right = tokens.slice(i + 1).join(' ');
                 return { left, operator: token, right };
@@ -265,6 +272,94 @@ export class ExpressionParser {
             }
         }
         return null;
+    }
+
+    protected readSwitchExpression(tokens: string[]): Expression | null {
+        const caseValues: Expression[] = [];
+        const caseExpressions: Expression[] = [];
+
+        if (tokens.length >= 4 && tokens[0] === 'SWITCH' && tokens[1] === '(') {
+            const closingParenIndex = this.findFirstToken(tokens, ')', 2);
+            if (closingParenIndex > 1) {
+                const conditionSyntax = tokens.slice(2, closingParenIndex).join(' ');
+                const conditionExpr = this.parse(conditionSyntax);
+
+                let i = closingParenIndex + 1;
+                while (i < tokens.length) {
+                    if (tokens[i] === 'CASE') {
+                        const colonIndex = this.findFirstToken(tokens, ':', i + 1);
+                        if (colonIndex === -1) {
+                            throw new Error(`Expected ':' after case value in switch expression, but not found`);
+                        }
+                        const caseTokens = tokens.slice(i + 1, colonIndex);
+                        const caseSyntax = caseTokens.join(' ');
+                        const caseValue = this.parse(caseSyntax);
+                        if (!caseValue) {
+                            throw new Error(`Unable to parse case value in switch expression: ${caseSyntax}`);
+                        }
+                        i += caseTokens.length + 1; // move index past case value and colon
+
+                        const commaIndex = this.findFirstToken(tokens, ',', i);
+                        if (commaIndex === -1) {
+                            // no more cases, take the rest of the tokens as the case expression
+                            const caseExprTokens = tokens.slice(i + 1);
+                            const caseExprSyntax = caseExprTokens.join(' ');
+                            const caseExpr = this.parse(caseExprSyntax);
+                            caseValues.push(caseValue);
+                            caseExpressions.push(caseExpr);
+                            // caseExpressions[caseValue.toString()] = caseExpr;
+                            break;
+                        } else {
+                            // there are more cases, take tokens until the next CASE as the case expression
+                            const caseExprTokens = tokens.slice(i + 1, commaIndex);
+                            const caseExprSyntax = caseExprTokens.join(' ');
+                            const caseExpr = this.parse(caseExprSyntax);
+                            caseValues.push(caseValue);
+                            caseExpressions.push(caseExpr);
+                            //
+                            i = commaIndex + 1; // move index past comma to next CASE
+                        }
+                    } else if (tokens[i] === 'DEFAULT' && tokens[i + 1] === ':') {
+                        const defaultExprTokens = tokens.slice(i + 2);
+                        const defaultExprSyntax = defaultExprTokens.join(' ');
+                        const defaultExpr = this.parse(defaultExprSyntax);
+                        return new SwitchExpression(conditionExpr, caseValues, caseExpressions, defaultExpr);
+                    } else {
+                        throw new Error(`Expected 'CASE' in switch expression, but got '${tokens[i]}'`);
+                    }
+                }
+
+                return new SwitchExpression(conditionExpr, caseValues, caseExpressions);
+            }
+        }
+        return null;
+    }
+
+    protected findFirstToken(tokens: string[], target: string, startIndex: number): number {
+        const stack: string[] = [];
+        const openers = ['(', '[', '{', '"', '\''];
+        const closers = [')', ']', '}', '"', '\''];
+        let latest: string | null = null;
+
+        for (let i = startIndex; i < tokens.length; i++) {
+            const token = tokens[i]!;
+            if (closers.includes(token)) {
+                if (latest && closers.indexOf(token) === openers.indexOf(latest)) {
+                    stack.pop();
+                    latest = stack.length > 0 ? stack[stack.length - 1]! : null;
+                    continue;
+                }
+            }
+            if (openers.includes(token)) {
+                stack.push(token);
+                latest = token;
+                continue;
+            }
+            if (token === target && stack.length === 0) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     protected readLambdaExpression(tokens: string[]): LambdaExpression | null {

@@ -68,6 +68,24 @@ describe('Parsers Tests', () => {
     // console.debug('Logged rules during processing:', ctx.getLog().map(logged => ({ rule: logged.rule.toString(), effect: logged.effect })));
   });
 
+  it('parse switch expressions', async () => {
+    const space = new WorkSpace();
+    space.addRule('if status == "A" or status == "B" or status == "C" then result = SWITCH(status) CASE "A": "one", CASE "B": "two", DEFAULT: "other" ELSE result = "unknown"');
+    const ctx1 = space.loadContext({ status: "A" });
+    expect(space.applicableRules(ctx1).length).toBe(1);
+    space.process(ctx1);
+    expect(ctx1.getOutput('result')).toBe('one');
+
+    const ctx2 = space.loadContext({ status: "B" });
+    expect(space.applicableRules(ctx2).length).toBe(1);
+    space.process(ctx2);
+    expect(ctx2.getOutput('result')).toBe('two');
+
+    const ctx3 = space.loadContext({ status: "C" });
+    expect(space.applicableRules(ctx3).length).toBe(1);
+    space.process(ctx3);
+    expect(ctx3.getOutput('result')).toBe('other');
+  });
 
   it('throws errors for invalid syntax', async () => {
     const parser = new ExpressionParser({});
@@ -92,6 +110,31 @@ describe('Parsers Tests', () => {
     expect(() => IfThenElseRule.parse('if x then y else')).toThrow();
     expect(() => IfThenElseRule.parse('if x then else z')).toThrow();
     expect(() => IfThenElseRule.parse('if then y else z')).toThrow();
+  });
+
+  it('parse rules with variable conditions', async () => {
+    const space = new WorkSpace();
+    space.addRule('if isActive then status = "active" else status = "inactive"');
+    space.addRule('if person.age then status = "age_known" else status = "age_unknown"');
+    const ctx1 = space.loadContext({ isActive: true });
+    expect(space.applicableRules(ctx1).length).toBe(1);
+    space.process(ctx1);
+    expect(ctx1.getOutput('status')).toBe('active');
+
+    const ctx2 = space.loadContext({ isActive: false });
+    expect(space.applicableRules(ctx2).length).toBe(1);
+    space.process(ctx2);
+    expect(ctx2.getOutput('status')).toBe('inactive');
+
+    const ctx3 = space.loadContext({ person: { age: 30 } });
+    expect(space.applicableRules(ctx3).length).toBe(1);
+    space.process(ctx3);
+    expect(ctx3.getOutput('status')).toBe('age_known');
+
+    const ctx4 = space.loadContext({ person: { age: null } });
+    expect(space.applicableRules(ctx4).length).toBe(1);
+    space.process(ctx4);
+    expect(ctx4.getOutput('status')).toBe('age_unknown');
   });
 
 });

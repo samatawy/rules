@@ -1,6 +1,6 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, PropertyType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
-import { getPathValue, getReturnType, isArrayType, isAtomicType, makeArrayType, makeItemType, mergeValidationResults, pathExists } from "../../utils";
+import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
+import { getReturnType, makeArrayType, mergeValidationResults } from "../../utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";

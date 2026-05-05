@@ -1,8 +1,7 @@
-import type { FunctionMemory } from "../engine/function.memory";
 import type { WorkSpace } from "../engine/work.space";
 import { OutputAction } from "../executable";
 import type { AbstractRule } from "../rules/abstract.rule";
-import { OutputRule, StateRule } from "../rules/assignment.rules";
+import { OutputRule } from "../rules/assignment.rules";
 import { IfThenElseRule, IfThenRule, IfThrowRule } from "../rules/conditional.rules";
 import { ExecutableParser } from "./executable.parser";
 import { ExpressionParser } from "./expression.parser";
@@ -43,6 +42,7 @@ export class RuleParser {
 
     /**
      * Parse a rule from its syntax string and return the corresponding AbstractRule implementation.
+     * 
      * @param syntax The syntax string of the rule to parse.
      * @returns The parsed implementation of AbstractRule object if successful, null otherwise.
      * @throws An error if the syntax is invalid or if parsing fails for any reason.
@@ -80,6 +80,24 @@ export class RuleParser {
         } else {
             throw new Error(`Unrecognized rule syntax: ${syntax}`);
         }
+    }
+
+    /**
+     * Create a deep clone of the given AbstractRule by parsing its syntax and copying its metadata.
+     * 
+     * @param original the original AbstractRule object to clone.
+     * @returns a new AbstractRule object that is a deep clone of the original.
+     * @throws an error if the original AbstractRule cannot be cloned for any reason.
+     */
+    public clone(original: AbstractRule): AbstractRule {
+        const cloned = this.parse(original.getSyntax());
+        if (!cloned) {
+            throw new Error(`Failed to clone rule: ${original.getSyntax()}`);
+        }
+        cloned.name = original.name;
+        cloned.description = original.description;
+        cloned.setSalience(original.getSalience());
+        return cloned;
     }
 
     protected parseMetadata(given: RuleMetadata): RuleMetadata {
@@ -158,6 +176,7 @@ export class RuleParser {
             if (!condition) {
                 throw new Error(`Failed to parse condition for IfThenElseRule: ${conditionSyntax}`);
             }
+
             const consequenceSyntax = match[2]!;
             const consequence = this.executableParser.parse(consequenceSyntax);
             if (!consequence) {
@@ -169,7 +188,7 @@ export class RuleParser {
                 throw new Error(`Failed to parse alternative for IfThenElseRule: ${alternativeSyntax}`);
             }
 
-            return IfThenElseRule.parsed(syntax, condition, consequence, alternative); // For simplicity, we're not implementing the consequence execution here
+            return IfThenElseRule.parsed(syntax, condition, consequence, alternative);
         }
         return null;
     }
@@ -193,7 +212,7 @@ export class RuleParser {
     }
 
     protected parseStateRule(syntax: string): AbstractRule | null {
-        // This is a placeholder for parsing assignment rules like "SET x = 10"
+        // Parsing assignment rules like "SET x = 10"
 
         const match = syntax.match(/^SET\s+(\w+)\s*=\s*(.+)$/i);
         if (match) {
@@ -229,7 +248,6 @@ export class RuleParser {
             }
 
             return IfThenRule.parsed(syntax, conditionExpr, new OutputAction(variableName, valueExpr));
-            // return new IfThenRule(syntax, conditionExpr, new StateRule(syntax, variableName, valueExpr));
         }
         return null;
     }

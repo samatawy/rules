@@ -53,7 +53,7 @@ export class LogicalExpression extends BooleanExpression {
         const leftValue = this.left.evaluate(context);
         const rightValue = this.right.evaluate(context);
 
-        switch (this.operator) {
+        switch (this.operator.toUpperCase()) {
             case 'AND':
                 return leftValue && rightValue;
             case 'OR':

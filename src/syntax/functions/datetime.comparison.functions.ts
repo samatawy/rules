@@ -19,8 +19,6 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
     public expectsParameters(): TypedParameter[] {
         switch (this.name) {
-            case 'equals':
-            case 'notEquals':
             case 'before':
             case 'after':
             case 'sameYear':
@@ -30,6 +28,7 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
             case 'sameHour':
             case 'sameMinute':
             case 'sameSecond':
+            case 'sameInstant':
                 return [{ type: 'date' }, { type: 'date' }];
             default:
                 throw new Error(`Unknown date/time comparison function: ${this.name}`);
@@ -45,10 +44,6 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
         }
 
         switch (this.name) {
-            case 'equals':
-                return leftValue.getTime() === rightValue.getTime();
-            case 'notEquals':
-                return leftValue.getTime() !== rightValue.getTime();
             case 'before':
                 return leftValue.getTime() < rightValue.getTime();
             case 'after':
@@ -75,6 +70,8 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate() && leftValue.getHours() === rightValue.getHours() && leftValue.getMinutes() === rightValue.getMinutes();
             case 'sameSecond':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate() && leftValue.getHours() === rightValue.getHours() && leftValue.getMinutes() === rightValue.getMinutes() && leftValue.getSeconds() === rightValue.getSeconds();
+            case 'sameInstant':
+                return leftValue.getTime() === rightValue.getTime();
 
             default:
                 throw new Error(`Unknown date/time comparison function: ${this.name}`);

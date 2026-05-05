@@ -1,9 +1,8 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import type { ArrayType, AtomicType, FunctionDefinition, ObjectArrayType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
+import type { ArrayType, AtomicType, FunctionDefinition, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
 import { getLiteralType, getReturnType, isArrayType, isAtomicType, mergeValidationResults } from "../../utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
-import { LiteralExpression } from "../literal.expression";
 
 export class CustomFunctionExpression extends FunctionExpression {
 
