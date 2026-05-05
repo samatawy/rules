@@ -36,7 +36,7 @@ Exceptions can be thrown if a condition is met. For example if the buyer of a ti
 
 They are declared as:
 ```
-IF buyer.age < 21 THROW Only adults can buy tickets
+IF buyer.age < 21 THROW 'Only adults can buy tickets'
 ```
 
 ### Conditional Rules

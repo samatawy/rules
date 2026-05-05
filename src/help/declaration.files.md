@@ -31,7 +31,7 @@ TAX(total: number) = total * TAX_RATE
 @name(Invoice tax calculator)
 IF invoice.total > 0 
 THEN invoice.tax = TAX(invoice.total)
-ELSE THROW Invalid invoice amount
+ELSE THROW "Invalid invoice amount"
 ```
 
 This approach encourages separation of declarations into business-relevant areas such as a single file for every domain of interest.

@@ -16,7 +16,7 @@ import { SwitchExpression } from "../syntax/switch.expression";
  * You should normally not need to use this parser directly, as it is primarily used internally 
  * by the RuleParser and ExecutableParser when parsing conditions and consequences from rule syntax.
  * This parser handles parsing of literals, variables, function calls, logical expressions (AND/OR), 
- * comparison expressions (==, !=, <, >, <=, >=), arithmetic expressions (+, -, *, /, %), 
+ * comparison expressions (==, !=, <, >, <=, >=, in), arithmetic expressions (+, -, *, /, %), 
  * and ternary expressions (condition ? trueExpr : falseExpr).
  * It uses a recursive descent parsing approach, starting with the most complex expressions (function calls, logical expressions) 
  * and working down to simpler expressions (literals, variables).
@@ -261,10 +261,32 @@ export class ExpressionParser {
     }
 
     protected readTernaryExpression(tokens: string[]): TernaryExpression | null {
+        // Parse the syntax IF(condition)? trueExpr ELSE falseExpr
+        // if (tokens[0]?.toUpperCase() === 'IF') {
+        //     const thenIndex = this.findFirstToken(tokens, '?', 1);
+        //     if (thenIndex === -1) {
+        //         throw new Error(`Expected '?' in ternary expression, but not found`);
+        //     }
+        //     const conditionSyntax = tokens.slice(1, thenIndex).join(' ');
+        //     const elseIndex = this.findFirstToken(tokens, 'ELSE', thenIndex + 1);
+        //     if (elseIndex === -1) {
+        //         throw new Error(`Expected 'ELSE' in ternary expression, but not found`);
+        //     }
+        //     const trueSyntax = tokens.slice(thenIndex + 1, elseIndex).join(' ');
+        //     const falseSyntax = tokens.slice(elseIndex + 1).join(' ');
+        //     const conditionExpr = this.parse(conditionSyntax);
+        //     const trueExpr = this.parse(trueSyntax);
+        //     const falseExpr = this.parse(falseSyntax);
+        //     return new TernaryExpression(conditionExpr, trueExpr, falseExpr);
+        // }
+
+        // Parse the syntax condition ? trueExpr : falseExpr
         const { left: conditionSyntax, operator: questionMark, right: remainder } = this.splitOperands(tokens, ['?']) || {};
         if (conditionSyntax && questionMark && remainder) {
             const { left: trueSyntax, operator: colon, right: falseSyntax } = this.splitOperands(remainder.split(' '), [':']) || {};
             if (trueSyntax && colon && falseSyntax) {
+                // const hasIf = conditionSyntax.trim().toUpperCase().startsWith('IF');
+                // const conditionExpr = hasIf ? this.parse(conditionSyntax.slice(2)) : this.parse(conditionSyntax);
                 const conditionExpr = this.parse(conditionSyntax);
                 const trueExpr = this.parse(trueSyntax);
                 const falseExpr = this.parse(falseSyntax);
@@ -375,10 +397,13 @@ export class ExpressionParser {
     }
 
     protected readComparisonExpression(tokens: string[]): ComparisonExpression | null {
-        const { left, operator, right } = this.splitOperands(tokens, ['==', '!=', '<=', '>=', '<', '>']) || {};
+        const { left, operator, right } = this.splitOperands(tokens, ['==', '!=', '<=', '>=', '<', '>', 'IN']) || {};
         if (left && operator && right) {
             const leftExpr = this.parse(left);
             const rightExpr = this.parse(right);
+            // TODO: Should we check that if operator is IN, then rightExpr must be an array expression 
+            // or variable that resolves to an array type? 
+            // Or should we allow any type and let the type checker handle it?
             return new ComparisonExpression(operator, leftExpr, rightExpr);
         }
         return null;

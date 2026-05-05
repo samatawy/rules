@@ -15,9 +15,12 @@ export class BooleanFunction extends BooleanFunctionExpression {
     }
 
     public expectsParameters(): TypedParameter[] {
-        switch (this.name) {
+        switch (this.name.toLowerCase()) {
+            case 'if':
+            case 'is':
+                return [{ type: 'any' }];
             case 'not':
-                return [{ type: 'boolean' }];
+                return [{ type: 'any' }];
             default:
                 throw new Error(`Unknown boolean function: ${this.name}`);
         }
@@ -29,7 +32,10 @@ export class BooleanFunction extends BooleanFunctionExpression {
             throw new Error(`Target argument for function ${this.name} did not evaluate to a boolean`);
         }
 
-        switch (this.name) {
+        switch (this.name.toLowerCase()) {
+            case 'if':
+            case 'is':
+                return !!targetValue;
             case 'not':
                 return !targetValue;
             default:
@@ -37,5 +43,5 @@ export class BooleanFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['not'];
+    static names = ['if', 'is', 'not'];
 }

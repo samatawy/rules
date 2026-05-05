@@ -63,7 +63,7 @@ export class FunctionFactory {
         }
 
         // Boolean functions
-        if (BooleanFunction.names.includes(name)) {
+        if (BooleanFunction.names.includes(name.toLowerCase())) {
             return new BooleanFunction(name, args[0] as Expression);
         }
 

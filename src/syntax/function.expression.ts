@@ -75,7 +75,7 @@ export abstract class FunctionExpression extends Expression {
         if (this.expectsParameterArray()) {
             const expectedType = expected[0]!.type;
             const itemType = getArrayType(this.args, checker);
-            if (itemType !== expectedType) {
+            if (itemType !== expectedType && expectedType !== 'any') {
                 checks.push({
                     valid: false,
                     errors: [`All arguments for function ${this.name} must be of type ${expectedType}, but got ${itemType}`],
@@ -114,7 +114,7 @@ export abstract class FunctionExpression extends Expression {
                         errors: [`Argument ${i + 1} for function ${this.name} must be an array type, but got ${argType}`],
                     });
                 }
-            } else if (argType != expectedType) {
+            } else if (argType != expectedType && expectedType !== 'any') {
                 // } else if (argType && argType != expectedType) {
                 // console.debug(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({

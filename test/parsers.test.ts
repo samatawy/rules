@@ -40,6 +40,11 @@ describe('Parsers Tests', () => {
     const expr9 = parser.parse('(x + y) % 5');
     expect(expr9).toBeInstanceOf(ArithmeticExpression);
     expect(expr9.required().size).toBe(2);
+
+    const expr10 = parser.parse('5 in [1, 2, 3]');
+    expect(expr10).toBeInstanceOf(ComparisonExpression);
+    const expr11 = parser.parse('x in ["1", "2", "3"]');
+    expect(expr11).toBeInstanceOf(ComparisonExpression);
   });
 
 
@@ -100,6 +105,10 @@ describe('Parsers Tests', () => {
     expect(() => parser.parse('x + * 5')).toThrow();
     expect(() => parser.parse('(x + 5')).toThrow();
     expect(() => parser.parse('x + 5)')).toThrow();
+    expect(() => parser.parse('max(1, 2, )')).toThrow();
+    expect(() => parser.parse('min(1 3)')).toThrow();
+    expect(() => parser.parse('unknownFunc(1, 2)')).toThrow();
+    expect(() => parser.parse('x IN (1, 2, 3)')).toThrow();
 
     try {
       IfThenRule.parse('if x then z');
@@ -135,6 +144,27 @@ describe('Parsers Tests', () => {
     expect(space.applicableRules(ctx4).length).toBe(1);
     space.process(ctx4);
     expect(ctx4.getOutput('status')).toBe('age_unknown');
+  });
+
+  it('parse ternary expressions', async () => {
+    const parser = new ExpressionParser({});
+    const expr = parser.parse('x > 10 ? y : z');
+    expect(expr).toBeInstanceOf(TernaryExpression);
+
+    const expr2 = parser.parse('IF(x > 10)? y : z');
+    expect(expr2).toBeInstanceOf(TernaryExpression);
+
+    const space = new WorkSpace();
+    space.addRule('if x then result = x? "greater" : "lesser"');
+    space.addRule('if x then result = not(x < 10)? "greater" : "lesser"');
+    const ctx1 = space.loadContext({ x: 15 });
+    expect(space.applicableRules(ctx1).length).toBe(2);
+    space.process(ctx1);
+    expect(ctx1.getOutput('result')).toBe('greater');
+
+    const ctx2 = space.loadContext({ x: 5 });
+    space.process(ctx2);
+    expect(ctx2.getOutput('result')).toBe('lesser');
   });
 
 });

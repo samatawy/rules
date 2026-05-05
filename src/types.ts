@@ -210,7 +210,7 @@ export interface RootType {
 }
 
 export interface TypedParameter {
-    type: AtomicType | ArrayType | 'lambda';
+    type: AtomicType | ArrayType | 'lambda' | 'any';
     optional?: boolean;
 }
 
