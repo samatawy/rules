@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/work.space';
+import { WorkSpace } from '../src/engine/workspace';
 import { RulesFileReader } from '../src/reader/rules.file.reader';
 import { ConstantsFileReader } from '../src/reader/constants.file.reader';
 import { TypesFileReader } from '../src/reader/types.file.reader';

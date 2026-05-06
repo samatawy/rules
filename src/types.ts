@@ -1,4 +1,5 @@
-import type { ExecutableAction } from "./executable";
+import type { AbstractException } from "./rules/exception";
+import type { ExecutableAction } from "./rules/executable";
 import type { Expression } from "./syntax/expression";
 
 export interface WorkingContext {
@@ -43,11 +44,10 @@ export interface WorkingContext {
     rootKeys(): string[];
 
     /**
-     * Add an exception to the context with a message and additional context information.
-     * @param message the message describing the exception.
-     * @param context additional context information related to the exception.
+     * Add a created exception to the context
+     * @param exception the exception to add to the context.
      */
-    addException(message: string, context: any): void;
+    addException(exception: AbstractException): void;
 
     /**
      * Set an output value in the context with the given key.

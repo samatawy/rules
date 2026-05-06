@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/work.space';
+import { WorkSpace } from '../src/engine/workspace';
 import { FunctionParser } from '../src/parser/function.parser';
+import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Cloning tests', () => {
 
   it('handles workspace cloning safely', async () => {
+
     const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
     space.typeRegistry().addRootType({
       key: 'Person',
@@ -34,7 +36,8 @@ describe('Cloning tests', () => {
     expect(Object.keys(space.typeRegistry().getRootTypes()).length).toBe(1);
     expect(Object.keys(space.functionRegistry().getFunctions()).length).toBe(1);
 
-    const clonedSpace = space.clone();
+    const clonedSpace = RulesEngine.cloneWorkspace(space, 'clonedSpace');
+    // const clonedSpace = space.clone();
 
     // Verify that the cloned workspace has the same content
     expect(clonedSpace.checkTypes().valid).toBe(true);

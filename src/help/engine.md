@@ -6,17 +6,63 @@ title: Engine Components
 
 This Rule Engine implementation is composed of basic classes that manage rules and process inputs. This is an overview of the system design so you can use these classes in your own application.
 
+## RulesEngine
+
+The top-level manager of the rules engine is a manager of workspaces. 
+
+It provides a registry of named workspaces, enabling you divide work into business domains, each with its own set of declared components. By default you have a global registry of workspaces with one common workspace (if you only need one):
+
+```
+// The following is the default common workspace for simple deployments
+const defaultSpace = RulesEngine.commonSpace();
+
+// The following is a targeted named workspace, previously added on startup
+const salesSpace = RulesEngine.getWorkspace('SALES');
+```
+
+On startup, add the workspace you will need, load its declarations, check it, then use it anywhere in your code:
+
+```
+const space = RulesEngine.getWorkspace('SALES');
+const ctx = space.loadContext({ ...inputData });
+space.process(ctx);
+```
+
+To develop or test rules, you can clone an existing Workspace so your changes do not affect requests being served by the system. 
+
+```
+const space = RulesEngine.getWorkspace('SALES');
+const volatile = space.clone();
+// You can modify the cloned instance freely.
+...
+
+// If you want to keep the cloned Workspace available to others, you should name it:
+const duplicate = RulesEngine.cloneWorkspace(space, 'TESTING SALES');
+```
+
 ## Workspace
 
 A Workspace holds a set of rules and any types, constants, and functions they may need.
 
-- You can have one global Workspace or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
+- You can have one global Workspace `RulesEngine.commonSpace()` or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
 
 - Normally the lifetime of a Workspace in production is the entire uptime of the application. However, a testing Workspace can be created and then closed without ill-effect.
 
-- A Workspace creates a context to hold input data, then processes that context. After processing, the contact contains its inputs, outputs, any eerrors encountered, and an audit trail of the rules used.
+- A Workspace can create a context to hold input data, then processes that context. After processing, the contact contains its inputs, outputs, any errors encountered, and an audit trail of the rules used. (See Working Memory below for an example.)
 
 - A Workspace internally handles forward chaining (running rules in iterations until no more changes are possible), checks declarations for type-safety, resolves conflicts in priorities (salient rules override less salient ones), and tracks executed actions and exceptions.
+
+- Workspace behaviour can be tuned for specific use cases using options passed to the constructor:
+```
+const newSpace = new Workspace({
+    debugging: true,            // whether to report steps to the console (development only)
+    strict_syntax: true,        // type check all expressions, operands, and function arguments
+    strict_inputs: false,       // type check all inputs against declared types
+    strict_outputs: false,      // type check all outputs against declared types
+    strict_conflicts: false,    // whether to throw errors on salience conflicts
+    max_iterations: 20          // allowed number of iterations for forward-chaining
+})
+```
 
 - A Workspace provides methods to manage and invokes its rules, but uses other classes to manage other components.
 
@@ -61,6 +107,18 @@ A Context is a holder of data used in evaluating conditions and executing action
 A Working Memory is a Context holds inputs for an engine run, and the outputs that result. It also holds any executed actions and any errors encountered.
 
 - On receiving data, use a Workspace to wrap that data in a Working Memory. When you ask the Workspace to process that object, you can then query that object to inspect output, errors, and an audit trail of the last run.
+
+```
+const space = RulesEngine.commonSpace();
+const ctx = space.loadContext({ ...input Data });
+space.process(ctx);
+if (ctx.errors.length) {
+    // report error messages
+} else {
+    const output = ctx.getOutput();
+    // perform actions as necessary
+}
+```
 
 #### Scope Context
 

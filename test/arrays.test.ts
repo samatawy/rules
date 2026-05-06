@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/work.space';
+import { WorkSpace } from '../src/engine/workspace';
 
 describe('Engine tests', () => {
 

@@ -1,7 +1,7 @@
-import { Exception } from "../exception";
+import { AbstractException } from "../rules/exception";
 import { cloneDeep, getPathValue, pathExists } from "../utils";
 import type { RuleEffect, WorkingContext } from "../types";
-import type { WorkSpace } from "./work.space";
+import type { WorkSpace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
 
 export interface LoggedRule {
@@ -15,7 +15,7 @@ export class WorkingMemory implements WorkingContext {
 
     private input: any;
 
-    private exceptions: Exception[];
+    private exceptions: AbstractException[];
 
     private output: any;
 
@@ -62,11 +62,11 @@ export class WorkingMemory implements WorkingContext {
         return Array.from(keys);
     }
 
-    public addException(message: string, context: any): void {
-        this.exceptions.push(new Exception(message, context));
+    public addException(exception: AbstractException): void {
+        this.exceptions.push(exception);
     }
 
-    public getExceptions(): Exception[] {
+    public getExceptions(): AbstractException[] {
         return this.exceptions;
     }
 

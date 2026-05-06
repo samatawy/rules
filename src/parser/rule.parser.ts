@@ -1,5 +1,5 @@
-import type { WorkSpace } from "../engine/work.space";
-import { OutputAction } from "../executable";
+import type { WorkSpace } from "../engine/workspace";
+import { OutputAction } from "../rules/executable";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { OutputRule } from "../rules/assignment.rules";
 import { IfThenElseRule, IfThenRule, IfThrowRule } from "../rules/conditional.rules";

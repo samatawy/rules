@@ -3,8 +3,8 @@ import type { Expression } from "../syntax/expression";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult, ArrayType, AtomicType } from "../types";
 import { RuleParser } from "../parser/rule.parser";
 import { getReturnType, isAtomicType, mergeValidationResults } from "../utils";
-import type { WorkSpace } from "../engine/work.space";
-import { OutputAction } from "../executable";
+import type { WorkSpace } from "../engine/workspace";
+import { OutputAction } from "./executable";
 
 export class OutputRule extends AbstractRule {
 

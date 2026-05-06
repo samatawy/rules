@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
-import { WorkSpace } from '../src/engine/work.space';
+import { WorkSpace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
 import { LogicalExpression } from '../src/syntax/logical.expression';
 import { TernaryExpression } from '../src/syntax/ternary.expression';

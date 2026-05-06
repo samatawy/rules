@@ -1,5 +1,6 @@
-import { WorkSpace } from "../engine/work.space";
+import { WorkSpace } from "../engine/workspace";
 import { FunctionParser } from "../parser/function.parser";
+import { ParserError } from "../rules/exception";
 import type { FunctionDefinition } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
 
@@ -138,7 +139,7 @@ export class FunctionsFileReader extends AbstractFileReader {
             }
 
         } catch (error) {
-            throw new Error(`Failed to parse functions file: ${error instanceof Error ? error.message : String(error)}`);
+            throw new ParserError(`Failed to parse functions file: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 

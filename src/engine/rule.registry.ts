@@ -1,5 +1,5 @@
 import type { AbstractRule } from "../rules/abstract.rule";
-import type { WorkSpaceOptions } from "./work.space";
+import type { WorkSpaceOptions } from "./workspace";
 
 /**
  * The RuleRegistry class is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 

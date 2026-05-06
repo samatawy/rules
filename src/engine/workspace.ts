@@ -10,6 +10,8 @@ import { WorkspaceTypeChecker } from "./workspace.type.checker";
 import { FunctionRegistry } from "./function.registry";
 import { FunctionParser } from "../parser/function.parser";
 import { TypeRegistry } from "./type.registry";
+import { EngineError, ParserError, TypeException } from "../rules/exception";
+import { RulesEngine } from "./rules.engine";
 
 /**
  * Options for configuring the behavior of the WorkSpace, including debugging, conflict resolution, and iteration limits.
@@ -67,7 +69,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
 
     protected graph: RuleGraph;
 
-    protected constants: any;
+    protected constants: Record<string, any>;
 
     protected type_checker: WorkspaceTypeChecker;
 
@@ -76,6 +78,10 @@ export class WorkSpace implements Clonable<WorkSpace> {
     protected functions: FunctionRegistry;
 
     protected options: WorkSpaceOptions;
+
+    public static default(): WorkSpace {
+        return RulesEngine.commonSpace();
+    }
 
     /**
      * Create a new WorkSpace instance, the starting point for managing rules, constants, and their evaluation.
@@ -131,7 +137,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
             const clonedFunction = functionParser.clone(value);
             clonedFunctions.addFunction(clonedFunction);
         } catch (e) {
-            throw new Error(`Failed to clone function: ${value.name}. Error: ${e instanceof Error ? e.message : String(e)}`);
+            throw new EngineError(`Failed to clone function: ${value.name}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         // Clone rules
@@ -142,10 +148,19 @@ export class WorkSpace implements Clonable<WorkSpace> {
             const clonedRule = ruleParser.clone(rule);
             cloned.addRule(clonedRule);
         } catch (e) {
-            throw new Error(`Failed to clone rule: ${rule.getSyntax()}. Error: ${e instanceof Error ? e.message : String(e)}`);
+            throw new EngineError(`Failed to clone rule: ${rule.getSyntax()}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         return cloned;
+    }
+
+    /**
+     * Get the options currently set for the workspace, which control various aspects of its behavior 
+     * such as debugging, conflict resolution, and validation strictness.
+     * @returns an object containing the current workspace options.
+     */
+    public getOptions(): WorkSpaceOptions {
+        return { ...this.options };
     }
 
     /**
@@ -153,7 +168,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
      * Constants are key-value pairs that can be used in rule evaluation and are accessible across all rules.
      * @param constants a json object containing constant names as keys and their corresponding values.
      */
-    public addConstants(constants: any): void {
+    public addConstants(constants: Record<string, any>): void {
         this.constants = { ...this.constants, ...constants };
     }
 
@@ -185,6 +200,14 @@ export class WorkSpace implements Clonable<WorkSpace> {
     }
 
     /**
+     * Get all constants currently stored in the workspace as a key-value object.
+     * @returns an object containing all constants in the workspace, where keys are constant names and values are their corresponding values.
+     */
+    public getConstants(): Record<string, any> {
+        return { ...this.constants };
+    }
+
+    /**
      * Clear all constants from the workspace. 
      * This will remove all existing constants and their values, effectively resetting the constants to an empty state.
      */
@@ -203,7 +226,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
         if (typeof rule === 'string') try {
             rule = new RuleParser({ workspace: this }).parse(rule) as AbstractRule;
         } catch (e) {
-            throw new Error(`Failed to parse rule: ${rule}. Error: ${e instanceof Error ? e.message : String(e)}`);
+            throw new ParserError(`Failed to parse rule: ${rule}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
         if (salience !== undefined) {
             rule.setSalience(salience);
@@ -261,6 +284,13 @@ export class WorkSpace implements Clonable<WorkSpace> {
 
     public functionRegistry(): FunctionRegistry {
         return this.functions;
+    }
+
+    public clearSpace(): void {
+        this.clearRules();
+        this.clearConstants();
+        this.typeRegistry().clear();
+        this.functionRegistry().clear();
     }
 
     public checkTypes(): ValidationResult {
@@ -392,7 +422,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
             if (this.options.strict_inputs) {
                 for (const error of typeCheck.errors || []) {
                     this.debug('Type validation error:', error);
-                    context.addException(error, { type: 'input_validation' });
+                    context.addException(new TypeException(error));
                 }
                 return context.getOutput();
                 // throw new Error(errorMessage);

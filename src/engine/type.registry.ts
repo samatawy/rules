@@ -1,5 +1,5 @@
 import type { AtomicType, RootType, ComplexType, ArrayType, ObjectArrayType, ObjectType } from "../types";
-import type { WorkSpaceOptions } from "./work.space";
+import type { WorkSpaceOptions } from "./workspace";
 import { getDefinedType, hasDefinedType } from "../utils";
 
 export class TypeRegistry {

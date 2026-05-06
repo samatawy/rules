@@ -1,4 +1,4 @@
-import type { WorkSpace } from "../engine/work.space";
+import type { WorkSpace } from "../engine/workspace";
 
 export interface FileReaderOptions {
     /**

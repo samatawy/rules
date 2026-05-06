@@ -1,10 +1,10 @@
 import { AbstractRule } from "./abstract.rule";
-import { ExceptionThrower, type ExecutableAction } from "../executable";
+import { ExceptionThrower, type ExecutableAction } from "./executable";
 import type { Expression } from "../syntax/expression";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../types";
 import { RuleParser } from "../parser/rule.parser";
 import { mergeValidationResults } from "../utils";
-import type { WorkSpace } from "../engine/work.space";
+import type { WorkSpace } from "../engine/workspace";
 
 export class IfThenRule extends AbstractRule {
 

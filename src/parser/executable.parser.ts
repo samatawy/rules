@@ -1,4 +1,4 @@
-import { CompositeAction, OutputAction, type ExecutableAction } from "../executable";
+import { CompositeAction, OutputAction, type ExecutableAction } from "../rules/executable";
 import { ExpressionParser } from "./expression.parser";
 import type { ParserOptions } from "./rule.parser";
 

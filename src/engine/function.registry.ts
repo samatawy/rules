@@ -2,7 +2,7 @@ import { isAtomicType, mergeValidationResults } from "../utils";
 import { FunctionParser } from "../parser/function.parser";
 import type { ArrayType, AtomicType, FunctionDefinition, TypeChecker, ValidationResult } from "../types";
 import { ScopeTypeChecker } from "./scope.memory";
-import type { WorkSpaceOptions } from "./work.space";
+import type { WorkSpaceOptions } from "./workspace";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 

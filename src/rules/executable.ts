@@ -1,6 +1,7 @@
-import type { Expression } from "./syntax/expression";
-import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult, AtomicType, ArrayType } from "./types";
-import { getReturnType, isAtomicType, mergeValidationResults } from "./utils";
+import type { Expression } from "../syntax/expression";
+import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult, AtomicType, ArrayType } from "../types";
+import { getReturnType, isAtomicType, mergeValidationResults } from "../utils";
+import { RuleException } from "./exception";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.
@@ -208,7 +209,7 @@ export class ExceptionThrower extends ExecutableAction {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        context.addException(this.errorMessage, context);
+        context.addException(new RuleException(this.errorMessage, context));
         return { ...this.preparedEffect, exception: this.errorMessage };
     }
 }    

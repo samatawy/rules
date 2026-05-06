@@ -3,11 +3,11 @@
 // Basic files
 export * from './types';
 export * from './utils';
-export * from './executable';
-export * from './exception';
+export * from './rules/executable';
+export * from './rules/exception';
 
 // Engine and common entry components
-export * from './engine/work.space';
+export * from './engine/workspace';
 export * from './engine/function.registry';
 export * from './engine/rule.registry';
 export * from './engine/scope.memory';

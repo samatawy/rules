@@ -1,3 +1,4 @@
+import { RuleException, type AbstractException } from "../rules/exception";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypeChecker, ValidationResult, WorkingContext } from "../types";
 import { getPathValue, pathExists } from "../utils";
 
@@ -7,16 +8,19 @@ export class ScopeContext implements WorkingContext {
 
     private variables: Record<string, any>;
 
+    private exceptions: AbstractException[];
+
     constructor(parent: WorkingContext | null = null) {
         this.parent = parent;
         this.variables = {};
+        this.exceptions = [];
     }
 
-    setData(key: string, value: any): void {
+    public setData(key: string, value: any): void {
         this.variables[key] = value;
     }
 
-    getData(key: string): any {
+    public getData(key: string): any {
         const value = getPathValue(this.variables, key);
         if (value !== undefined) {
             return value;
@@ -28,7 +32,7 @@ export class ScopeContext implements WorkingContext {
         }
     }
 
-    hasData(key: string): boolean {
+    public hasData(key: string): boolean {
         if (key in this.variables) {
             return true;
         } else if (this.parent) {
@@ -38,15 +42,15 @@ export class ScopeContext implements WorkingContext {
         }
     }
 
-    getConstant(key: string): any {
+    public getConstant(key: string): any {
         return this.parent ? this.parent.getConstant(key) : this.getData(key);
     }
 
-    hasConstant(key: string): boolean {
+    public hasConstant(key: string): boolean {
         return this.parent ? this.parent.hasConstant(key) : this.hasData(key);
     }
 
-    rootKeys(): string[] {
+    public rootKeys(): string[] {
         const keys = new Set<string>(Object.keys(this.variables));
         if (this.parent) {
             for (const key of this.parent.rootKeys()) {
@@ -56,16 +60,19 @@ export class ScopeContext implements WorkingContext {
         return Array.from(keys);
     }
 
-    addException(message: string, context: any): void {
-        // For simplicity, we just throw an error here. In a real implementation, you might want to collect exceptions instead.
-        throw new Error(`Function exception: ${message}. Context: ${JSON.stringify(context)}`);
+    public addException(exception: AbstractException): void {
+        this.exceptions.push(exception);
     }
 
-    setOutput(key: string, value: any): void {
+    public getExceptions(): AbstractException[] {
+        return [...this.exceptions];
+    }
+
+    public setOutput(key: string, value: any): void {
         this.variables[key] = value;
     }
 
-    getOutput(key?: string): any {
+    public getOutput(key?: string): any {
         if (key) {
             return this.getData(key);
         } else {
@@ -85,11 +92,11 @@ export class ScopeTypeChecker implements TypeChecker {
         this.types = {};
     }
 
-    setType(key: string, type: AtomicType | ArrayType | ObjectType): void {
+    public setType(key: string, type: AtomicType | ArrayType | ObjectType): void {
         this.types[key] = type;
     }
 
-    hasType(key: string): boolean {
+    public hasType(key: string): boolean {
         const found = pathExists(this.types, key);
         if (found) {
             return true;
@@ -100,7 +107,7 @@ export class ScopeTypeChecker implements TypeChecker {
         }
     }
 
-    getType(key: string): AtomicType | ArrayType | ObjectArrayType | ObjectType | undefined {
+    public getType(key: string): AtomicType | ArrayType | ObjectArrayType | ObjectType | undefined {
         const found = getPathValue(this.types, key);
         if (found) {
             return found;
@@ -111,19 +118,19 @@ export class ScopeTypeChecker implements TypeChecker {
         }
     }
 
-    checkTypes(target: any): ValidationResult {
+    public checkTypes(target: any): ValidationResult {
         return { valid: true };
     }
 
-    strictSyntax(): boolean {
+    public strictSyntax(): boolean {
         return this.parent ? this.parent.strictSyntax() : true;
     }
 
-    strictInputs(): boolean {
+    public strictInputs(): boolean {
         return this.parent ? this.parent.strictInputs() : true;
     }
 
-    strictOutputs(): boolean {
+    public strictOutputs(): boolean {
         return this.parent ? this.parent.strictOutputs() : true;
     }
 }

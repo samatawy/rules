@@ -16,6 +16,15 @@ TypeScript utilities for parsing, validating, and executing declarative business
 npm install @samatawy/rules
 ```
 
+## Runtime Support
+
+This package is intended to work in both Node.js and browser applications.
+
+- Node.js: supported directly.
+- Browser apps: supported when bundled with tools such as Vite, Webpack, Rollup, or similar.
+
+The published package exposes an ESM browser-safe entry and does not depend on Node builtins in its runtime source.
+
 ## Quick Example
 
 ```ts

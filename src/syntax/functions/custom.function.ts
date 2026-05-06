@@ -1,4 +1,5 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
+import { RuleException } from "../../rules/exception";
 import type { ArrayType, AtomicType, FunctionDefinition, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
 import { getLiteralType, getReturnType, isArrayType, isAtomicType, mergeValidationResults } from "../../utils";
 import type { Expression } from "../expression";
@@ -166,7 +167,7 @@ export class CustomFunctionExpression extends FunctionExpression {
             for (const line of this.definition.lines) {
                 const effect = line.execute(scope);
                 if (effect.exception) {
-                    scope.addException(effect.exception, { function: this.name });
+                    scope.addException(new RuleException(effect.exception, { function: this.name }));
                     break;
                 } else if (effect.changed) {
                     const newValue = scope.getOutput(effect.changed);

@@ -2,6 +2,7 @@ import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, P
 import JSON5 from "json5";
 import { isArrayType, isAtomicType } from "../utils";
 import type { ParserOptions } from "./rule.parser";
+import { ParserError } from "../rules/exception";
 
 /**
  * Parser class for parsing type definitions from JSON syntax into RootType objects.
@@ -54,7 +55,7 @@ export class TypeParser {
                 properties: json.properties
             }
         } catch (e) {
-            throw new Error(`Invalid JSON syntax for type definition: ${syntax}. Error: ${e instanceof Error ? e.message : String(e)}`);
+            throw new ParserError(`Invalid JSON syntax for type definition: ${syntax}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

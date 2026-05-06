@@ -1,5 +1,5 @@
 import type { AtomicType, PropertyType, RootType, ValidationResult, TypeChecker, ComplexType, ArrayType, ObjectArrayType, ObjectType } from "../types";
-import type { WorkSpaceOptions } from "./work.space";
+import type { WorkSpaceOptions } from "./workspace";
 import { isArrayType, isAtomicType, makeItemType } from "../utils";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";

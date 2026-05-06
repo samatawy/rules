@@ -1,3 +1,4 @@
+import { ParserError } from "../rules/exception";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
 
 export interface ConstantsFileResult {
@@ -112,7 +113,7 @@ export class ConstantsFileReader extends AbstractFileReader {
             }
 
         } catch (error) {
-            throw new Error(`Failed to parse constants file: ${error instanceof Error ? error.message : String(error)}`);
+            throw new ParserError(`Failed to parse constants file: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 

@@ -1,4 +1,5 @@
 import { TypeParser } from "../parser/type.parser";
+import { ParserError } from "../rules/exception";
 import type { RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
 
@@ -119,7 +120,7 @@ export class TypesFileReader extends AbstractFileReader {
             }
 
         } catch (error) {
-            throw new Error(`Failed to parse types file: ${error instanceof Error ? error.message : String(error)}`);
+            throw new ParserError(`Failed to parse types file: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -140,7 +141,7 @@ export class TypesFileReader extends AbstractFileReader {
             return this.typeParser.parseRootType(content);
 
         } catch (e) {
-            throw new Error(`Invalid type syntax: ${content}. Error: ${e instanceof Error ? e.message : String(e)}`);
+            throw new ParserError(`Invalid type syntax: ${content}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

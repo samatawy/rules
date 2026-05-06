@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RuleGraph } from '../src/engine/graph/rule.graph';
 import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
-import { WorkSpace } from '../src/engine/work.space';
+import { WorkSpace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
 import { RuleParser } from '../src/parser/rule.parser';
 import { CustomFunctionExpression } from '../src/syntax/functions/custom.function';

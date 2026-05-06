@@ -1,6 +1,7 @@
 import type { AbstractRule } from "../rules/abstract.rule";
 import { RuleParser } from "../parser/rule.parser";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
+import { ParserError } from "../rules/exception";
 
 export interface RulesFileResult {
     read: number;
@@ -102,7 +103,7 @@ export class RulesFileReader extends AbstractFileReader {
             };
 
         } catch (error) {
-            throw new Error(`Failed to parse rules file: ${error instanceof Error ? error.message : String(error)}`);
+            throw new ParserError(`Failed to parse rules file: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

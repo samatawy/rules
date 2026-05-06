@@ -1,4 +1,4 @@
-import { WorkSpace } from "../engine/work.space";
+import { WorkSpace } from "../engine/workspace";
 import { FunctionParser } from "../parser/function.parser";
 import { RuleParser } from "../parser/rule.parser";
 import { TypeParser } from "../parser/type.parser";
