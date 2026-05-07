@@ -1,5 +1,6 @@
-import type { AtomicType, ObjectType, TypeChecker, ValidationResult, WorkingContext } from "../types";
-import { getReturnType } from "../utils";
+import type { AtomicType, ObjectType } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getReturnType } from "../type.utils";
 import { Expression } from "./expression";
 
 /**

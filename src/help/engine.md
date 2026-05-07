@@ -112,7 +112,7 @@ A Working Memory is a Context holds inputs for an engine run, and the outputs th
 const space = RulesEngine.commonSpace();
 const ctx = space.loadContext({ ...input Data });
 space.process(ctx);
-if (ctx.errors.length) {
+if (ctx.getExceptions().length) {
     // report error messages
 } else {
     const output = ctx.getOutput();

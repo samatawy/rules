@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { Expression, NumericExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
 
 export class NumericComparisonFunction extends BooleanFunctionExpression {
-
-    protected name: string;
 
     protected target: NumericExpression;
 
@@ -12,7 +11,6 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
 
     constructor(name: string, target: NumericExpression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target = target;
         this.extra_args = args;
     }

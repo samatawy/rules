@@ -1,14 +1,14 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
-import { getReturnType, makeArrayType, mergeValidationResults } from "../../utils";
+import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
+import { getReturnType, makeArrayType } from "../../type.utils";
+import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
 
 export class ArrayLambdaFunction extends FunctionExpression {
-
-    protected name: string;
 
     protected target_arg: VariableExpression;
 
@@ -18,7 +18,6 @@ export class ArrayLambdaFunction extends FunctionExpression {
 
     public constructor(name: string, args: Expression[]) {
         super(name, args);
-        this.name = name;
         this.target_arg = args[0] as VariableExpression;
         this.lambda_arg = args[1] as LambdaExpression;
     }
@@ -29,7 +28,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
 
             const arrayType = getReturnType(this.target_arg, checker);
             if ((arrayType as ObjectArrayType) && (arrayType as ObjectArrayType).items) {
-                this.localChecker.setType(this.lambda_arg.getVariableName(), (arrayType as ObjectArrayType).items);
+                this.localChecker.setType(this.lambda_arg.getVariableName(), (arrayType as ObjectArrayType).items!);
             } else {
                 const itemType = (arrayType as ArrayType).endsWith('[]') ? (arrayType as ArrayType).slice(0, -2) as AtomicType : {} as ObjectType;
                 if (itemType) {
@@ -59,15 +58,23 @@ export class ArrayLambdaFunction extends FunctionExpression {
     }
 
     public returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectArrayType {
-        this.localChecker = this.getLocalChecker(checker);
 
         switch (this.name) {
             case 'every':
             case 'any':
                 return 'boolean';
             case 'filter':
+                // The following in case created without arguments, e.g. in autocomplete suggestions
+                if (!this.target_arg || !this.lambda_arg) {
+                    return 'array';
+                }
                 return getReturnType(this.target_arg, checker) as ArrayType | ObjectArrayType;
             case 'map':
+                // The following in case created without arguments, e.g. in autocomplete suggestions
+                if (!this.target_arg || !this.lambda_arg) {
+                    return 'array';
+                }
+                this.localChecker = this.getLocalChecker(checker);
                 const lambdaReturnType = getReturnType(this.lambda_arg, this.localChecker);
                 if (!lambdaReturnType) {
                     throw new Error(`Unable to determine return type of lambda argument in function ${this.name}`);

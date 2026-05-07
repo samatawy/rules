@@ -1,6 +1,6 @@
 import { AbstractException } from "../rules/exception";
-import { cloneDeep, getPathValue, pathExists } from "../utils";
-import type { RuleEffect, WorkingContext } from "../types";
+import { cloneDeep, getPathValue, pathExists } from "../common.utils";
+import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { WorkSpace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
 

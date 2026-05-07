@@ -157,7 +157,9 @@ describe('Readers Tests', () => {
 
     const ctx = space.loadContext({ n: 4, fp: 3.2, name: 'world!', invoice: { total: 50 } });
 
-    const output = space.process(ctx);
+    const ok = space.process(ctx);
+    expect(ok).toBe(true);
+    const output = ctx.getOutput();
     // console.debug('Function evaluation output:', output);
     expect(output.tripled).toBe(12);
     expect(output.greeting).toBe('Hello world!');

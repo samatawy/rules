@@ -1,5 +1,5 @@
 import type { AtomicType, FunctionDefinition, NamedParameter, PropertyType } from "../types";
-import { isAtomicType } from "../utils";
+import { isAtomicType } from "../type.utils";
 import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
@@ -18,6 +18,7 @@ import { DateTimeManipulationFunction } from "../syntax/functions/datetime.manip
 import { DateTimeComparisonFunction } from "../syntax/functions/datetime.comparison.functions";
 import { DateTimeInspectionFunction } from "../syntax/functions/datetime.inspection.functions";
 import type { Expression } from "../syntax/expression";
+import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 
 /**
  * Parser class for parsing function syntax into CustomFunctionExpression objects.
@@ -50,6 +51,7 @@ export class FunctionParser {
             ...StringInspectionFunction.names,
             ...NumericManipulationFunction.names,
             ...NumericComparisonFunction.names,
+            ...RandomFunction.names,
             ...TrigonomicFunction.names,
             ...DateTimeManipulationFunction.names,
             ...DateTimeComparisonFunction.names,
@@ -60,6 +62,10 @@ export class FunctionParser {
 
     static isReservedName(name: string): boolean {
         return FunctionParser.reserved_names.has(name);
+    }
+
+    static getReservedNames(): Set<string> {
+        return new Set(FunctionParser.reserved_names);
     }
 
     constructor(options: ParserOptions) {
@@ -109,6 +115,7 @@ export class FunctionParser {
             name: original.name,
             parameters: original.parameters.map(param => ({ ...param })),
             expression: this.expressionParser.parse(original.expression.toString()),
+            // returns: original.returns,
             lines: original.lines ? original.lines.map(line => this.executableParser.parse(line.toString()) as any) : undefined
         };
         return cloned;

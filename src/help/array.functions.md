@@ -20,18 +20,25 @@ Returns the sum of a numeric array.
 set totalSales = sum(Order.amounts)
 ```
 
-### `avg(numbers)`
+### `avg(numbers)` or `mean(numbers)`
 Returns the arithmetic mean of a numeric array.
 
 ```
-set averageAge = avg(Person.ages)
+set averageAge = avg(Students.age)
+```
+
+### `median(numbers)`
+Returns the median value from a numeric array, i.e. the number in the middle.
+
+```
+set median = median(Exam.scores)
 ```
 
 ### `min(numbers)`
 Returns the smallest value in a numeric array.
 
 ```
-set youngestAge = min(Person.ages)
+set youngestAge = min(Family.ages)
 ```
 
 ### `max(numbers)`

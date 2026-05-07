@@ -1,6 +1,7 @@
 import { RuleException, type AbstractException } from "../rules/exception";
-import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypeChecker, ValidationResult, WorkingContext } from "../types";
-import { getPathValue, pathExists } from "../utils";
+import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getPathValue, pathExists } from "../common.utils";
 
 export class ScopeContext implements WorkingContext {
 

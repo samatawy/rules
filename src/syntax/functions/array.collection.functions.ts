@@ -1,11 +1,10 @@
 import { ArrayExpression } from "../array.expression";
-import type { TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
 import { StringFunctionExpression } from "../function.expression";
 
 export class ArrayCollectionFunction extends StringFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: Expression;
 
@@ -13,7 +12,7 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
 
     constructor(name: string, target: Expression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
+        // this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }

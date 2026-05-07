@@ -98,6 +98,8 @@ Supported operators are:
 - `<=`
 - `>=`
 - `IN`
+- `BEFORE`
+- `AFTER`
 
 Examples:
 

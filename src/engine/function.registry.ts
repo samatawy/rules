@@ -1,6 +1,7 @@
-import { isAtomicType, mergeValidationResults } from "../utils";
+import { mergeValidationResults } from "../common.utils";
 import { FunctionParser } from "../parser/function.parser";
-import type { ArrayType, AtomicType, FunctionDefinition, TypeChecker, ValidationResult } from "../types";
+import type { ArrayType, AtomicType, FunctionDefinition } from "../types";
+import type { TypeChecker, ValidationResult } from "../interfaces";
 import { ScopeTypeChecker } from "./scope.memory";
 import type { WorkSpaceOptions } from "./workspace";
 

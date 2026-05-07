@@ -1,7 +1,9 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
 import { RuleException } from "../../rules/exception";
-import type { ArrayType, AtomicType, FunctionDefinition, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
-import { getLiteralType, getReturnType, isArrayType, isAtomicType, mergeValidationResults } from "../../utils";
+import type { ArrayType, AtomicType, FunctionDefinition, TypedParameter } from "../../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
+import { getLiteralType, getReturnType, isArrayType, isAtomicType } from "../../type.utils";
+import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
 

@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { Expression, NumericExpression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
 
 export class TrigonomicFunction extends NumericFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: NumericExpression;
 
@@ -12,7 +11,6 @@ export class TrigonomicFunction extends NumericFunctionExpression {
 
     constructor(name: string, target: NumericExpression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }

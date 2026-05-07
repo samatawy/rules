@@ -1,6 +1,8 @@
 import type { Expression } from "../syntax/expression";
-import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult, AtomicType, ArrayType } from "../types";
-import { getReturnType, isAtomicType, mergeValidationResults } from "../utils";
+import type { ArrayType, AtomicType } from "../types";
+import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult } from "../interfaces";
+import { getReturnType, isAtomicType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 
 /**

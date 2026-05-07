@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { IfThenRule } from '../src/rules/conditional.rules';
 import { WorkspaceTypeChecker } from '../src/engine/workspace.type.checker';
-import { getDefinedType, hasDefinedType } from '../src/utils';
+import { getDefinedType, hasDefinedType } from '../src/type.utils';
 import { TypeRegistry } from '../src/engine/type.registry';
+import { WorkSpace, type ObjectArrayType, type ObjectType } from '../src';
 
 describe('Types Test', () => {
 
@@ -145,6 +146,68 @@ describe('Types Test', () => {
     // console.debug(invalidOutputTypeCheckResult2);
     expect(invalidOutputTypeCheckResult2.valid).toBe(false);
     expect(invalidOutputTypeCheckResult2.errors?.length).toBeGreaterThan(0);
+  });
+
+  it('handles type checking with type inheritance', async () => {
+    const space = new WorkSpace({
+      strict_syntax: true,
+      strict_inputs: true,
+      strict_outputs: true,
+    });
+    const registry = space.typeRegistry();
+
+    registry.addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+
+        is_adult: 'boolean',  // for output type checking
+      }
+    });
+
+    registry.addRootType({
+      key: 'Employee',
+      inherits: 'Person',
+      // No properties defined here, but should inherit name and age from Person
+    });
+
+    registry.addRootType({
+      key: 'Father',
+      inherits: 'Person',
+      properties: {
+        // name: 'string',
+        // age: 'number',
+        children: 'string[]',
+        ages: 'number[]',
+        family: {
+          type: 'array',
+          inherits: 'Person',
+        },
+
+        family_range: 'number', // for output type checking
+      }
+    });
+
+    expect(registry.getRootType('Employee')?.properties?.name).toBeDefined();
+    expect(registry.getRootType('Employee')?.properties?.age).toBeDefined();
+    expect(registry.getRootType('Father')?.properties?.family).toBeDefined();
+    expect((registry.getRootType('Father')?.properties?.family as ObjectArrayType).items?.name).toBeDefined();
+    expect((registry.getRootType('Father')?.properties?.family as ObjectArrayType).items?.age).toBeDefined();
+
+    space.addRule('if Employee.age > 18 then Employee.is_adult = true');
+    space.addRule('if Father.age > 18 then Father.is_adult = true; Father.family_range = range(Father.family.age)');
+    space.addRule('if count(Father.family.age) > 1 then Father.family_range = range(Father.family.age)');
+
+    const typeCheckResult = space.checkTypes();
+    console.debug('should be valid', typeCheckResult);
+    expect(typeCheckResult.valid).toBe(true);
+
+    space.addRule('if Employee.height > 180 then Employee.isTall = true; Father.family_range = range(Father.family.age)');
+    const invalidTypeCheckResult = space.checkTypes();
+    // console.debug('should be invalid', invalidTypeCheckResult);
+    expect(invalidTypeCheckResult.valid).toBe(false);
+    expect(invalidTypeCheckResult.errors?.length).toBeGreaterThan(0);
   });
 
 });

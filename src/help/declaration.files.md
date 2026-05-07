@@ -44,7 +44,7 @@ const reader = new GeneralFileReader();
 const result = reader.parse(fileContents);
 
 const mySpace = new Workspace();
-if (result.errors.length === 0) {
+if (result.getExceptions().length === 0) {
     mySpace.addConstants(result.constants);
     mySpace.typeChecker().addRootTypes(result.types);
     mySpace.functionRegistry().addFunctions(result.functions);

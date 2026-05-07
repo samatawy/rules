@@ -1,8 +1,10 @@
 import { AbstractRule } from "./abstract.rule";
 import type { Expression } from "../syntax/expression";
-import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult, ArrayType, AtomicType } from "../types";
+import type { ArrayType, AtomicType } from "../types";
+import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../interfaces";
 import { RuleParser } from "../parser/rule.parser";
-import { getReturnType, isAtomicType, mergeValidationResults } from "../utils";
+import { getReturnType, isAtomicType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
 import type { WorkSpace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 

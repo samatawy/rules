@@ -1,6 +1,6 @@
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "../types";
 import JSON5 from "json5";
-import { isArrayType, isAtomicType } from "../utils";
+import { isArrayType, isAtomicType } from "../type.utils";
 import type { ParserOptions } from "./rule.parser";
 import { ParserError } from "../rules/exception";
 
@@ -95,7 +95,7 @@ export class TypeParser {
         if ((type as ObjectArrayType).type !== 'array' || !(type as ObjectArrayType).items) {
             return false;
         }
-        for (const [key, entry] of Object.entries((type as ObjectArrayType).items)) {
+        for (const [key, entry] of Object.entries((type as ObjectArrayType).items!)) {
             if (!TypeParser.isValidPropertyType(entry)) {
                 return false;
             }

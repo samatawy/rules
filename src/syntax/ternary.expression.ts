@@ -1,5 +1,7 @@
-import type { ArrayType, AtomicType, TypeChecker, ValidationResult, WorkingContext } from "../types";
-import { getReturnType, mergeValidationResults } from "../utils";
+import type { ArrayType, AtomicType } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getReturnType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 
 export class TernaryExpression extends Expression {

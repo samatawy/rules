@@ -186,7 +186,8 @@ describe('Engine tests', () => {
     // without throwing an error.
     space.addRule('if x > 30 then y = 25', 5);
     ctx = space.loadContext({ x: 35 });
-    expect(space.process(ctx).y).toBe(25);
+    space.process(ctx);
+    expect(ctx.getOutput('y')).toBe(25);
 
     const rmeta = new RuleParser({}).parse('@salience(7) @name(Highest Priority) if x > 30 then y = 30');
     expect(rmeta).toBeInstanceOf(IfThenRule);
@@ -195,7 +196,8 @@ describe('Engine tests', () => {
 
     space.addRule(rmeta!);
     ctx = space.loadContext({ x: 35 });
-    expect(space.process(ctx).y).toBe(30);
+    space.process(ctx);
+    expect(ctx.getOutput('y')).toBe(30);
 
     expect(space.checkTypes().valid).toBe(true);
     // console.debug('Logged rules during processing:', ctx.getLog().map(logged => ({ rule: logged.rule.toString(), effect: logged.effect })));

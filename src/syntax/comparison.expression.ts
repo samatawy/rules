@@ -1,5 +1,6 @@
-import type { TypeChecker, ValidationResult, WorkingContext } from "../types";
-import { getReturnType, isArrayType, makeItemType, mergeValidationResults } from "../utils";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getReturnType, isArrayType, makeItemType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 
 export class ComparisonExpression extends BooleanExpression {
@@ -52,6 +53,26 @@ export class ComparisonExpression extends BooleanExpression {
                     }
                 }
 
+            } else if (['BEFORE', 'AFTER'].includes(this.operator)) {
+                // BEFORE and AFTER operators require that both operands are of a date type (or any type if strict inputs is not enabled)
+                const isLeftDate = leftType === 'date';
+                const isRightDate = rightType === 'date';
+                if (checker?.strictInputs()) {
+                    if (!isLeftDate || !isRightDate) {
+                        checks.push({
+                            valid: false,
+                            errors: [`Comparison operator ${this.operator} requires both operands to be of date type, but got ${leftType} and ${rightType}`],
+                        });
+                    }
+                } else {
+                    if ((leftType && !isLeftDate) || (rightType && !isRightDate)) {
+                        checks.push({
+                            valid: false,
+                            errors: [`Comparison operator ${this.operator} requires both operands to be of date type, but got ${leftType} and ${rightType}`],
+                        });
+                    }
+                }
+
             } else {
                 // For other comparison operators, we require that both operands are of the same type 
                 // (or any type if strict inputs is not enabled)
@@ -100,6 +121,11 @@ export class ComparisonExpression extends BooleanExpression {
                 }
             // or should we throw an error if rightValue is not an array?
             // throw new Error(`Right operand of 'IN' operator must be an array, but got ${typeof rightValue}`);
+
+            case 'BEFORE':
+                return new Date(leftValue) < new Date(rightValue);
+            case 'AFTER':
+                return new Date(leftValue) > new Date(rightValue);
 
             default:
                 throw new Error(`Unknown operator: ${this.operator}`);

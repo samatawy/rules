@@ -1,4 +1,5 @@
-import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker, ArrayType, AtomicType } from "../types";
+import type { ArrayType, AtomicType } from "../types";
+import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
 
 /**
  * Abstract base class for all rules in the system, providing common properties and methods for evaluating and executing rules. 

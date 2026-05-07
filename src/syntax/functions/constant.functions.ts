@@ -1,4 +1,5 @@
-import type { TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
 import { DateFunctionExpression, NumericFunctionExpression } from "../function.expression";
 
 export class ConstantNumbers extends NumericFunctionExpression {

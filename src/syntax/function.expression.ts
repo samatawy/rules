@@ -1,5 +1,7 @@
-import type { ArrayType, AtomicType, ObjectArrayType, TypeChecker, TypedParameter, ValidationResult, WorkingContext } from "../types";
-import { getArrayType, getReturnType, isArrayType, makeItemType, mergeValidationResults } from "../utils";
+import type { ArrayType, AtomicType, ObjectArrayType, TypedParameter } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getArrayType, getReturnType, isArrayType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 
 export abstract class FunctionExpression extends Expression {

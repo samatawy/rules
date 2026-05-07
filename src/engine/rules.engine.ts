@@ -51,6 +51,22 @@ export class RulesEngine {
     }
 
     /**
+     * Get the names of all workspaces in this engine.
+     * @returns An array of workspace names.
+     */
+    public workspaceNames(): string[] {
+        return Array.from(this.workspaces.keys());
+    }
+
+    /**
+     * Get the names of all workspaces in the global registry.
+     * @returns An array of workspace names.
+     */
+    public static workspaceNames(): string[] {
+        return this.registry().workspaceNames();
+    }
+
+    /**
      * Check if a workspace with the given name exists in the global registry.
      * 
      * @param name The name of the workspace.
@@ -122,7 +138,7 @@ export class RulesEngine {
      * which will return a deep clone of the workspace.
      * 
      * @param source the WorkSpace instance or name of the workspace to clone.
-     * @param name name for the cloned workspace. The cloned workspace will be added to the engine's workspace map with this name.
+     * @param target_name name for the cloned workspace. The cloned workspace will be added to the engine's workspace map with this name.
      * @returns a new WorkSpace instance that is a deep clone of the original workspace.
      * @throws EngineError if the source workspace is not found in the engine's workspace map 
      * or if a workspace with the new name already exists in the engine's workspace map.
@@ -149,13 +165,13 @@ export class RulesEngine {
      * Clone a workspace by name from the global registry and add it to the global registry with a new name.
      * 
      * @param source the workspace instance or name of the workspace to clone.
-     * @param name the name for the cloned workspace in the global registry.
+     * @param target_name the name for the cloned workspace in the global registry.
      * @returns a new WorkSpace instance that is a deep clone of the original workspace, added to the global registry with the new name.
      * @throws EngineError if the source workspace is not found in the global registry 
      * or if a workspace with the new name already exists in the global registry.
      */
-    public static cloneWorkspace(source: WorkSpace | string, name: string): WorkSpace {
-        return this.registry().cloneWorkspace(source, name);
+    public static cloneWorkspace(source: WorkSpace | string, target_name: string): WorkSpace {
+        return this.registry().cloneWorkspace(source, target_name);
     }
 
 }

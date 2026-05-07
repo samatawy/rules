@@ -1,4 +1,4 @@
-import type { TypeChecker, ValidationResult, WorkingContext } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { Expression } from "./expression";
 
 export class VariableExpression extends Expression {

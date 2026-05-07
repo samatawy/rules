@@ -50,6 +50,18 @@ if endsWith(fileName, ".pdf") then isPdf = true
 ### `endsWithIgnoreCase(text, suffix)`
 Returns `true` when the string ends with the given suffix, ignoring upper/lower case differences.
 
+### `like(text, pattern)`
+Returns `true` when the string matches the wildcard pattern.
+
+```
+if like(mobile_number, "010*") then mobile_operator = "Vodafone"
+```
+
+- Wildcards include `%` representing a single character, and `*` representing zero or more characters. Regex patterns using `match()` offer more powerful control.
+
+### `likeIgnoreCase(text, pattern)`
+Returns `true` when the string matches the wildcard pattern, ignoring upper/lower case differences.
+
 ### `matches(text, pattern)`
 Returns `true` when the string matches the regular expression pattern.
 

@@ -2,12 +2,14 @@
 
 // Basic files
 export * from './types';
-export * from './utils';
-export * from './rules/executable';
-export * from './rules/exception';
+export * from './interfaces';
+export * from './type.utils';
+export * from './common.utils';
 
 // Engine and common entry components
+export * from './engine/rules.engine';
 export * from './engine/workspace';
+export * from './engine/type.registry';
 export * from './engine/function.registry';
 export * from './engine/rule.registry';
 export * from './engine/scope.memory';
@@ -33,6 +35,8 @@ export * from './reader/rules.file.reader';
 export * from './reader/types.file.reader';
 
 // Rule components
+export * from './rules/executable';
+export * from './rules/exception';
 export * from './rules/abstract.rule';
 export * from './rules/assignment.rules';
 export * from './rules/conditional.rules';
@@ -60,7 +64,13 @@ export * from './syntax/functions/datetime.inspection.functions';
 export * from './syntax/functions/datetime.manipulation.functions';
 export * from './syntax/functions/numeric.comparison.functions';
 export * from './syntax/functions/numeric.manipulation.functions';
+export * from './syntax/functions/numeric.random.functions';
 export * from './syntax/functions/numeric.trigonometric.functions';
 export * from './syntax/functions/string.comparison.functions';
 export * from './syntax/functions/string.manipulation.functions';
 export * from './syntax/functions/string.inspection.functions';
+
+// Autocomplete components
+export * from './autocomplete/autocomplete';
+// export * from './autocomplete/suggestion.builder';
+// export * from './autocomplete/types';

@@ -35,7 +35,9 @@ describe('Engine tests', () => {
       }
     });
     expect(space.applicableRules(ctx).length).toBe(1);
-    const output = space.process(ctx);
+    const ok = space.process(ctx);
+    expect(ok).toBe(true);
+    const output = ctx.getOutput();
     // console.debug('Output with arrays:', output);
     expect(output.Person.hasManyChildren).toBe(true);
     expect(output.Person.family_range).toBe(10);
@@ -47,13 +49,16 @@ describe('Engine tests', () => {
       }
     });
     expect(space.applicableRules(ctx2).length).toBe(1);
-    const output2 = space.process(ctx2);
+    const ok2 = space.process(ctx2);
+    expect(ok2).toBe(true);
+    const output2 = ctx2.getOutput();
     // console.debug('Output with family array:', output2);
     expect(output2.age_range).toBe(10);
 
     const invalidCtx = space.loadContext({ Person: { name: 'Alice', age: 30, children: ['Bob', 'Charlie', 'David'], ages: [5, 'ten', 15] } });
-    const invalidOutput = space.process(invalidCtx);
-    expect(invalidOutput.Person.family_range).toBeUndefined();
+    const ok3 = space.process(invalidCtx);
+    expect(ok3).toBe(false);
+    expect(invalidCtx.getOutput().Person.family_range).toBeUndefined();
     // console.debug('Output with invalid array types:', JSON.stringify(invalidCtx.getExceptions()));
     // console.debug('Output with invalid array types:', invalidCtx.getExceptions());
   });
@@ -89,7 +94,9 @@ describe('Engine tests', () => {
       }
     });
     expect(space.applicableRules(ctx).length).toBe(1);
-    const output = space.process(ctx);
+    const ok = space.process(ctx);
+    expect(ok).toBe(true);
+    const output = ctx.getOutput();
     // console.debug('Output with lambda expression:', output);
     expect(output.Person.hasOldChildren).toBe(true);
 
@@ -105,7 +112,9 @@ describe('Engine tests', () => {
         family: [{ name: 'Bob', age: 5 }, { name: 'Charlie', age: 8 }, { name: 'David', age: 22 }]
       }
     });
-    const output2 = space.process(ctx2);
+    const ok2 = space.process(ctx2);
+    expect(ok2).toBe(true);
+    const output2 = ctx2.getOutput();
     // console.debug('Output with lambda expression - no older members:', output2);
     expect(output2.adultChildren).toBe(1);
 

@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { StringExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
 
 export class StringComparisonFunction extends BooleanFunctionExpression {
-
-    protected name: string;
 
     protected left_arg: StringExpression;
 
@@ -12,7 +11,6 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
 
     constructor(name: string, left: StringExpression, right: StringExpression) {
         super(name, [left, right]);
-        this.name = name;
         this.left_arg = left;
         this.right_arg = right;
     }
@@ -32,8 +30,6 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
         switch (this.name) {
             case 'equals':
                 return leftValue === rightValue;
-            // case 'notEquals':
-            //     return leftValue !== rightValue;
             case 'contains':
                 return leftValue.includes(rightValue);
             case 'startsWith':
@@ -42,6 +38,15 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
                 return leftValue.endsWith(rightValue);
             case 'matches':
                 return new RegExp(rightValue).test(leftValue);
+            case 'like':
+                // Support wildcards in the right value using % or * as wildcard characters, similar to SQL LIKE operator
+                // Wildcard % represents one character, while * represents zero or more characters
+                const regexPattern = this.getWildcardRegexPattern(rightValue);
+                return new RegExp(`^${regexPattern}$`).test(leftValue);
+            case 'likeIgnoreCase':
+                // Support wildcards with case-insensitive matching
+                const regexPatternIgnoreCase = this.getWildcardRegexPattern(rightValue);
+                return new RegExp(`^${regexPatternIgnoreCase}$`, 'i').test(leftValue);
 
             case 'equalsIgnoreCase':
                 return leftValue.toLowerCase() === rightValue.toLowerCase();
@@ -58,5 +63,15 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['equals', 'equalsIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'matches', 'matchesIgnoreCase'];
+    private getWildcardRegexPattern(pattern: string): string {
+        // Escape regex special characters except for our wildcards
+        const escapedPattern = pattern.replace(/([.+?^=!:${}()|[\]\/\\])/g, '\\$1');
+
+        // Replace % with . to match any single character and * with .* to match zero or more characters
+        return escapedPattern
+            .replace(/%/g, '.')
+            .replace(/\*/g, '.*');
+    }
+
+    static names = ['equals', 'equalsIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
 }

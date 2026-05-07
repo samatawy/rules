@@ -16,6 +16,7 @@ import { StringComparisonFunction } from "../syntax/functions/string.comparison.
 import { StringInspectionFunction } from "../syntax/functions/string.inspection.functions";
 import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
 import { CustomFunctionExpression } from "../syntax/functions/custom.function";
+import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -73,6 +74,9 @@ export class FunctionFactory {
         }
         if (NumericComparisonFunction.names.includes(name)) {
             return new NumericComparisonFunction(name, args[0] as NumericExpression, [args[1] as Expression]);
+        }
+        if (RandomFunction.names.includes(name)) {
+            return new RandomFunction(name, args);
         }
         if (TrigonomicFunction.names.includes(name)) {
             return new TrigonomicFunction(name, args[0] as NumericExpression, []);

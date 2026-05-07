@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { DateExpression, Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
 
 export class DateTimeInspectionFunction extends NumericFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: DateExpression;
 
@@ -12,7 +11,6 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
 
     constructor(name: string, target: DateExpression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }
@@ -26,6 +24,8 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
             case 'hour':
             case 'minute':
             case 'second':
+            case 'instant':
+            case 'timestamp':
                 return [{ type: 'date' }];
             default:
                 throw new Error(`Unknown date/time inspection function: ${this.name}`);
@@ -37,7 +37,7 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
         if (!(targetValue instanceof Date)) {
             throw new Error(`Target argument for function ${this.name} did not evaluate to a date`);
         }
-        const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
+        // const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         switch (this.name) {
             case 'year':
@@ -56,10 +56,13 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
                 return targetValue.getMinutes();
             case 'second':
                 return targetValue.getSeconds();
+            case 'instant':
+            case 'timestamp':
+                return targetValue.getTime();
             default:
                 throw new Error(`Unknown date/time inspection function: ${this.name}`);
         }
     }
 
-    static names = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second'];
+    static names = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'instant', 'timestamp'];
 }

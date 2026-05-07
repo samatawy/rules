@@ -148,6 +148,25 @@ Returns $e^x$.
 set growthFactor = exp(rate)
 ```
 
+## Randomization Functions
+
+### `random()`
+Returns a pseudo-random value between 0 and 1.
+
+### `randomBetween(min, max)`
+Returns a pseudo-random value between min and max arguments.
+
+```
+set random_pass_grade = randomBetween(50, 100)
+```
+
+### `randomInteger(min, max)`
+Returns a pseudo-random value between min and max arguments.
+
+```
+set random_year = randomInteger(1990, 2026)
+```
+
 ## Trigonometric Functions
 
 ### `sin(number)`

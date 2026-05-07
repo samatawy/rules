@@ -1,6 +1,7 @@
-import type { AtomicType, RootType, ComplexType, ArrayType, ObjectArrayType, ObjectType } from "../types";
+import type { AtomicType, RootType, ComplexType, ArrayType, ObjectArrayType, ObjectType, PropertyType } from "../types";
 import type { WorkSpaceOptions } from "./workspace";
-import { getDefinedType, hasDefinedType } from "../utils";
+import { getDefinedType, hasDefinedType, isArrayType, isAtomicType } from "../type.utils";
+import { ParserError } from "../rules/exception";
 
 export class TypeRegistry {
 
@@ -31,6 +32,7 @@ export class TypeRegistry {
     }
 
     public addRootType(type: RootType): void {
+        type = this.replaceCustomTypes(type);
         this.types.set(type.key, type);
     }
 
@@ -87,6 +89,63 @@ export class TypeRegistry {
             return root.properties as ObjectType || undefined;
         } else {
             return undefined;
+        }
+    }
+
+    protected replaceCustomTypes(root: RootType): RootType {
+        if (root.inherits) {
+            // if (!isAtomicType(root.type) && !isArrayType(root.type)) {
+            const custom = this.getRootType(root.inherits);
+            if (!custom) {
+                throw new ParserError(`Type ${root.inherits} not found for root type ${root.key}`);
+            }
+            root.properties = { ...root.properties || [], ...custom.properties || [] } as ObjectType;
+            // }
+        }
+        // } else 
+        if (root.properties) {
+            // loop over properties and replace any custom types with their definitions
+            for (const [key, prop] of Object.entries(root.properties)) {
+                root.properties[key] = this.replaceNestedCustomTypes(prop);
+            }
+        }
+        return root;
+    }
+
+    private replaceNestedCustomTypes(type: PropertyType): PropertyType {
+        if (isAtomicType(type) || isArrayType(type)) {
+            return type;
+        } else if (type === 'object') {
+            return type;
+        } else if ((type as ObjectArrayType).type === 'array') {
+            const arrayType = type as ObjectArrayType;
+            if (arrayType.inherits) {
+                const custom = this.getRootType(arrayType.inherits);
+                if (!custom) {
+                    throw new ParserError(`Type ${arrayType.inherits} not found for array type`);
+                }
+                arrayType.items = { ...arrayType.items || [], ...custom.properties || [] } as ObjectType;
+            }
+            if (arrayType.items) {
+                for (const [key, prop] of Object.entries(arrayType.items)) {
+                    arrayType.items[key] = this.replaceNestedCustomTypes(prop);
+                }
+            }
+            return arrayType;
+            // } else if (typeof type === 'object' && type !== null) {
+            //     const newObj: ObjectType = {};
+            //     for (const [key, prop] of Object.entries(type)) {
+            //         newObj[key] = this.replaceNestedCustomTypes(prop);
+            //     }
+            //     return newObj;
+            // } else if (typeof type === 'string') {
+            //     const custom = this.getRootType(type);
+            //     if (!custom) {
+            //         throw new ParserError(`Type ${type} not found for property type`);
+            //     }
+            //     return custom.properties as ObjectType || custom.type as AtomicType | ArrayType | ComplexType;
+        } else {
+            throw new ParserError(`Invalid type definition: ${type}`);
         }
     }
 }

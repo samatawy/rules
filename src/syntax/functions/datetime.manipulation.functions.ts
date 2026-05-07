@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { DateExpression, Expression } from "../expression";
 import { DateFunctionExpression } from "../function.expression";
 
 export class DateTimeManipulationFunction extends DateFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: DateExpression;
 
@@ -12,7 +11,6 @@ export class DateTimeManipulationFunction extends DateFunctionExpression {
 
     constructor(name: string, target: DateExpression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }

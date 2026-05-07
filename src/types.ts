@@ -1,194 +1,35 @@
-import type { AbstractException } from "./rules/exception";
 import type { ExecutableAction } from "./rules/executable";
 import type { Expression } from "./syntax/expression";
-
-export interface WorkingContext {
-
-    /**
-     * Read data from the context using the given key or path. 
-     * Nested keys can be accessed using dot notation (e.g., "user.name").
-     * @param key the key to look up in the context.
-     * @returns the value associated with the key, or undefined if the key is not found.
-     */
-    getData(key: string): any;
-
-    /**
-     * Check if the context contains data for the given key or path.
-     * Nested keys can be accessed using dot notation (e.g., "user.name").
-     * @param key the key to check in the context.
-     * @returns true if the key exists in the context, false otherwise.
-     */
-    hasData(key: string): boolean;
-
-    /**
-     * Get a constant value from the context using the given key.
-     * Nested keys are not allowed.
-     * @param key the key to look up in the constants.
-     * @returns the constant value associated with the key, or undefined if the key is not found.
-     */
-    getConstant(key: string): any;
-
-    /**
-     * Check if the context contains a constant for the given key.
-     * Nested keys are not allowed.
-     * @param key the key to check in the constants.
-     * @returns true if the constant exists, false otherwise.
-     */
-    hasConstant(key: string): boolean;
-
-    /**
-     * Get the root-level keys of the context.
-     * This can be useful for determining what data is available in the context and for debugging purposes.
-     * @returns an array of root-level keys in the context.
-     */
-    rootKeys(): string[];
-
-    /**
-     * Add a created exception to the context
-     * @param exception the exception to add to the context.
-     */
-    addException(exception: AbstractException): void;
-
-    /**
-     * Set an output value in the context with the given key.
-     * @param key the key to associate with the output value.
-     * @param value the value to set for the given key.
-     */
-    setOutput(key: string, value: any): void;
-
-    /**
-     * Get an output value from the context using the given key.
-     * @param key the key to look up in the outputs.
-     * @returns the output value associated with the key, or undefined if the key is not found.
-     */
-    getOutput(key?: string): any;
-}
-
-export interface RuleEffect {
-
-    /**
-     * Indicates whether the rule was satisfied when evaluated. 
-     * This can be used by the rule engine to determine if the rule should be executed or not.
-     */
-    satisfied?: boolean;
-
-    /**
-     * Indicates which data key was changed as a result of executing the rule. 
-     * This can be used by the rule engine to track changes and manage dependencies between rules.
-     */
-    changed?: string;
-
-    /**
-     * Indicates an exception that was thrown during the execution of the rule. 
-     * This can be used by the rule engine to handle errors and take appropriate actions.
-     */
-    exception?: string;
-}
-
-export interface Evaluator {
-
-    /**
-     * Evaluate the rule or expression in the given context.
-     * Implementations differ in what they perform and return.
-     * @param context the current working context containing data and constants.
-     * @returns an executor to execute, or the value of the expression based on the context.
-     */
-    evaluate(context: WorkingContext): Executor | any | null;
-}
-
-export interface Executor {
-
-    /**
-     * Get the data keys that this executor will change when executed, along with their expected types.
-     * @returns a record mapping data keys to their expected types.
-     */
-    typedChanges(): Record<string, AtomicType | ArrayType>;
-
-    /**
-     * Execute the required action in the given context and return the effects of the execution.
-     * @param context the current working context containing data and constants.
-     * @returns the effects of executing the action, including any changes or exceptions.
-     */
-    execute(context: WorkingContext): RuleEffect;
-}
-
-export interface ValidationResult {
-
-    valid: boolean;
-
-    errors?: string[];
-}
-
-export interface TypeChecker {
-    /**
-     * Check if the type checker knows the type of the given key.
-     * Nested keys can be checked using dot notation (e.g., "user.name").
-     * @param key the key to check.
-     * @returns true if the type is known, false otherwise.
-     */
-    hasType(key: string): boolean;
-
-    /**
-     * Get the type of the given key from the type checker.
-     * Nested keys can be accessed using dot notation (e.g., "user.name").
-     * @param key the key to look up in the type checker.
-     * @returns the type associated with the key, or undefined if the type is not known.
-     */
-    getType(key: string): PropertyType | undefined;
-
-    /**
-     * Perform type checking on the given target, which can be a rule, expression, or any other component 
-     * that requires type validation.
-     * @param target the target to check types for, which must implement the HasValidity interface.
-     * @returns the result of the type check, indicating whether the target is valid and any errors if it is not.
-     */
-    checkTypes(target: HasValidity): ValidationResult;
-
-    /**
-     * Indicates whether the type checker should enforce strict syntax validation.
-     * When true, the type checker will validate that all rules and expressions conform to expected syntax, 
-     * potentially throwing errors if syntax is invalid. This can be used to catch issues early in development.
-     */
-    strictSyntax(): boolean;
-
-    /**
-     * Indicates whether the type checker should enforce strict input validation. 
-     * When true, the type checker will validate that all required input data for rules and expressions 
-     * are defined and conform to expected types, potentially throwing errors if inputs are missing or incorrectly typed. 
-     */
-    strictInputs(): boolean;
-
-    /**
-     * Indicates whether the type checker should enforce strict output validation. 
-     * When true, the type checker will validate that all output data for rules and expressions 
-     * are defined and conform to expected types, potentially throwing errors if outputs are missing or incorrectly typed.
-     */
-    strictOutputs(): boolean;
-}
-
-export interface HasValidity {
-    checkTypes(checker?: TypeChecker): ValidationResult;
-}
-
-export interface Clonable<T> {
-    clone(): T;
-}
 
 export type AtomicType = 'string' | 'number' | 'boolean' | 'date';
 
 export type ArrayType = 'array' | 'string[]' | 'number[]' | 'boolean[]' | 'date[]';
 
+export type CustomType = string;
+
 export type ComplexType = 'object' | ObjectType;
 
+// TODO: Should this have ObjectType instead of Record<string, ObjectType>?
 export type PropertyType = AtomicType | ArrayType | ObjectArrayType | ComplexType | Record<string, ObjectType>;
 
+/** A defined object type with properties */
 export interface ObjectType {
     [key: string]: PropertyType;
 }
 
+/** A defined array type that can contain objects */
 export interface ObjectArrayType {
     type: 'array';
-    items: ObjectType;
+
+    /**
+     * The key of another root type to inherit properties from, if any. This allows for type reuse and extension in array item definitions.
+     */
+    inherits?: CustomType;
+
+    /**
+     * The properties of the array items, if they are objects. This allows for defining the structure of objects within arrays and supports nested types.
+     */
+    items?: ObjectType;
 }
 
 /** A defined root type that can contain nested properties*/
@@ -204,23 +45,68 @@ export interface RootType {
     type?: AtomicType | ArrayType | ComplexType;
 
     /**
+     * The key of another root type to inherit properties from, if any. This allows for type reuse and extension.
+     */
+    inherits?: CustomType;
+
+    /**
      * The properties of the root type, if it is an object. This allows for nested structures and detailed type definitions.
      */
     properties?: ObjectType;
 }
 
+/**
+ * A typed parameter definition to specify the expected type of each parameter in a built-in (or custom) function.
+ * This is used for type checking and validation of function arguments when the function is called in rules and expressions.
+ */
 export interface TypedParameter {
+    /**
+     * The type of the parameter, which can be an atomic type, an array type, a lambda type, or any type. 
+     * This defines the expected type of the parameter value when the function is called.
+     */
     type: AtomicType | ArrayType | 'lambda' | 'any';
+
     optional?: boolean;
 }
 
+/**
+ * A named and typed parameter that can be passed to a function.
+ */
 export interface NamedParameter extends TypedParameter {
+    /**
+     * The name of the parameter, which is used to identify it in function definitions and calls. 
+     */
     name: string;
 }
 
+/**
+ * Definition of a custom function that can be used in rules and expressions. 
+ */
 export interface FunctionDefinition {
+    /**
+     * The name of the function, which is used to identify it in expressions and function calls. 
+     * This should be unique across all defined functions in a workspace to avoid conflicts.
+     */
     name: string;
+
+    /**
+     * The expected parameters for the function, defined as an array of named parameters. Each parameter includes its expected type and whether it is optional.
+     * This is used for type checking and validation of function arguments when the function is called in rules and expressions.
+     * Functions that expect a parameter array (e.g., sum, avg, concat) can indicate this in their definition and will have their parameters validated accordingly.
+     * For functions that expect a parameter array, the parameters defined here represent the expected type of each element in the array.
+     * For example, a function that expects an array of numbers would have a single parameter with type 'number' and expectsParameterArray() returning true.    
+     */
     parameters: NamedParameter[];
+
+    /**
+     * If defined in a block, the lines of the function represent the sequence of executable actions that define the function's behavior.
+     * This allows for complex function definitions that involve multiple steps and operations, rather than just a single expression.
+     */
     lines?: ExecutableAction[];
+
+    /**
+     * The return expression of the function, which defines how the return value is computed based on the input parameters.
+     * This can be the body of the function or the last line if defined in a block.
+     */
     expression: Expression;
 }

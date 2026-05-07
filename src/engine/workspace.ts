@@ -1,6 +1,6 @@
 import { AbstractRule } from "../rules/abstract.rule";
-import { cloneDeep, mergeValidationResults, pathExists } from "../utils";
-import type { Clonable, Executor, TypeChecker, ValidationResult, WorkingContext } from "../types";
+import { cloneDeep, mergeValidationResults, pathExists } from "../common.utils";
+import type { Clonable, Executor, TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { WorkingMemory } from "./working.memory";
 import { RuleGraph } from "./graph/rule.graph";
 import { CombinationNode, RuleNode, type AbstractNode } from "./graph/nodes";
@@ -10,7 +10,7 @@ import { WorkspaceTypeChecker } from "./workspace.type.checker";
 import { FunctionRegistry } from "./function.registry";
 import { FunctionParser } from "../parser/function.parser";
 import { TypeRegistry } from "./type.registry";
-import { EngineError, ParserError, TypeException } from "../rules/exception";
+import { EngineError, EngineException, ParserError, RuleException, TypeException } from "../rules/exception";
 import { RulesEngine } from "./rules.engine";
 
 /**
@@ -409,7 +409,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
      * @param context the working memory context that contains the current state of data.
      * @returns the final output after processing all applicable rules.
      */
-    public process(context: WorkingMemory): any {
+    public process(context: WorkingMemory): boolean {
 
         context.clearLog();
 
@@ -424,7 +424,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
                     this.debug('Type validation error:', error);
                     context.addException(new TypeException(error));
                 }
-                return context.getOutput();
+                return false;
                 // throw new Error(errorMessage);
             } else {
                 this.debug('Proceeding with rule evaluation despite type validation errors due to non-strict input settings.');
@@ -447,17 +447,22 @@ export class WorkSpace implements Clonable<WorkSpace> {
 
             // Evaluate all applicable rules and collect their executors
             const sorted = this.rules.sortRules(applicable);
-            for (const rule of sorted) {
+            for (const rule of sorted) try {
                 this.debug('Evaluating rule:', rule.toString());
                 const executor = rule.evaluate(context);
                 if (executor) {
                     satisfied.push(rule);
                     executors.push(executor);
                 }
+            } catch (e) {
+                const errorMessage = `Error evaluating rule: ${e instanceof Error ? e.message : String(e)}`;
+                this.debug(errorMessage);
+                context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
+                return false;
             }
 
             // Execute all collected executors and track if any outputs were changed
-            for (const executor of executors) {
+            for (const executor of executors) try {
                 const idx = executors.indexOf(executor);
 
                 const effect = executor.execute(context);
@@ -473,6 +478,11 @@ export class WorkSpace implements Clonable<WorkSpace> {
                     this.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
                     iterate = true;
                 }
+            } catch (e) {
+                const errorMessage = `Error executing rule: ${e instanceof Error ? e.message : String(e)}`;
+                this.debug(errorMessage);
+                context.addException(new EngineException(errorMessage, { executor: executor }));
+                return false;
             }
 
             // If any executors changed outputs, we need to check if new rules have become applicable
@@ -497,7 +507,7 @@ export class WorkSpace implements Clonable<WorkSpace> {
         }
         this.debug('Final output after evaluation:', context.getOutput());
 
-        return context.getOutput();
+        return context.getExceptions().length === 0;
     }
 
     private debug(...args: any[]): void {

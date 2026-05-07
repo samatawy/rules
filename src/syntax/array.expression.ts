@@ -1,5 +1,5 @@
-import type { TypeChecker, ValidationResult, WorkingContext } from "../types";
-import { mergeValidationResults } from "../utils";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 
 export class ArrayExpression extends Expression {

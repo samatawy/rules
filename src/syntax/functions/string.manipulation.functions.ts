@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { Expression, StringExpression } from "../expression";
 import { StringFunctionExpression } from "../function.expression";
 
 export class StringManipulationFunction extends StringFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: StringExpression;
 
@@ -12,7 +11,6 @@ export class StringManipulationFunction extends StringFunctionExpression {
 
     constructor(name: string, target: StringExpression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }

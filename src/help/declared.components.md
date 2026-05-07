@@ -89,6 +89,8 @@ greeting(name: string) = concat('Hello ', name)
 
 - Each function has a unique name, accepts atomic data types (string, number, boolean, opr date) and returns a single atomic atomic value.
 
+- Functions can use other custom functions, however they MUST be registered in the correct order.
+
 - Rules can then use functions in their syntax and pass in the correct parameters to get the return value.
 
 - Functions cannot directly access inputs beyond the parameters passed to them. They also cannot directly change of affect output.
@@ -114,6 +116,20 @@ They are declared as:
 ```
 
 - The declared types define how named objects are structured and the data type of each field/property.
+
+- Types can be declared and then reused as parts of other types. However they MUST be registered in the correct order since inheritance validation is checked when a type is added.
+```
+{
+    key: 'father',
+    inherits: 'person',
+    properties: {
+        'children': {
+            type: 'array',
+            inherits: 'person'
+        }
+    }
+}
+```
 
 - At design time the engine ensures that all variables referenced in rules are declared and have the same type as declared. This catches malformed rules before they are deployed.
 

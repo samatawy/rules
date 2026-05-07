@@ -20,12 +20,16 @@ Returns `true` when the first date is earlier than the second.
 if before(now(), dueDate) then stillOpen = true
 ```
 
+- This can be confusing, so using the syntax `date1 BEFORE date2` is highly advisable.
+
 ### `after(left, right)`
 Returns `true` when the first date is later than the second.
 
 ```
 if after(now(), expiryDate) then expired = true
 ```
+
+- This can be confusing, so using the syntax `date2 AFTER date1` is highly advisable.
 
 ### `sameYear(left, right)`
 Returns `true` when both dates are in the same year.
@@ -125,6 +129,13 @@ Returns the second component.
 
 ```
 set ss = second(createdAt)
+```
+
+### `instant(date)` or `timestamp(date)`
+Return the UNIX timestamp, i.e. milliseconds that have passed since the Unix Epoch (January 1, 1970, 00:00:00 UTC).
+
+```
+set exactly_when = instant(createdAt)
 ```
 
 ## Date and Time Manipulation

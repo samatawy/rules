@@ -1,4 +1,4 @@
-import type { WorkingContext, Evaluator, HasValidity, ValidationResult, TypeChecker } from "../types";
+import type { WorkingContext, Evaluator, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
 
 /**
  * Represents an expression that can be evaluated in a given context to produce a value. 

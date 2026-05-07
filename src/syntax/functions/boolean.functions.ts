@@ -1,16 +1,14 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { BooleanExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
 
 export class BooleanFunction extends BooleanFunctionExpression {
 
-    protected name: string;
-
     protected target: BooleanExpression;
 
     constructor(name: string, target: BooleanExpression) {
         super(name, [target]);
-        this.name = name;
         this.target = target;
     }
 

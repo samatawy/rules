@@ -1,10 +1,9 @@
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { DateExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
 
 export class DateTimeComparisonFunction extends BooleanFunctionExpression {
-
-    protected name: string;
 
     protected left_arg: DateExpression;
 
@@ -12,7 +11,6 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
     constructor(name: string, left: DateExpression, right: DateExpression) {
         super(name, [left, right]);
-        this.name = name;
         this.left_arg = left;
         this.right_arg = right;
     }

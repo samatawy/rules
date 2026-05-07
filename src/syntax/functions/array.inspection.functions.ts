@@ -1,11 +1,10 @@
 import { ArrayExpression } from "../array.expression";
-import type { TypedParameter, WorkingContext } from "../../types";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
-
-    protected name: string;
 
     protected target_arg: Expression;
 
@@ -13,7 +12,6 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
 
     constructor(name: string, target: Expression, args: Expression[]) {
         super(name, [target, ...args]);
-        this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }
@@ -26,6 +24,8 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
             case 'total':
             case 'avg':
             case 'average':
+            case 'mean':
+            case 'median':
             case 'min':
             case 'max':
             case 'range':
@@ -36,7 +36,7 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
     }
 
     public expectsParameterArray(): boolean {
-        return ['sum', 'total', 'avg', 'average', 'min', 'max', 'range'].includes(this.name);
+        return ['sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'].includes(this.name);
     }
 
     public evaluate(context: WorkingContext): number {
@@ -63,17 +63,29 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
                 return targetValue.reduce((acc, val) => acc + val, 0);
             case 'avg':
             case 'average':
+            case 'mean':
                 return targetValue.reduce((acc, val) => acc + val, 0) / targetValue.length;
+            case 'median':
+                if (targetValue.length === 0) return 0;
+                const sorted = [...targetValue].sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                if (sorted.length % 2 === 0) {
+                    return (sorted[mid - 1] + sorted[mid]) / 2;
+                } else {
+                    return sorted[mid];
+                }
+
             case 'min':
                 return Math.min(...targetValue);
             case 'max':
                 return Math.max(...targetValue);
             case 'range':
                 return Math.max(...targetValue) - Math.min(...targetValue);
+
             default:
                 throw new Error(`Unknown array inspection function: ${this.name}`);
         }
     }
 
-    static names = ['count', 'sum', 'avg', 'min', 'max', 'range'];
+    static names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'];
 }
