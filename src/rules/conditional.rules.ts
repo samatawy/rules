@@ -187,4 +187,4 @@ export class IfThrowRule extends AbstractRule {
     }
 }
 
-export const ExceptionRule = IfThrowRule;
+export type ExceptionRule = IfThrowRule;

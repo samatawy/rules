@@ -161,7 +161,7 @@ set random_pass_grade = randomBetween(50, 100)
 ```
 
 ### `randomInteger(min, max)`
-Returns a pseudo-random value between min and max arguments.
+Returns a pseudo-random integer value between min and max arguments.
 
 ```
 set random_year = randomInteger(1990, 2026)

@@ -100,4 +100,4 @@ export class OutputRule extends AbstractRule {
     }
 }
 
-export const StateRule = OutputRule;
+export type StateRule = OutputRule;
