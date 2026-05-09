@@ -2,7 +2,7 @@ import type { AbstractRule } from "../rules/abstract.rule";
 import type { WorkSpaceOptions } from "./workspace";
 
 /**
- * The RuleRegistry class is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
+ * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
  * It provides methods to add, retrieve, list, and clear rules, as well as to sort them based on their salience. 
  * If strict conflict resolution is enabled, it also checks for potential conflicts where multiple rules change the same output key 
  * and resolves them by keeping only the rule with the highest salience.
@@ -10,7 +10,7 @@ import type { WorkSpaceOptions } from "./workspace";
 export class RuleRegistry {
 
     private rules: AbstractRule[];
-    private options: WorkSpaceOptions;
+    private options: Partial<WorkSpaceOptions>;
 
     /**
      * Create a new RuleRegistry instance.
@@ -23,12 +23,16 @@ export class RuleRegistry {
         this.options = {
             debugging: false,
             strict_conflicts: false,
-            strict_syntax: true,      // Ignored here
-            strict_inputs: false,    // Ignored here
-            strict_outputs: false,   // Ignored here
-            max_iterations: 100,    // Ignored here
             ...options
         };
+    }
+
+    /**
+     * Set or update the options for the registry.
+     * @param options an object containing the options to set or update.
+     */
+    public setOptions(options: Partial<WorkSpaceOptions>): void {
+        this.options = { ...this.options, ...options };
     }
 
     /**

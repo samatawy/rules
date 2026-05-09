@@ -6,6 +6,12 @@ title: Declaration Files
 
 To configure the Rule engine, you need to declare your business logic. You can provide persistent files to do this in more than one way.
 
+Please note that you may have dependencies between files, e.g. a rules file may use functions declared in another file. 
+If so, the order of reading files into a workspace will matter, especially with strict options.
+
+You may get around loading order if you disable `strict_syntax`, `strict_inpouts`, and `strict_outputs` in your workspace. 
+After loading you can set them back as needed and run `checkTypes()` on the workspace instance to validate loaded components.
+
 ## General Files
 
 A general file contains mixed declarations. You can have one file for a specific type and its relevant rules.
@@ -36,8 +42,18 @@ ELSE THROW "Invalid invoice amount"
 
 This approach encourages separation of declarations into business-relevant areas such as a single file for every domain of interest.
 
-#### Reading a general file:
+### Reading a general file:
 
+In a node environment with known paths, the easiest way to load files (or folders) into a workspace is to use the helper class `WorkspaceFilesReader`: 
+```
+const sales_space = new Workspace();
+const reader = new WorkspaceFilesReader(sales_space);
+
+let success = reader.readFromFile('<path>/common.functions.text');
+success &&= reader.readFromFile('<path>/sales.rules.txt');
+```
+
+Alternatively, in a browser or when you need more control (e.g. if building your own editor) you can use reader classes (e.g. `GeneralFileReader`) directly.
 ```
 const fileContents = <load file as string>;
 const reader = new GeneralFileReader();

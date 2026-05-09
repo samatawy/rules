@@ -88,12 +88,12 @@ export class WorkSpace implements Clonable<WorkSpace> {
      * @param options Optional configuration settings for the workspace.
      */
     constructor(options?: Partial<WorkSpaceOptions>) {
-        this.rules = new RuleRegistry(options);
-        this.graph = new RuleGraph();
         this.constants = {};
+        this.functions = new FunctionRegistry(options);
         this.types = new TypeRegistry(options);
         this.type_checker = new WorkspaceTypeChecker(this.types, options);
-        this.functions = new FunctionRegistry(options);
+        this.rules = new RuleRegistry(options);
+        this.graph = new RuleGraph();
 
         this.options = {
             debugging: false,
@@ -161,6 +161,20 @@ export class WorkSpace implements Clonable<WorkSpace> {
      */
     public getOptions(): WorkSpaceOptions {
         return { ...this.options };
+    }
+
+    /**
+     * Set or update the options for the workspace. This allows you to configure the behavior of the workspace,
+     * such as debugging, conflict resolution, and validation strictness.
+     * @param options an object containing the options to set or update.
+     */
+    public setOptions(options: Partial<WorkSpaceOptions>): void {
+        this.options = { ...this.options, ...options };
+
+        this.functions.setOptions(options);
+        this.types.setOptions(options);
+        this.type_checker.setOptions(options);
+        this.rules.setOptions(options);
     }
 
     /**

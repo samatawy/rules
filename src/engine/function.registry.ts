@@ -10,16 +10,12 @@ import type { WorkSpaceOptions } from "./workspace";
  * It allows adding, retrieving, and checking for the existence of function definitions. 
  * This registry is used during rule evaluation to resolve function calls and validate their usage 
  * against defined function signatures.
- * The FunctionRegistry also respects the workspace options for strict input and output validation, 
- * which can be used to enforce type safety and correctness when functions are called within rules and expressions.
- * 
- * TODO: Prevent custom functions from being added with the same name as built-in functions, to avoid conflicts and ensure predictable behavior.
  */
 export class FunctionRegistry {
 
     private functions: Map<string, FunctionDefinition>;
 
-    protected options: WorkSpaceOptions;
+    protected options: Partial<WorkSpaceOptions>;
 
     /**
      * Create a new instance of FunctionRegistry.
@@ -29,30 +25,15 @@ export class FunctionRegistry {
         this.functions = new Map<string, FunctionDefinition>();
 
         this.options = {
-            debugging: false,
-            strict_conflicts: false,    // Ignored here
-            strict_syntax: true,      // Ignored here
-            strict_inputs: false,   // Ignored here
-            strict_outputs: false,   // Ignored here
-            max_iterations: 100,      // Ignored here
             ...options
         };
     }
-
     /**
-     * Check if strict input validation is enabled.
-     * @returns True if strict input validation is enabled, false otherwise.
+     * Set or update the options for the registry.
+     * @param options an object containing the options to set or update.
      */
-    public strictInputs(): boolean {
-        return this.options.strict_inputs;
-    }
-
-    /**
-     * Check if strict output validation is enabled.
-     * @returns True if strict output validation is enabled, false otherwise.
-     */
-    public strictOutputs(): boolean {
-        return this.options.strict_outputs;
+    public setOptions(options: Partial<WorkSpaceOptions>): void {
+        this.options = { ...this.options, ...options };
     }
 
     /**
@@ -157,9 +138,9 @@ export class FunctionRegistry {
         this.functions.clear();
     }
 
-    private debug(...args: any[]): void {
-        if (this.options.debugging) {
-            console.debug('[FunctionRegistry DEBUG]', ...args);
-        }
-    }
+    // private debug(...args: any[]): void {
+    //     if (this.options.debugging) {
+    //         console.debug('[FunctionRegistry DEBUG]', ...args);
+    //     }
+    // }
 }

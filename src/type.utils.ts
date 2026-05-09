@@ -1,14 +1,18 @@
 import { TypeParser } from "./parser/type.parser";
 import { ArrayExpression } from "./syntax/array.expression";
 import { BooleanExpression, DateExpression, Expression, NumericExpression, StringExpression } from "./syntax/expression";
-import { FunctionExpression } from "./syntax/function.expression";
-import { CustomFunctionExpression } from "./syntax/functions/custom.function";
 import { LambdaExpression } from "./syntax/lambda.expression";
 import { LiteralExpression } from "./syntax/literal.expression";
 import { TernaryExpression } from "./syntax/ternary.expression";
 import { VariableExpression } from "./syntax/variable.expression";
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "./types";
 import type { TypeChecker } from "./interfaces";
+
+function hasReturnsType(expression: Expression): expression is Expression & {
+    returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectType | ObjectArrayType;
+} {
+    return typeof (expression as { returnsType?: unknown }).returnsType === 'function';
+}
 
 /**
  * Determine the return type of an expression.
@@ -34,12 +38,13 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
     } else if (expression instanceof ArrayExpression) {
         return getArrayType(expression, checker);
 
-    } else if (expression instanceof FunctionExpression || expression instanceof CustomFunctionExpression) {
-        return expression.returnsType(checker);
     } else if (expression instanceof LambdaExpression) {
         return (expression as LambdaExpression).returnsType(checker) as AtomicType | ObjectType | undefined;
     } else if (expression instanceof TernaryExpression) {
         return (expression as TernaryExpression).returnsType(checker) as AtomicType | ObjectType | undefined;
+
+    } else if (hasReturnsType(expression)) {
+        return expression.returnsType(checker);
 
     } else if (expression instanceof StringExpression) {
         return 'string';

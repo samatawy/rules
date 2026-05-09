@@ -3,6 +3,12 @@ import type { WorkSpaceOptions } from "./workspace";
 import { getDefinedType, hasDefinedType, isArrayType, isAtomicType } from "../type.utils";
 import { ParserError } from "../rules/exception";
 
+/**
+ * TypeRegistry is responsible for storing and managing type definitions within the working context. 
+ * It allows adding, retrieving, and checking for the existence of type definitions. 
+ * This registry is used during rule evaluation to resolve type references and validate their usage 
+ * against defined type structures.
+ */
 export class TypeRegistry {
 
     private types: Map<string, RootType>;
@@ -16,6 +22,14 @@ export class TypeRegistry {
             ...options
         };
     }
+    /**
+     * Set or update the options for the registry.
+     * @param options an object containing the options to set or update.
+     */
+    public setOptions(options: Partial<WorkSpaceOptions>): void {
+        this.options = { ...this.options, ...options };
+    }
+
 
     public hasRootType(key: string): boolean {
         if (key.includes('.')) {
@@ -94,15 +108,13 @@ export class TypeRegistry {
 
     protected replaceCustomTypes(root: RootType): RootType {
         if (root.inherits) {
-            // if (!isAtomicType(root.type) && !isArrayType(root.type)) {
             const custom = this.getRootType(root.inherits);
             if (!custom) {
                 throw new ParserError(`Type ${root.inherits} not found for root type ${root.key}`);
             }
             root.properties = { ...root.properties || [], ...custom.properties || [] } as ObjectType;
-            // }
         }
-        // } else 
+
         if (root.properties) {
             // loop over properties and replace any custom types with their definitions
             for (const [key, prop] of Object.entries(root.properties)) {
@@ -132,18 +144,7 @@ export class TypeRegistry {
                 }
             }
             return arrayType;
-            // } else if (typeof type === 'object' && type !== null) {
-            //     const newObj: ObjectType = {};
-            //     for (const [key, prop] of Object.entries(type)) {
-            //         newObj[key] = this.replaceNestedCustomTypes(prop);
-            //     }
-            //     return newObj;
-            // } else if (typeof type === 'string') {
-            //     const custom = this.getRootType(type);
-            //     if (!custom) {
-            //         throw new ParserError(`Type ${type} not found for property type`);
-            //     }
-            //     return custom.properties as ObjectType || custom.type as AtomicType | ArrayType | ComplexType;
+
         } else {
             throw new ParserError(`Invalid type definition: ${type}`);
         }

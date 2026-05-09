@@ -16,11 +16,19 @@ export class WorkspaceTypeChecker implements TypeChecker {
 
         this.options = {
             debugging: false,
-            strict_syntax: true,       // Ignored here
+            strict_syntax: true,
             strict_inputs: false,
-            strict_outputs: false,   // Ignored here
+            strict_outputs: false,
             ...options
         };
+    }
+    /**
+     * Set or update the options for the type checker. This allows you to configure the behavior of the type checker, 
+     * such as debugging and validation strictness.
+     * @param options an object containing the options to set or update.
+     */
+    public setOptions(options: Partial<WorkSpaceOptions>): void {
+        this.options = { ...this.options, ...options };
     }
 
     public strictSyntax(): boolean {
