@@ -1,0 +1,85 @@
+# @samatawy/rules
+
+> TypeScript utilities for parsing, validating, and executing declarative business rules.
+
+@samatawy/rules is a declarative rule engine package for TypeScript and JavaScript applications. 
+It supports a readable DSL for rules and expressions, declared types, custom and built-in functions, 
+file readers, autocomplete support, rule graphs, and runtime workspaces for evaluating business logic.
+
+## Package
+
+- Name: `@samatawy/rules`
+- Homepage: https://samatawy.github.io/rules/
+- Repository: https://github.com/samatawy/rules
+- Issues: https://github.com/samatawy/rules/issues
+
+## Machine-readable metadata
+
+- package.json: https://raw.githubusercontent.com/samatawy/rules/main/package.json
+
+## Documentation
+
+- Full documentation: https://samatawy.github.io/rules/
+- API index: https://samatawy.github.io/rules/modules.html
+- Authored guides index: https://github.com/samatawy/rules/blob/main/src/help/index.md
+- Engine guide: https://samatawy.github.io/rules/documents/engine.html
+- Expression syntax guide: https://samatawy.github.io/rules/documents/expression.syntax.html
+- Rules syntax guide: https://samatawy.github.io/rules/documents/rules.syntax.html
+- Functions guide: https://samatawy.github.io/rules/documents/functions.html
+- Declaration files guide: https://samatawy.github.io/rules/documents/declaration.files.html
+
+## Core topics
+
+- Forward-chaining `modus ponens` inference engine
+- Workspaces, rule registries, type registries, and function registries
+- A documented and concise TypeScript-like DSL for rules and expressions
+- Rule syntax: `IF ... THEN ...`, `IF ... THEN ... ELSE ...`, `THROW`, and `SET`
+- Expression syntax: arithmetic, comparison, boolean logic, arrays, lambdas, ternaries, and `SWITCH`
+- Syntax parsers for rules, expressions, executables, functions, and types
+- Top-down recursive expression parsing with operator precedence and nested structures
+- Declared types and customizable type checking
+- Input and output validation with configurable strictness
+- Custom functions and built-in functions
+- Built-in functions for numeric, string, date/time, boolean, array, lambda, constant, and random operations
+- Rule graphs for selecting relevant rules from the current working context
+- Rule salience and conflict detection/resolution
+- Working memory, scope context, and function-local execution scope
+- Autocompletion support for editors
+- File readers for rules, functions, constants, types, markdown, mixed/general files, and multi-file workspace loading
+- Markdown-backed executable documentation
+- Browser-compatible ESM runtime and Node.js support
+- Typed public API with declaration files and preserved doc comments for IntelliSense
+
+## Main components
+
+- `WorkSpace` for loading declarations, creating contexts, and processing rules
+- `RulesEngine` as a higher-level engine entry point
+- `WorkingMemory` for inputs, outputs, exceptions, and execution logs
+- `RuleParser`, `ExpressionParser`, `ExecutableParser`, `FunctionParser`, and `TypeParser`
+- `RuleRegistry`, `FunctionRegistry`, `TypeRegistry`, and `WorkspaceTypeChecker`
+- `RuleGraph` and graph nodes for efficient applicability traversal
+- `Autocomplete` for editor suggestion support
+
+## File and declaration workflows
+
+- Supports direct code-based declaration through parser classes
+- Supports constants, functions, types, and rules in separate files
+- Supports mixed declaration files through a general reader
+- Supports markdown files with executable code blocks
+- Supports workspace-level loading across multiple files
+
+## Entry points
+
+- ESM runtime: `dist/index.js`
+- CommonJS runtime: `dist/index.cjs`
+- Type declarations: `dist/index.d.ts`
+
+## Notes for LLMs
+
+- Prefer the GitHub Pages documentation for the latest published API and guide pages.
+- Use `package.json` for package metadata, exports, version, and runtime support details.
+- Use the README for a concise overview and quick-start example.
+- Use the authored help pages for syntax explanations and conceptual guidance.
+- Use the Typedoc API pages for exported classes, methods, and interfaces.
+- The package is intended for Node.js and browser applications that use a bundler.
+- The package focuses on deterministic business-rule execution rather than probabilistic AI workflows.

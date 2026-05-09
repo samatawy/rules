@@ -7,6 +7,8 @@
     "module": "./dist/index.js",
     "browser": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "llms": "./llms.txt",
+    "llmsFull": "https://samatawy.github.io/rules/",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
@@ -17,6 +19,7 @@
     },
     "files": [
         "dist",
+        "llms.txt",
         "README.md",
         "LICENSE"
     ],
