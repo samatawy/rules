@@ -92,8 +92,9 @@ set yyyy = year(orderDate)
 ### `month(date)`
 Returns the month number from `1` to `12`.
 
+Provided constants include `JAN`, `FEB`, etc. Use these to make your declarations more readable.
 ```
-set mm = month(orderDate)
+IF month(today()) IN [JAN, FEB, NOV, DEC] THEN season = 'winter'
 ```
 
 ### `week(date)`
@@ -108,6 +109,14 @@ Returns the day of the month.
 
 ```
 set dd = day(orderDate)
+```
+
+### `weekday(date)`
+Returns the day of week from 1 to 7.
+
+Provided constants include `MON`, `TUE`, etc. Use these to make your declarations more readable.
+```
+IF weekday(today()) IN [SAT, SUN] THEN weekend = TRUE 
 ```
 
 ### `hour(date)`

@@ -1,21 +1,22 @@
 import type { AtomicType, PropertyType, RootType, ComplexType, ArrayType, ObjectArrayType } from "../types";
 import type { TypeChecker, ValidationResult } from "../interfaces";
-import type { WorkSpaceOptions } from "./workspace";
+import type { WorkspaceOptions } from "./workspace";
 import { isArrayType, isAtomicType, makeItemType } from "../type.utils";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";
+import { ParserError } from "../rules/exception";
+import { WorkLogger } from "../log/work.logger";
 
 export class WorkspaceTypeChecker implements TypeChecker {
 
     protected types: TypeRegistry;
 
-    protected options: Partial<WorkSpaceOptions>;
+    protected options: Partial<WorkspaceOptions>;
 
-    constructor(registry: TypeRegistry, options?: Partial<WorkSpaceOptions>) {
+    constructor(registry: TypeRegistry, options?: Partial<WorkspaceOptions>) {
         this.types = registry || new TypeRegistry(options);
 
         this.options = {
-            debugging: false,
             strict_syntax: true,
             strict_inputs: false,
             strict_outputs: false,
@@ -27,7 +28,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
      * such as debugging and validation strictness.
      * @param options an object containing the options to set or update.
      */
-    public setOptions(options: Partial<WorkSpaceOptions>): void {
+    public setOptions(options: Partial<WorkspaceOptions>): void {
         this.options = { ...this.options, ...options };
     }
 
@@ -65,12 +66,12 @@ export class WorkspaceTypeChecker implements TypeChecker {
 
     public validateData(input: any): ValidationResult {
 
-        this.debug(`Validating input: ${JSON.stringify(input)} against type definitions.`, this.types);
+        WorkLogger.debug(`Validating input: ${JSON.stringify(input)} against type definitions.`, this.types);
         const errors: string[] = [];
 
         for (const [rootKey, data] of Object.entries(input)) {
             if (this.types.hasRootType(rootKey)) {
-                this.debug(`Validating key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
+                WorkLogger.debug(`Validating key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
 
                 const expectedType = this.types.getRootType(rootKey);
                 if (expectedType) {
@@ -82,7 +83,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
                 }
             } else {
                 // No type definition found for this key, skipping validation
-                this.debug(`No type definition found for key: ${rootKey}.`);
+                WorkLogger.warn(`No type definition found for key: ${rootKey}.`);
                 errors.push(`No type definition found for key: ${rootKey}.`);
             }
         }
@@ -108,17 +109,17 @@ export class WorkspaceTypeChecker implements TypeChecker {
         //     return { valid: false, errors: [`${key} is undefined, expected type ${JSON.stringify(expectedType)}.`] };
         // }
 
-        this.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
+        WorkLogger.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
         const expected: any = expectedType as any;
         const errors: string[] = [];
 
         if (isAtomicType(expectedType)) {
             // A leaf node with an atomic type
             const actualType = typeof value;
-            this.debug(`Actual type: ${actualType}, Expected Atomic type: ${expectedType}.`);
             if (actualType === expectedType) {
                 return { valid: true };
             } else {
+                WorkLogger.warn(`Actual type: ${actualType}, Expected Atomic type: ${expectedType}.`);
                 return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expectedType}.`] };
             }
         }
@@ -129,7 +130,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         else if (expected.hasOwnProperty('type') && isAtomicType(expected.type)) {
             // A leaf node with an atomic type defined in a RootType
             const actualType = typeof value;
-            this.debug(`Actual type: ${actualType}, Expected Property type: ${expected.type}.`);
+            WorkLogger.warn(`Actual type: ${actualType}, Expected Property type: ${expected.type}.`);
             if (actualType === expected.type) {
                 return { valid: true };
             } else {
@@ -147,7 +148,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         else if (expected.hasOwnProperty('properties')) {
             // An object type with nested properties
             for (const [key, propertyType] of Object.entries(expected.properties!)) {
-                this.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
+                WorkLogger.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
                 const result = this.validateType(key, value[key], propertyType);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
@@ -164,7 +165,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         else if (typeof expected === 'object' && Object.keys(expected).length > 0) {
             // A record type with dynamic keys
             for (const [key, propertyType] of Object.entries(expected)) {
-                this.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
+                WorkLogger.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
                 const result = this.validateType(key, value[key], propertyType);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
@@ -177,16 +178,16 @@ export class WorkspaceTypeChecker implements TypeChecker {
             };
 
         } else {
-            this.debug(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
-            throw new Error(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
+            WorkLogger.warn(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
+            throw new ParserError(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
         }
     }
 
     private validateArray(key: string, value: unknown, expectedType: ArrayType): ValidationResult {
-        this.debug(`Validating array value: ${value} against expected array type: ${expectedType}.`);
+        WorkLogger.debug(`Validating array value: ${value} against expected array type: ${expectedType}.`);
         if (!Array.isArray(value)) {
             const actualType = typeof value;
-            this.debug(`Actual type: ${actualType}, Expected Array type: ${expectedType}.`);
+            WorkLogger.warn(`Actual type: ${actualType}, Expected Array type: ${expectedType}.`);
             return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expectedType}.`] };
         }
 
@@ -195,7 +196,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         // const elementType = expectedType === 'array' ? 'object' : expectedType.replace('[]', '') as AtomicType;
         for (let i = 0; i < value.length; i++) {
             const element = value[i];
-            this.debug(`Validating array element at index ${i}: ${element} against expected array type: ${expectedType}.`);
+            WorkLogger.debug(`Validating array element at index ${i}: ${element} against expected array type: ${expectedType}.`);
             const result = this.validateType(`${key}[${i}]`, element, elementType);
             if (!result.valid) {
                 errors.push(...(result.errors || []));
@@ -207,9 +208,4 @@ export class WorkspaceTypeChecker implements TypeChecker {
         };
     }
 
-    private debug(...args: any[]): void {
-        if (this.options.debugging) {
-            console.debug('[WorkspaceTypeChecker DEBUG]', ...args);
-        }
-    }
 }

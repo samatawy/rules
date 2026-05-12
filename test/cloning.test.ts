@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/workspace';
+import { Workspace } from '../src/engine/workspace';
 import { FunctionParser } from '../src/parser/function.parser';
 import { RulesEngine } from '../src/engine/rules.engine';
 
@@ -7,7 +7,7 @@ describe('Cloning tests', () => {
 
   it('handles workspace cloning safely', async () => {
 
-    const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
+    const space = new Workspace({ strict_inputs: true, strict_outputs: false });
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {

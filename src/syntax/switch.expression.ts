@@ -3,6 +3,7 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class SwitchExpression extends Expression {
 
@@ -20,8 +21,14 @@ export class SwitchExpression extends Expression {
         this.caseExpressions = caseExpressions;
         this.defaultExpression = defaultExpression;
         if (this.caseValues.length !== this.caseExpressions.length) {
-            throw new Error(`Switch expression must have the same number of case values and case expressions, but got ${this.caseValues.length} case values and ${this.caseExpressions.length} case expressions`);
+            throw new TypeCheckError(`Switch expression must have the same number of case values and case expressions, but got ${this.caseValues.length} case values and ${this.caseExpressions.length} case expressions`);
         }
+
+        this.syntax = this.toString();
+    }
+
+    public getParts(): Expression[] {
+        return this.condition.getParts();
     }
 
     public required(): Set<string> {
@@ -37,7 +44,7 @@ export class SwitchExpression extends Expression {
         if (uniqueReturns.size === 1) {
             return caseReturns[0] as AtomicType | ArrayType;
         }
-        throw new Error(`Unable to determine return type of switch expression: multiple return types found ${Array.from(uniqueReturns).join(', ')}`);
+        throw new TypeCheckError(`Unable to determine return type of switch expression: multiple return types found ${Array.from(uniqueReturns).join(', ')}`);
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
@@ -76,6 +83,9 @@ export class SwitchExpression extends Expression {
     }
 
     public evaluate(context: WorkingContext): any {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const conditionValue = this.condition.evaluate(context);
         for (let i = 0; i < this.caseValues.length; i++) {
             const caseValueExpr = this.caseValues[i];
@@ -90,7 +100,7 @@ export class SwitchExpression extends Expression {
         if (this.defaultExpression) {
             return this.defaultExpression.evaluate(context);
         } else {
-            throw new Error(`No matching case found in switch expression for condition value: ${conditionValue} and no default expression provided`);
+            throw new EvaluationError(`No matching case found in switch expression for condition value: ${conditionValue} and no default expression provided`);
         }
     }
 

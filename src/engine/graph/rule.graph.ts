@@ -1,5 +1,5 @@
 import type { AbstractRule } from "../../rules/abstract.rule";
-import { AbstractNode, CombinationNode, DataNode, RuleNode } from "./nodes";
+import { AbstractNode, CombinationNode, InputNode, RuleOutputNode } from "./nodes";
 
 /**
  * The RuleGraph class is responsible for organizing rules based on their required inputs and outputs, 
@@ -12,7 +12,7 @@ export class RuleGraph {
 
     /**
      * Create a new RuleGraph instance.
-     * You should normally not need to create a RuleGraph directly, as it is managed by the WorkSpace. 
+     * You should normally not need to create a RuleGraph directly, as it is managed by the Workspace. 
      */
     constructor() {
         this.roots = [];
@@ -27,15 +27,14 @@ export class RuleGraph {
      * @param key the key of the root node to find.
      * @returns the root node with the given key, or undefined if no such node exists.
      */
-    public findRoot(key: string): DataNode | undefined {
-        // console.debug('Looking for root with key:', key, ' in roots:', this.roots);
-        return this.roots.find(root => root instanceof DataNode && root.key === key) as DataNode | undefined;
+    public findRoot(key: string): InputNode | undefined {
+        return this.roots.find(root => root instanceof InputNode && root.key === key) as InputNode | undefined;
     }
 
-    protected findOrCreateRoot(key: string): DataNode {
+    protected findOrCreateRoot(key: string): InputNode {
         let node = this.findRoot(key);
         if (!node) {
-            node = new DataNode(key);
+            node = new InputNode(key);
             this.addRoot(node);
         }
         return node;
@@ -44,7 +43,7 @@ export class RuleGraph {
     protected findOrCreateChild(node: AbstractNode, key: string): AbstractNode {
         let childNode = node.findChild(key);
         if (!childNode) {
-            childNode = new DataNode(key);
+            childNode = new InputNode(key);
             node.addChild(childNode);
         }
         return childNode;
@@ -60,7 +59,7 @@ export class RuleGraph {
     public addRule(rule: AbstractRule): void {
         const required = rule.required();
         if (required.size === 0) {
-            const root = new RuleNode(rule);
+            const root = new RuleOutputNode(rule);
             this.addRoot(root);
             return;
         }
@@ -89,14 +88,14 @@ export class RuleGraph {
         }
 
         if (parents.length === 1) {
-            const ruleNode = new RuleNode(rule);
+            const ruleNode = new RuleOutputNode(rule);
             parents[0]?.addChild(ruleNode);
         } else {
             const combinationNode = new CombinationNode();
             for (const parent of parents) {
                 parent.addChild(combinationNode);
             }
-            const ruleNode = new RuleNode(rule);
+            const ruleNode = new RuleOutputNode(rule);
             combinationNode.addChild(ruleNode);
         }
     }

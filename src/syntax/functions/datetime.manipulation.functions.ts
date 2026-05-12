@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { DateExpression, Expression } from "../expression";
 import { DateFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class DateTimeManipulationFunction extends DateFunctionExpression {
 
@@ -33,16 +34,19 @@ export class DateTimeManipulationFunction extends DateFunctionExpression {
             case 'subtractSeconds':
                 return [{ type: 'date' }, { type: 'number' }];
             default:
-                throw new Error(`Unknown date/time manipulation function: ${this.name}`);
+                throw new TypeCheckError(`Unknown date/time manipulation function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): Date {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         const targetValue = this.target_arg.evaluate(context);
         if (!(targetValue instanceof Date)) {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a Date`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a Date`);
         }
 
         switch (this.name) {
@@ -76,7 +80,7 @@ export class DateTimeManipulationFunction extends DateFunctionExpression {
             case 'subtractSeconds':
                 return new Date(targetValue.getTime() - evaluatedArgs[0] * 1000);
             default:
-                throw new Error(`Unknown date/time manipulation function: ${this.name}`);
+                throw new EvaluationError(`Unknown date/time manipulation function: ${this.name}`);
         }
     }
 

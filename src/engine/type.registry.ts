@@ -1,5 +1,5 @@
 import type { AtomicType, RootType, ComplexType, ArrayType, ObjectArrayType, ObjectType, PropertyType } from "../types";
-import type { WorkSpaceOptions } from "./workspace";
+import type { WorkspaceOptions } from "./workspace";
 import { getDefinedType, hasDefinedType, isArrayType, isAtomicType } from "../type.utils";
 import { ParserError } from "../rules/exception";
 
@@ -13,9 +13,9 @@ export class TypeRegistry {
 
     private types: Map<string, RootType>;
 
-    protected options: Partial<WorkSpaceOptions>;
+    protected options: Partial<WorkspaceOptions>;
 
-    constructor(options?: Partial<WorkSpaceOptions>) {
+    constructor(options?: Partial<WorkspaceOptions>) {
         this.types = new Map<string, RootType>();
 
         this.options = {
@@ -26,7 +26,7 @@ export class TypeRegistry {
      * Set or update the options for the registry.
      * @param options an object containing the options to set or update.
      */
-    public setOptions(options: Partial<WorkSpaceOptions>): void {
+    public setOptions(options: Partial<WorkspaceOptions>): void {
         this.options = { ...this.options, ...options };
     }
 

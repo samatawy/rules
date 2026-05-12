@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { DateExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
@@ -29,16 +30,19 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
             case 'sameInstant':
                 return [{ type: 'date' }, { type: 'date' }];
             default:
-                throw new Error(`Unknown date/time comparison function: ${this.name}`);
+                throw new TypeCheckError(`Unknown date/time comparison function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): boolean {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const leftValue = this.left_arg.evaluate(context);
         const rightValue = this.right_arg.evaluate(context);
 
         if (!(leftValue instanceof Date) || !(rightValue instanceof Date)) {
-            throw new Error(`Arguments for function ${this.name} did not evaluate to dates`);
+            throw new EvaluationError(`Arguments for function ${this.name} did not evaluate to dates`);
         }
 
         switch (this.name) {
@@ -72,7 +76,7 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
                 return leftValue.getTime() === rightValue.getTime();
 
             default:
-                throw new Error(`Unknown date/time comparison function: ${this.name}`);
+                throw new EvaluationError(`Unknown date/time comparison function: ${this.name}`);
         }
     }
 

@@ -1,4 +1,5 @@
-import { WorkSpace } from "../engine/workspace";
+import { Workspace } from "../engine/workspace";
+import { WorkspaceTransaction } from "./workspace.transaction";
 import { FunctionParser } from "../parser/function.parser";
 import { ParserError } from "../rules/exception";
 import type { FunctionDefinition } from "../types";
@@ -30,6 +31,11 @@ export interface FunctionsFileReaderOptions extends FileReaderOptions {
  * The reader will parse the file content and return an object containing the successfully parsed functions as well as any errors encountered during parsing.
  * The reader supports both line-by-line and block-by-block reading, allowing for flexible formatting of the functions file.
  * It also includes error handling for invalid syntax and duplicate function names, ensuring that the resulting functions object is valid and usable within the rule engine.
+ *
+ * N.B. Declarations need to be in order, otherwise errors will be returned.
+ *  
+ * N.B. This is a transactional safe reader. If you provide a workspace and select the option accept: 'all', 
+ * then that workplace will not be affected if any errors are encountered. 
  */
 export class FunctionsFileReader extends AbstractFileReader {
 
@@ -41,7 +47,7 @@ export class FunctionsFileReader extends AbstractFileReader {
      * The workspace instance to which the parsed functions will be added. 
      * This allows for functions to recognize earlier declared components.
      */
-    protected workspace: WorkSpace;
+    protected workspace: Workspace;
 
     /**
      * Create a new instance of the FunctionsFileReader with the specified options for parsing functions from a file.
@@ -57,19 +63,23 @@ export class FunctionsFileReader extends AbstractFileReader {
             accept: options?.accept || 'all',
             ...options
         };
-        // console.debug(this.options);
-        this.workspace = this.options.workspace || new WorkSpace();
+
+        this.workspace = this.options.workspace || new Workspace();
         this.functionParser = new FunctionParser({ workspace: this.workspace });
     }
 
     /**
      * Parse the content of a functions file and return the result, including the successfully parsed functions and any errors encountered during parsing.
+     * If a Workspace was passed in options, that Workspace will be changed to reflect successful declarations.
+     * 
      * @param fileContent The content of the functions file to parse.
      * @returns The result of parsing, including the successfully parsed functions and any errors encountered.
      */
     public parse(fileContent: string): FunctionsFileResult {
 
-        let read = 0, passed = 0, failed = 0, errors: string[] = [];
+        const transaction = WorkspaceTransaction.begin(this.workspace);
+
+        let read = 0, errors: string[] = [];
         try {
             let origin = fileContent.trim();
             let remainder = origin;
@@ -104,6 +114,14 @@ export class FunctionsFileReader extends AbstractFileReader {
                     return null;
                 }
             });
+
+            if (this.options.accept === 'all' && errors.length > 0) {
+                transaction.rollback();
+            } else {
+                // Already added to workspace..
+                transaction.commit();
+            }
+
             if (attempts.includes(null) && this.options.accept === 'all') {
                 return {
                     read,
@@ -113,7 +131,6 @@ export class FunctionsFileReader extends AbstractFileReader {
                     errors
                 };
             }
-            // console.debug('Parsed functions attempts:', attempts);
             // Prevent duplicates (and report them as errors) returning the functions as an object with key-value pairs
             const defined_functions = attempts.filter(c => c !== null) as FunctionDefinition[];
             let result: Record<string, FunctionDefinition> = {};
@@ -148,7 +165,7 @@ export class FunctionsFileReader extends AbstractFileReader {
         for (const item of array) {
             const key = item.name;
             if (result[key!] !== undefined) {
-                throw new Error(`Duplicate function key found: ${key}`);
+                throw new ParserError(`Duplicate function key found: ${key}`);
             }
             result[key!] = item;
         }

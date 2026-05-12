@@ -1,4 +1,4 @@
-import { RuleException, type AbstractException } from "../rules/exception";
+import { EvaluationError, type AbstractException } from "../rules/exception";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getPathValue, pathExists } from "../common.utils";
@@ -28,8 +28,7 @@ export class ScopeContext implements WorkingContext {
         } else if (this.parent) {
             return this.parent.getData(key);
         } else {
-            // console.debug(`Undefined variable access: ${key} in function context. Current variables:`, this.variables);
-            throw new Error(`Undefined variable: ${key}`);
+            throw new EvaluationError(`Undefined variable: ${key}`);
         }
     }
 
@@ -59,6 +58,41 @@ export class ScopeContext implements WorkingContext {
             }
         }
         return Array.from(keys);
+    }
+
+    protected cache: Map<string, any> = new Map<string, any>();
+
+    protected cacheMetrics: { sets: number, hits: number, misses: number } = {
+        sets: 0,
+        hits: 0,
+        misses: 0,
+    };
+
+    public getCached(id: string) {
+        const found = this.cache.get(id);
+        if (found === undefined) {
+            this.cacheMetrics.misses += 0;
+        } else {
+            this.cacheMetrics.hits += 1;
+        }
+        return found;
+    }
+
+    public setCache(id: string, value: any): void {
+        this.cache.set(id, value);
+        this.cacheMetrics.sets += 1;
+    }
+
+    public clearCache(id?: string): void {
+        if (id === undefined) {
+            this.cache.clear();
+        } else {
+            this.cache.delete(id);
+        }
+    }
+
+    public getCacheMetrics(): { sets: number; hits: number; misses: number; } {
+        return this.cacheMetrics;
     }
 
     public addException(exception: AbstractException): void {

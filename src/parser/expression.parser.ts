@@ -10,6 +10,7 @@ import type { ParserOptions } from "./rule.parser";
 import { LambdaExpression } from "../syntax/lambda.expression";
 import { ArrayExpression } from "../syntax/array.expression";
 import { SwitchExpression } from "../syntax/switch.expression";
+import { ParserError } from "../rules/exception";
 
 /**
  * Parser class for parsing expressions from rule syntax.
@@ -39,19 +40,15 @@ export class ExpressionParser {
      */
     public parse(syntax: string): Expression {
         if (!syntax || syntax.trim() === '') {
-            throw new Error("Empty expression");
+            throw new ParserError("Empty expression");
         }
 
         const tokens = this.tokenize(syntax);
         if (tokens.length === 0) {
-            throw new Error("Empty expression");
+            throw new ParserError("Empty expression");
         }
-        // console.debug(`Tokens: ${JSON.stringify(tokens)}`);
-
-        // console.debug(`Parsing expression: ${syntax}`);
 
         if (this.isEnclosedInParentheses(syntax)) {
-            // console.debug(`Expression is enclosed in parentheses, stripping and parsing inner expression: ${syntax}`);
             const innerSyntax = this.stripEnclosingParentheses(syntax);
             return this.parse(innerSyntax);
         }
@@ -63,71 +60,60 @@ export class ExpressionParser {
 
         const functionExpr = this.readFunctionExpression(tokens);
         if (functionExpr) {
-            // console.debug(`Parsed function expression: ${syntax}`);
             return functionExpr;
         }
 
         const logicalExpr = this.readLogicalExpression(tokens);
         if (logicalExpr) {
-            // console.debug(`Parsed logical expression: ${syntax}`);
             return logicalExpr;
         }
 
         const ternaryExpr = this.readTernaryExpression(tokens);
         if (ternaryExpr) {
-            // console.debug(`Parsed ternary expression: ${syntax}`);
             return ternaryExpr;
         }
 
         const switchExpr = this.readSwitchExpression(tokens);
         if (switchExpr) {
-            // console.debug(`Parsed switch expression: ${syntax}`);
             return switchExpr;
         }
 
         const comparisonExpr = this.readComparisonExpression(tokens);
         if (comparisonExpr) {
-            // console.debug(`Parsed comparison expression: ${syntax}`);
             return comparisonExpr;
         }
 
         const arithmeticExpr = this.readArithmeticExpression(['+', '-'], tokens);
         if (arithmeticExpr) {
-            // console.debug(`Parsed arithmetic expression: ${syntax}`);
             return arithmeticExpr;
         }
 
         const arithmeticExpr2 = this.readArithmeticExpression(['*', '/'], tokens);
         if (arithmeticExpr2) {
-            // console.debug(`Parsed arithmetic expression: ${syntax}`);
             return arithmeticExpr2;
         }
 
         const arithmeticExpr3 = this.readArithmeticExpression(['%'], tokens);
         if (arithmeticExpr3) {
-            // console.debug(`Parsed arithmetic expression: ${syntax}`);
             return arithmeticExpr3;
         }
 
         const literalExpr = this.readLiteralExpression(syntax);
         if (literalExpr) {
-            // console.debug(`Parsed literal expression: ${syntax}`);
             return literalExpr;
         }
 
         const arrayExpr = this.readArrayExpression(tokens);
         if (arrayExpr) {
-            // console.debug(`Parsed array expression: ${syntax}`);
             return arrayExpr;
         }
 
         const variableExpr = this.readVariableExpression(syntax);
         if (variableExpr) {
-            // console.debug(`Parsed variable expression: ${syntax}`);
             return variableExpr;
         }
 
-        throw new Error(`Unable to parse expression: ${syntax}`);
+        throw new ParserError(`Unable to parse expression: ${syntax}`);
     }
 
     protected tokenize(syntax: string): string[] {
@@ -261,32 +247,11 @@ export class ExpressionParser {
     }
 
     protected readTernaryExpression(tokens: string[]): TernaryExpression | null {
-        // Parse the syntax IF(condition)? trueExpr ELSE falseExpr
-        // if (tokens[0]?.toUpperCase() === 'IF') {
-        //     const thenIndex = this.findFirstToken(tokens, '?', 1);
-        //     if (thenIndex === -1) {
-        //         throw new Error(`Expected '?' in ternary expression, but not found`);
-        //     }
-        //     const conditionSyntax = tokens.slice(1, thenIndex).join(' ');
-        //     const elseIndex = this.findFirstToken(tokens, 'ELSE', thenIndex + 1);
-        //     if (elseIndex === -1) {
-        //         throw new Error(`Expected 'ELSE' in ternary expression, but not found`);
-        //     }
-        //     const trueSyntax = tokens.slice(thenIndex + 1, elseIndex).join(' ');
-        //     const falseSyntax = tokens.slice(elseIndex + 1).join(' ');
-        //     const conditionExpr = this.parse(conditionSyntax);
-        //     const trueExpr = this.parse(trueSyntax);
-        //     const falseExpr = this.parse(falseSyntax);
-        //     return new TernaryExpression(conditionExpr, trueExpr, falseExpr);
-        // }
-
         // Parse the syntax condition ? trueExpr : falseExpr
         const { left: conditionSyntax, operator: questionMark, right: remainder } = this.splitOperands(tokens, ['?']) || {};
         if (conditionSyntax && questionMark && remainder) {
             const { left: trueSyntax, operator: colon, right: falseSyntax } = this.splitOperands(remainder.split(' '), [':']) || {};
             if (trueSyntax && colon && falseSyntax) {
-                // const hasIf = conditionSyntax.trim().toUpperCase().startsWith('IF');
-                // const conditionExpr = hasIf ? this.parse(conditionSyntax.slice(2)) : this.parse(conditionSyntax);
                 const conditionExpr = this.parse(conditionSyntax);
                 const trueExpr = this.parse(trueSyntax);
                 const falseExpr = this.parse(falseSyntax);
@@ -311,13 +276,13 @@ export class ExpressionParser {
                     if (tokens[i] === 'CASE') {
                         const colonIndex = this.findFirstToken(tokens, ':', i + 1);
                         if (colonIndex === -1) {
-                            throw new Error(`Expected ':' after case value in switch expression, but not found`);
+                            throw new ParserError(`Expected ':' after case value in switch expression, but not found`);
                         }
                         const caseTokens = tokens.slice(i + 1, colonIndex);
                         const caseSyntax = caseTokens.join(' ');
                         const caseValue = this.parse(caseSyntax);
                         if (!caseValue) {
-                            throw new Error(`Unable to parse case value in switch expression: ${caseSyntax}`);
+                            throw new ParserError(`Unable to parse case value in switch expression: ${caseSyntax}`);
                         }
                         i += caseTokens.length + 1; // move index past case value and colon
 
@@ -329,7 +294,6 @@ export class ExpressionParser {
                             const caseExpr = this.parse(caseExprSyntax);
                             caseValues.push(caseValue);
                             caseExpressions.push(caseExpr);
-                            // caseExpressions[caseValue.toString()] = caseExpr;
                             break;
                         } else {
                             // there are more cases, take tokens until the next CASE as the case expression
@@ -347,7 +311,7 @@ export class ExpressionParser {
                         const defaultExpr = this.parse(defaultExprSyntax);
                         return new SwitchExpression(conditionExpr, caseValues, caseExpressions, defaultExpr);
                     } else {
-                        throw new Error(`Expected 'CASE' in switch expression, but got '${tokens[i]}'`);
+                        throw new ParserError(`Expected 'CASE' in switch expression, but got '${tokens[i]}'`);
                     }
                 }
 

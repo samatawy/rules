@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { Expression, NumericExpression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class TrigonomicFunction extends NumericFunctionExpression {
 
@@ -27,16 +28,19 @@ export class TrigonomicFunction extends NumericFunctionExpression {
             case 'atan2':
                 return [{ type: 'number' }, { type: 'number' }];
             default:
-                throw new Error(`Unknown trigonometric function: ${this.name}`);
+                throw new TypeCheckError(`Unknown trigonometric function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         const targetValue = this.target_arg.evaluate(context);
         if (typeof targetValue !== 'number') {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a number`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a number`);
         }
 
         switch (this.name) {
@@ -55,7 +59,7 @@ export class TrigonomicFunction extends NumericFunctionExpression {
             case 'atan2':
                 return Math.atan2(targetValue, evaluatedArgs[0]);
             default:
-                throw new Error(`Unknown trigonometric function: ${this.name}`);
+                throw new EvaluationError(`Unknown trigonometric function: ${this.name}`);
         }
     }
 

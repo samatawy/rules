@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
-import { WorkSpace } from '../src/engine/workspace';
+import { Workspace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
 import { LogicalExpression } from '../src/syntax/logical.expression';
 import { TernaryExpression } from '../src/syntax/ternary.expression';
@@ -49,7 +49,7 @@ describe('Parsers Tests', () => {
 
 
   it('parse functions', async () => {
-    const space = new WorkSpace();
+    const space = new Workspace();
     space.addRule('if x < avogadro() then approx = floor(pi())');
     space.addRule('if x > max(1, 2, 3) then year = year(now())');
     space.addRule('if x >= 10 then calc = max(5, 10, 15) else result = min(5, 10)');
@@ -74,7 +74,7 @@ describe('Parsers Tests', () => {
   });
 
   it('parse switch expressions', async () => {
-    const space = new WorkSpace();
+    const space = new Workspace();
     space.addRule('if status == "A" or status == "B" or status == "C" then result = SWITCH(status) CASE "A": "one", CASE "B": "two", DEFAULT: "other" ELSE result = "unknown"');
     const ctx1 = space.loadContext({ status: "A" });
     expect(space.applicableRules(ctx1).length).toBe(1);
@@ -122,16 +122,21 @@ describe('Parsers Tests', () => {
   });
 
   it('parse rules with variable conditions', async () => {
-    const space = new WorkSpace();
-    space.addRule('if isActive then status = "active" else status = "inactive"');
+    const space = new Workspace();
+    space.addRule('if isActive then status = "active"');
+    space.addRule('if not(isActive) then status = "inactive"');
+
+    // space.addRule('if isActive then status = "active" else status = "inactive"');
     space.addRule('if person.age then status = "age_known" else status = "age_unknown"');
+    // console.debug(space.reteGraph);
+
     const ctx1 = space.loadContext({ isActive: true });
-    expect(space.applicableRules(ctx1).length).toBe(1);
+    expect(space.applicableRules(ctx1).length).toBe(2);
     space.process(ctx1);
     expect(ctx1.getOutput('status')).toBe('active');
 
     const ctx2 = space.loadContext({ isActive: false });
-    expect(space.applicableRules(ctx2).length).toBe(1);
+    expect(space.applicableRules(ctx2).length).toBe(2);
     space.process(ctx2);
     expect(ctx2.getOutput('status')).toBe('inactive');
 
@@ -154,7 +159,7 @@ describe('Parsers Tests', () => {
     const expr2 = parser.parse('IF(x > 10)? y : z');
     expect(expr2).toBeInstanceOf(TernaryExpression);
 
-    const space = new WorkSpace();
+    const space = new Workspace();
     space.addRule('if x then result = x? "greater" : "lesser"');
     space.addRule('if x then result = not(x < 10)? "greater" : "lesser"');
     const ctx1 = space.loadContext({ x: 15 });

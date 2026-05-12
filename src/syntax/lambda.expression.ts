@@ -29,6 +29,8 @@ export class LambdaExpression extends Expression {
         super();
         this.variableName = variableName;
         this.expression = expression;
+
+        this.syntax = this.toString();
     }
 
     /**
@@ -37,6 +39,10 @@ export class LambdaExpression extends Expression {
      */
     public getVariableName(): string {
         return this.variableName;
+    }
+
+    public getParts(): Expression[] {
+        return this.expression.getParts();
     }
 
     public required(): Set<string> {

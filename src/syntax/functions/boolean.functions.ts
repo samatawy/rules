@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { BooleanExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class BooleanFunction extends BooleanFunctionExpression {
 
@@ -20,14 +21,14 @@ export class BooleanFunction extends BooleanFunctionExpression {
             case 'not':
                 return [{ type: 'any' }];
             default:
-                throw new Error(`Unknown boolean function: ${this.name}`);
+                throw new TypeCheckError(`Unknown boolean function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): boolean {
         const targetValue = this.target.evaluate(context);
         if (typeof targetValue !== 'boolean') {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a boolean`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a boolean`);
         }
 
         switch (this.name.toLowerCase()) {
@@ -37,7 +38,7 @@ export class BooleanFunction extends BooleanFunctionExpression {
             case 'not':
                 return !targetValue;
             default:
-                throw new Error(`Unknown boolean function: ${this.name}`);
+                throw new EvaluationError(`Unknown boolean function: ${this.name}`);
         }
     }
 

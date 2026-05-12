@@ -8,10 +8,16 @@ export class VariableExpression extends Expression {
     constructor(variableName: string) {
         super();
         this.variableName = variableName;
+
+        this.syntax = variableName;
     }
 
     public getVariableName(): string {
         return this.variableName;
+    }
+
+    public getParts(): Expression[] {
+        return [this];
     }
 
     public required(): Set<string> {
@@ -31,7 +37,12 @@ export class VariableExpression extends Expression {
     }
 
     public evaluate(context: WorkingContext): any {
-        return context.getData(this.variableName) || context.getConstant(this.variableName);
+        const variable = context.getData(this.variableName);
+        if (variable === undefined) {
+            return context.getConstant(this.variableName);
+        } else {
+            return variable;
+        }
     }
 
     public toString(): string {

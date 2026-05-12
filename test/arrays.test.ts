@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/workspace';
+import { Workspace } from '../src/engine/workspace';
 
 describe('Engine tests', () => {
 
   it('handles arrays in rules and types', async () => {
-    const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
+    const space = new Workspace({ strict_inputs: true, strict_outputs: false });
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
@@ -65,7 +65,7 @@ describe('Engine tests', () => {
 
 
   it('handles lambda expressions', async () => {
-    const space = new WorkSpace({ strict_inputs: true, strict_outputs: false });
+    const space = new Workspace({ strict_inputs: true, strict_outputs: false });
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {

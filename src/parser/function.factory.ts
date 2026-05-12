@@ -17,6 +17,7 @@ import { StringInspectionFunction } from "../syntax/functions/string.inspection.
 import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
 import { CustomFunctionExpression } from "../syntax/functions/custom.function";
 import { RandomFunction } from "../syntax/functions/numeric.random.functions";
+import { ParserError } from "../rules/exception";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -111,7 +112,7 @@ export class FunctionFactory {
             }
         }
 
-        throw new Error(`Unknown function: "${name}()"`);
+        throw new ParserError(`Unknown function: "${name}()"`);
     }
 
 }

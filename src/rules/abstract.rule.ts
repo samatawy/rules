@@ -1,5 +1,7 @@
 import type { ArrayType, AtomicType } from "../types";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
+import type { BooleanExpression } from "@cartona/feel";
+import type { Expression } from "../syntax/expression";
 
 /**
  * Abstract base class for all rules in the system, providing common properties and methods for evaluating and executing rules. 
@@ -56,6 +58,8 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
     public setSalience(salience: number): void {
         this.salience = salience;
     }
+
+    public abstract getExpression(): Expression;
 
     protected require(...requirements: string[]): void {
         for (const requirement of requirements) {

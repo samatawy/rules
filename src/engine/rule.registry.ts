@@ -1,5 +1,7 @@
 import type { AbstractRule } from "../rules/abstract.rule";
-import type { WorkSpaceOptions } from "./workspace";
+import { EngineError } from "../rules/exception";
+import { WorkLogger } from "../log/work.logger";
+import type { WorkspaceOptions } from "./workspace";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
@@ -10,18 +12,17 @@ import type { WorkSpaceOptions } from "./workspace";
 export class RuleRegistry {
 
     private rules: AbstractRule[];
-    private options: Partial<WorkSpaceOptions>;
+    private options: Partial<WorkspaceOptions>;
 
     /**
      * Create a new RuleRegistry instance.
-     * You should normally not need to create a RuleRegistry directly, as it is managed by the WorkSpace.
+     * You should normally not need to create a RuleRegistry directly, as it is managed by the Workspace.
      * @param options Optional configuration settings for the rule registry.
      */
-    constructor(options?: Partial<WorkSpaceOptions>) {
+    constructor(options?: Partial<WorkspaceOptions>) {
         this.rules = [];
 
         this.options = {
-            debugging: false,
             strict_conflicts: false,
             ...options
         };
@@ -31,7 +32,7 @@ export class RuleRegistry {
      * Set or update the options for the registry.
      * @param options an object containing the options to set or update.
      */
-    public setOptions(options: Partial<WorkSpaceOptions>): void {
+    public setOptions(options: Partial<WorkspaceOptions>): void {
         this.options = { ...this.options, ...options };
     }
 
@@ -78,7 +79,7 @@ export class RuleRegistry {
     }
 
     protected preventConflicts(rules: AbstractRule[]): AbstractRule[] {
-        this.debug(`Checking for potential conflicts among ${rules.length} applicable rules...`);
+        WorkLogger.debug(`Checking for potential conflicts among ${rules.length} applicable rules...`);
 
         // Detect potential conflicts where multiple rules change the same output key
         const effects: any = {};
@@ -95,22 +96,22 @@ export class RuleRegistry {
                 effects[key]['' + salience].push(rule);
             }
         }
-        this.debug('Effects grouped by changed output key and salience:', effects);
+        WorkLogger.debug('Effects grouped by changed output key and salience:', effects);
 
         for (const change in effects) {
             const saliences = Object.keys(effects[change]).map(s => parseInt(s));
             const maxSalience = Math.max(...saliences);
             const effectiveRules = effects[change]['' + maxSalience];
-            this.debug(`For output key "${change}", found ${effectiveRules.length} rules with saliences: ${saliences.join(', ')}. Max salience: ${maxSalience}`);
+            WorkLogger.debug(`For output key "${change}", found ${effectiveRules.length} rules with saliences: ${saliences.join(', ')}. Max salience: ${maxSalience}`);
             // If more than one rule has the highest salience, throw an error to prevent non-deterministic behavior
             if (effectiveRules.length > 1) {
                 const conflictingRules = effectiveRules.map((r: AbstractRule) => r.toString()).join(', ');
-                throw new Error(`Conflict detected: Multiple rules with salience ${maxSalience} change the same output key "${change}". Conflicting rules: ${conflictingRules}`);
+                throw new EngineError(`Conflict detected: Multiple rules with salience ${maxSalience} change the same output key "${change}". Conflicting rules: ${conflictingRules}`);
             } else {
                 distinctRules.push(...effectiveRules);
             }
         }
-        this.debug(`Conflict check completed. ${distinctRules.length} distinct rules after resolving conflicts.`);
+        WorkLogger.debug(`Conflict check completed. ${distinctRules.length} distinct rules after resolving conflicts.`);
         return distinctRules;
     }
 
@@ -129,9 +130,4 @@ export class RuleRegistry {
         }
     }
 
-    protected debug(...args: any[]): void {
-        if (this.options.debugging) {
-            console.log('[RuleRegistry DEBUG]', ...args);
-        }
-    }
 }

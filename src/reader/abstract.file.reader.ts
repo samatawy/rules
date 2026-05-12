@@ -1,4 +1,5 @@
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
+import type { FunctionDefinition, RootType } from "../types";
 
 export interface FileReaderOptions {
     /**
@@ -9,11 +10,11 @@ export interface FileReaderOptions {
     read_by: 'line' | 'block';
 
     /**
-     * Optional reference to the WorkSpace instance, which can be used by the RuleParser 
+     * Optional reference to the Workspace instance, which can be used by the RuleParser 
      * to access existing rules, types, functions, and constants when parsing rules from the file. 
-     * This allows for more complex rule definitions that can reference other components within the WorkSpace.
+     * This allows for more complex rule definitions that can reference other components within the Workspace.
      */
-    workspace?: WorkSpace;
+    workspace?: Workspace;
 }
 
 /**
@@ -27,7 +28,10 @@ export abstract class AbstractFileReader {
     protected options: Partial<FileReaderOptions>;
 
     constructor(options?: Partial<FileReaderOptions>) {
-        this.options = { ...options };
+        this.options = {
+            read_by: 'block',
+            ...options
+        };
     }
 
     public abstract parse(fileContent: string): any;
@@ -92,5 +96,21 @@ export abstract class AbstractFileReader {
         } else {
             return { line, remainder };
         }
+    }
+
+    protected isConstant(component: any): component is Record<string, any> {
+        const constant = component as Record<string, any>;
+        const keys = Object.keys(constant);
+        return (keys.length === 1 && !!keys[0] && constant[keys[0]!] !== undefined);
+    }
+
+    protected isFunctionDefnition(component: any): component is FunctionDefinition {
+        const funcdef = component as FunctionDefinition;
+        return (!!funcdef.name && !!funcdef.parameters && !!funcdef.expression);
+    }
+
+    protected isRootType(component: any): component is RootType {
+        const type = component as RootType;
+        return (!!type.key && (!!type.type || !!type.properties));
     }
 }

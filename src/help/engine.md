@@ -10,11 +10,11 @@ This Rule Engine implementation is composed of basic classes that manage rules a
 
 The top-level manager of the rules engine is a manager of workspaces. 
 
-It provides a registry of named workspaces, enabling you divide work into business domains, each with its own set of declared components. By default you have a global registry of workspaces with one common workspace (if you only need one):
+It provides a registry of named workspaces, enabling you divide work into business domains, each with its own set of declared components. By default you have a global registry of workspaces with one default workspace (if you only need one):
 
 ```
-// The following is the default common workspace for simple deployments
-const defaultSpace = RulesEngine.commonSpace();
+// The following is the default workspace for simple deployments
+const defaultSpace = RulesEngine.defaultSpace();
 
 // The following is a targeted named workspace, previously added on startup
 const salesSpace = RulesEngine.getWorkspace('SALES');
@@ -44,7 +44,7 @@ const duplicate = RulesEngine.cloneWorkspace(space, 'TESTING SALES');
 
 A Workspace holds a set of rules and any types, constants, and functions they may need.
 
-- You can have one global Workspace `RulesEngine.commonSpace()` or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
+- You can have one global Workspace `RulesEngine.defaultSpace()` or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
 
 - Normally the lifetime of a Workspace in production is the entire uptime of the application. However, a testing Workspace can be created and then closed without ill-effect.
 
@@ -109,7 +109,7 @@ A Working Memory is a Context holds inputs for an engine run, and the outputs th
 - On receiving data, use a Workspace to wrap that data in a Working Memory. When you ask the Workspace to process that object, you can then query that object to inspect output, errors, and an audit trail of the last run.
 
 ```
-const space = RulesEngine.commonSpace();
+const space = RulesEngine.defaultSpace();
 const ctx = space.loadContext({ ...input Data });
 space.process(ctx);
 if (ctx.getExceptions().length) {

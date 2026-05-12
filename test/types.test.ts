@@ -3,7 +3,7 @@ import { IfThenRule } from '../src/rules/conditional.rules';
 import { WorkspaceTypeChecker } from '../src/engine/workspace.type.checker';
 import { getDefinedType, hasDefinedType } from '../src/type.utils';
 import { TypeRegistry } from '../src/engine/type.registry';
-import { WorkSpace, type ObjectArrayType, type ObjectType } from '../src';
+import { Workspace, type ObjectArrayType, type ObjectType } from '../src';
 
 describe('Types Test', () => {
 
@@ -149,7 +149,7 @@ describe('Types Test', () => {
   });
 
   it('handles type checking with type inheritance', async () => {
-    const space = new WorkSpace({
+    const space = new Workspace({
       strict_syntax: true,
       strict_inputs: true,
       strict_outputs: true,
@@ -200,7 +200,7 @@ describe('Types Test', () => {
     space.addRule('if count(Father.family.age) > 1 then Father.family_range = range(Father.family.age)');
 
     const typeCheckResult = space.checkTypes();
-    console.debug('should be valid', typeCheckResult);
+    // console.debug('should be valid', typeCheckResult);
     expect(typeCheckResult.valid).toBe(true);
 
     space.addRule('if Employee.height > 180 then Employee.isTall = true; Father.family_range = range(Father.family.age)');

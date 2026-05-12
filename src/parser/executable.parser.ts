@@ -1,3 +1,4 @@
+import { ParserError } from "../rules/exception";
 import { CompositeAction, OutputAction, type ExecutableAction } from "../rules/executable";
 import { ExpressionParser } from "./expression.parser";
 import type { ParserOptions } from "./rule.parser";
@@ -40,7 +41,7 @@ export class ExecutableParser {
             if (actions.length === actionSyntaxes.length) {
                 return new CompositeAction(actions);
             } else {
-                throw new Error(`Failed to parse one or more actions in composite syntax: ${syntax}`);
+                throw new ParserError(`Failed to parse one or more actions in composite syntax: ${syntax}`);
             }
         }
 
@@ -57,7 +58,7 @@ export class ExecutableParser {
         if (action) {
             return action;
         } else {
-            throw new Error(`Unrecognized executable syntax: ${syntax}`);
+            throw new ParserError(`Unrecognized executable syntax: ${syntax}`);
         }
     }
 

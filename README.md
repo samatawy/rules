@@ -28,9 +28,9 @@ The published package exposes an ESM browser-safe entry and does not depend on N
 ## Quick Example
 
 ```ts
-import { WorkSpace } from '@samatawy/rules';
+import { Workspace } from '@samatawy/rules';
 
-const space = new WorkSpace();
+const space = new Workspace();
 
 space.addRule("IF invoice.total > 1000 THEN invoice.tax_rate = 0.10");
 space.addRule("IF invoice.total <= 1000 THEN invoice.tax_rate = 0.14");

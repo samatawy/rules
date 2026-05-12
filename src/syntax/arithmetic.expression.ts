@@ -2,6 +2,7 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression, NumericExpression } from "./expression";
+import { EvaluationError } from "../rules/exception";
 
 export class ArithmeticExpression extends NumericExpression {
 
@@ -16,6 +17,12 @@ export class ArithmeticExpression extends NumericExpression {
         this.operator = operator;
         this.left = left;
         this.right = right;
+
+        this.syntax = this.toString();
+    }
+
+    public getParts(): Expression[] {
+        return [this.left, this.right];
     }
 
     public required(): Set<string> {
@@ -51,6 +58,9 @@ export class ArithmeticExpression extends NumericExpression {
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const leftValue = this.left.evaluate(context);
         const rightValue = this.right.evaluate(context);
 
@@ -63,16 +73,16 @@ export class ArithmeticExpression extends NumericExpression {
                 return leftValue * rightValue;
             case '/':
                 if (rightValue === 0) {
-                    throw new Error("Division by zero");
+                    throw new EvaluationError("Division by zero");
                 }
                 return leftValue / rightValue;
             case '%':
                 if (rightValue === 0) {
-                    throw new Error("Division by zero");
+                    throw new EvaluationError("Division by zero");
                 }
                 return leftValue % rightValue;
             default:
-                throw new Error(`Unsupported arithmetic operator: ${this.operator}`);
+                throw new EvaluationError(`Unsupported arithmetic operator: ${this.operator}`);
         }
     }
 

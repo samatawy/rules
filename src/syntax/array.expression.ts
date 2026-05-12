@@ -9,11 +9,16 @@ export class ArrayExpression extends Expression {
     constructor(elements: Expression[]) {
         super();
         this.elements = elements;
+
         this.syntax = this.toString();
     }
 
     public getElements(): Expression[] {
         return this.elements;
+    }
+
+    public getParts(): Expression[] {
+        return [...this.elements];
     }
 
     public required(): Set<string> {
@@ -32,6 +37,9 @@ export class ArrayExpression extends Expression {
     }
 
     public evaluate(context: WorkingContext): any[] {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         return this.elements.map(e => e.evaluate(context));
     }
 

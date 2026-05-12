@@ -1,10 +1,11 @@
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "../rules/executable";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { OutputRule } from "../rules/assignment.rules";
 import { IfThenElseRule, IfThenRule, IfThrowRule } from "../rules/conditional.rules";
 import { ExecutableParser } from "./executable.parser";
 import { ExpressionParser } from "./expression.parser";
+import { ParserError } from "../rules/exception";
 
 export interface RuleMetadata {
     name?: string;
@@ -14,7 +15,7 @@ export interface RuleMetadata {
 }
 
 export interface ParserOptions {
-    workspace?: WorkSpace;
+    workspace?: Workspace;
 }
 
 /**
@@ -53,7 +54,7 @@ export class RuleParser {
         let parsed: AbstractRule | null = null;
         syntax = metadata.syntax || '';
         if (syntax.length === 0) {
-            throw new Error('Rule syntax cannot be empty');
+            throw new ParserError('Rule syntax cannot be empty');
         }
 
         // If this is a conditional rule, like "IF condition THEN consequence [ELSE alternative]"
@@ -78,7 +79,7 @@ export class RuleParser {
             parsed.setSalience(metadata.salience ?? 0);
             return parsed;
         } else {
-            throw new Error(`Unrecognized rule syntax: ${syntax}`);
+            throw new ParserError(`Unrecognized rule syntax: ${syntax}`);
         }
     }
 
@@ -92,7 +93,7 @@ export class RuleParser {
     public clone(original: AbstractRule): AbstractRule {
         const cloned = this.parse(original.getSyntax());
         if (!cloned) {
-            throw new Error(`Failed to clone rule: ${original.getSyntax()}`);
+            throw new ParserError(`Failed to clone rule: ${original.getSyntax()}`);
         }
         cloned.name = original.name;
         cloned.description = original.description;
@@ -154,17 +155,17 @@ export class RuleParser {
             const conditionSyntax = match[1]!;
             const condition = this.expressionParser.parse(conditionSyntax);
             if (!condition) {
-                throw new Error(`Failed to parse condition for IfThenRule: ${conditionSyntax}`);
+                throw new ParserError(`Failed to parse condition for IfThenRule: ${conditionSyntax}`);
             }
 
             const consequenceSyntax = match[2]!;
             const consequence = this.executableParser.parse(consequenceSyntax);
             if (!consequence) {
-                throw new Error(`Failed to parse consequence for IfThenRule: ${consequenceSyntax}`);
+                throw new ParserError(`Failed to parse consequence for IfThenRule: ${consequenceSyntax}`);
             }
             return IfThenRule.parsed(syntax, condition, consequence);
         }
-        throw new Error(`Syntax does not match IfThenRule pattern: ${syntax}`);
+        throw new ParserError(`Syntax does not match IfThenRule pattern: ${syntax}`);
     }
 
     protected parseIfThenElseRule(syntax: string): AbstractRule | null {
@@ -174,18 +175,18 @@ export class RuleParser {
             const conditionSyntax = match[1]!;
             const condition = this.expressionParser.parse(conditionSyntax);
             if (!condition) {
-                throw new Error(`Failed to parse condition for IfThenElseRule: ${conditionSyntax}`);
+                throw new ParserError(`Failed to parse condition for IfThenElseRule: ${conditionSyntax}`);
             }
 
             const consequenceSyntax = match[2]!;
             const consequence = this.executableParser.parse(consequenceSyntax);
             if (!consequence) {
-                throw new Error(`Failed to parse consequence for IfThenElseRule: ${consequenceSyntax}`);
+                throw new ParserError(`Failed to parse consequence for IfThenElseRule: ${consequenceSyntax}`);
             }
             const alternativeSyntax = match[3]!;
             const alternative = this.executableParser.parse(alternativeSyntax);
             if (!alternative) {
-                throw new Error(`Failed to parse alternative for IfThenElseRule: ${alternativeSyntax}`);
+                throw new ParserError(`Failed to parse alternative for IfThenElseRule: ${alternativeSyntax}`);
             }
 
             return IfThenElseRule.parsed(syntax, condition, consequence, alternative);
@@ -202,7 +203,7 @@ export class RuleParser {
             const conditionSyntax = match[1]!;
             const condition = this.expressionParser.parse(conditionSyntax);
             if (!condition) {
-                throw new Error(`Failed to parse condition for IfThrowRule: ${conditionSyntax}`);
+                throw new ParserError(`Failed to parse condition for IfThrowRule: ${conditionSyntax}`);
             }
             const errorMessage = match[2]!;
 
@@ -220,7 +221,7 @@ export class RuleParser {
             const valueSyntax = match[2]!;
             const valueExpr = this.expressionParser.parse(valueSyntax);
             if (!valueExpr) {
-                throw new Error(`Failed to parse value expression for StateRule: ${valueSyntax}`);
+                throw new ParserError(`Failed to parse value expression for StateRule: ${valueSyntax}`);
             }
 
             return OutputRule.parsed(syntax, variableName, valueExpr);
@@ -239,12 +240,12 @@ export class RuleParser {
 
             const valueExpr = this.expressionParser.parse(valueSyntax);
             if (!valueExpr) {
-                throw new Error(`Failed to parse value expression for StateIfRule: ${valueSyntax}`);
+                throw new ParserError(`Failed to parse value expression for StateIfRule: ${valueSyntax}`);
             }
 
             const conditionExpr = this.expressionParser.parse(conditionSyntax);
             if (!conditionExpr) {
-                throw new Error(`Failed to parse condition expression for StateIfRule: ${conditionSyntax}`);
+                throw new ParserError(`Failed to parse condition expression for StateIfRule: ${conditionSyntax}`);
             }
 
             return IfThenRule.parsed(syntax, conditionExpr, new OutputAction(variableName, valueExpr));

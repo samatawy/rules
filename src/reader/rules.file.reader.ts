@@ -2,6 +2,8 @@ import type { AbstractRule } from "../rules/abstract.rule";
 import { RuleParser } from "../parser/rule.parser";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
 import { ParserError } from "../rules/exception";
+import { WorkspaceTransaction } from "./workspace.transaction";
+import { Workspace } from "../engine/workspace";
 
 export interface RulesFileResult {
     read: number;
@@ -29,12 +31,17 @@ export interface RulesFileReaderOptions extends FileReaderOptions {
  * The reader will parse the file content and return an object containing the successfully parsed rules as well as any errors encountered during parsing.
  * The reader supports both line-by-line and block-by-block reading, allowing for flexible formatting of the rules file.
  * It also includes error handling for invalid syntax, ensuring that the resulting rules array only contains valid AbstractRule instances that can be used within the rule engine.
+ *  
+ * N.B. This is a transactional safe reader. If you provide a workspace and select the option accept: 'all', 
+ * then that workplace will not be affected if any errors are encountered. 
  */
 export class RulesFileReader extends AbstractFileReader {
 
     protected options: RulesFileReaderOptions;
 
     protected ruleParser: RuleParser;
+
+    protected workspace: Workspace;
 
     /**
      * Create a new instance of the RulesFileReader with the specified options for parsing rules from a file.
@@ -50,17 +57,22 @@ export class RulesFileReader extends AbstractFileReader {
             read_by: options?.read_by || 'block',
             accept: options?.accept || 'all',
             ...options
-        }
+        };
+        this.workspace = this.options.workspace || new Workspace();
     }
 
     /**
      * Parse the content of a rules file and return the result, including the successfully parsed rules and any errors encountered.
+     * If a Workspace was passed in options, that Workspace will be changed to reflect successful declarations.
+     * 
      * @param fileContent The content of the rules file to parse.
      * @returns The result of parsing, including the successfully parsed rules and any errors encountered.
      */
     public parse(fileContent: string): RulesFileResult {
 
-        let read = 0, passed = 0, failed = 0, errors: string[] = [];
+        const transaction = WorkspaceTransaction.begin(this.workspace);
+
+        let read = 0, errors: string[] = [];
         try {
             let origin = fileContent.trim();
             let remainder = origin;
@@ -84,6 +96,18 @@ export class RulesFileReader extends AbstractFileReader {
                     return null;
                 }
             });
+
+            const parsed_rules = attempts.filter(rule => rule !== null);
+            if (this.options.accept === 'all' && errors.length > 0) {
+                // transaction.rollback();
+            } else {
+                // Add to workspace..
+                for (const rule of parsed_rules) {
+                    this.workspace.addRule(rule);
+                }
+                transaction.commit();
+            }
+
             if (attempts.includes(null) && this.options.accept === 'all') {
                 return {
                     read,
@@ -93,7 +117,6 @@ export class RulesFileReader extends AbstractFileReader {
                     errors
                 };
             }
-            const parsed_rules = attempts.filter(rule => rule !== null);
             return {
                 read,
                 passed: parsed_rules.length,

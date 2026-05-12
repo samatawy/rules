@@ -1,4 +1,4 @@
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
 import { FunctionFactory } from "../parser/function.factory";
 import { FunctionParser } from "../parser/function.parser";
 import type { ObjectArrayType, ObjectType, PropertyType } from "../types";
@@ -8,17 +8,16 @@ import { Closers, ComparisonOperators, LogicalOperators, NumericOperators, Opene
 
 export class SuggestionBuilder {
 
-    private workspace: WorkSpace;
+    private workspace: Workspace;
 
     private functionFactory: FunctionFactory;
 
-    constructor(workspace: WorkSpace) {
+    constructor(workspace: Workspace) {
         this.workspace = workspace;
         this.functionFactory = new FunctionFactory({ workspace });
     }
 
     public generateSuggestions(): AutocompleteSuggestion[] {
-        // const typeChecker = this.workspace.typeChecker();
         const typeRegistry = this.workspace.typeRegistry();
         const constants = this.workspace.getConstants();
         const functionRegistry = this.workspace.functionRegistry();
@@ -50,14 +49,6 @@ export class SuggestionBuilder {
             }
         }
 
-        // Add enclosers
-        // for (const encloser of Enclosers) {
-        //     if (encloser === '(' || encloser === "[" || encloser === '{' || encloser === '"' || encloser === "'") {
-        //         suggestions.push({ value: encloser, kind: 'encloser' });
-        //     } else {
-        //         suggestions.push({ value: encloser, kind: 'encloser', comes_after: ['any'] });
-        //     }
-        // }
         for (const opener of Openers) {
             suggestions.push({ value: opener, kind: 'opener' });
         }

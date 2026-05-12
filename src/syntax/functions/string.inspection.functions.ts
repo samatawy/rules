@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { Expression, StringExpression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class StringInspectionFunction extends NumericFunctionExpression {
 
@@ -24,14 +25,17 @@ export class StringInspectionFunction extends NumericFunctionExpression {
             case 'lastIndexOf':
                 return [{ type: 'string' }, { type: 'string' }];
             default:
-                throw new Error(`Unknown string inspection function: ${this.name}`);
+                throw new TypeCheckError(`Unknown string inspection function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const targetValue = this.target_arg.evaluate(context);
         if (typeof targetValue !== 'string') {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a string`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a string`);
         }
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
@@ -45,7 +49,7 @@ export class StringInspectionFunction extends NumericFunctionExpression {
             case 'lastIndexOf':
                 return targetValue.lastIndexOf(evaluatedArgs[0]);
             default:
-                throw new Error(`Unknown string inspection function: ${this.name}`);
+                throw new EvaluationError(`Unknown string inspection function: ${this.name}`);
         }
     }
 

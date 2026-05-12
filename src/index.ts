@@ -15,6 +15,9 @@ export * from './engine/rule.registry';
 export * from './engine/scope.memory';
 export * from './engine/workspace.type.checker';
 export * from './engine/working.memory';
+
+export * from './engine/graph/rete.graph';
+export * from './engine/graph/rete.nodes';
 export * from './engine/graph/rule.graph';
 export * from './engine/graph/nodes';
 
@@ -33,6 +36,8 @@ export * from './reader/functions.file.reader';
 export * from './reader/general.file.reader';
 export * from './reader/rules.file.reader';
 export * from './reader/types.file.reader';
+export * from './reader/workspace.files.reader';
+export * from './reader/workspace.transaction';
 
 // Rule components
 export * from './rules/executable';
@@ -74,3 +79,7 @@ export * from './syntax/functions/string.inspection.functions';
 export * from './autocomplete/autocomplete';
 // export * from './autocomplete/suggestion.builder';
 // export * from './autocomplete/types';
+
+// Logger components
+export * from './log/work.logger';
+export * from './log/console.logger';

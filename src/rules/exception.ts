@@ -11,7 +11,6 @@ export abstract class AbstractException {
         this.message = message;
         this.context = context;
     }
-
 }
 
 /**
@@ -22,7 +21,6 @@ export class RuleException extends AbstractException {
     constructor(message: string, context?: any) {
         super(message, context);
     }
-
 }
 
 /**
@@ -34,7 +32,6 @@ export class TypeException extends AbstractException {
     constructor(message: string, context?: any) {
         super(message, context);
     }
-
 }
 
 /**
@@ -46,24 +43,28 @@ export class EngineException extends AbstractException {
     constructor(message: string, context?: any) {
         super(message, context);
     }
-
 }
 
-export class EngineError extends Error {
+export class RulesEngineError extends Error {
     public context?: any;
 
     constructor(message: string, context?: any) {
         super(message);
         this.context = context;
     }
-
 }
 
-export class ParserError extends Error {
-    public context?: any;
+export class EngineError extends RulesEngineError {
+}
 
-    constructor(message: string, context?: any) {
-        super(message);
-        this.context = context;
-    }
+export class ParserError extends RulesEngineError {
+}
+
+export class TypeCheckError extends RulesEngineError {
+}
+
+export class EvaluationError extends RulesEngineError {
+}
+
+export class ExecutionError extends RulesEngineError {
 }

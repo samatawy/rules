@@ -4,7 +4,8 @@ import type { Expression } from "../syntax/expression";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../interfaces";
 import { RuleParser } from "../parser/rule.parser";
 import { mergeValidationResults } from "../common.utils";
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
+import { EvaluationError, ExecutionError, ParserError } from "./exception";
 
 export class IfThenRule extends AbstractRule {
 
@@ -12,13 +13,17 @@ export class IfThenRule extends AbstractRule {
 
     protected consequence: ExecutableAction;
 
-    static parse(syntax: string, workspace?: WorkSpace): IfThenRule {
+    static parse(syntax: string, workspace?: Workspace): IfThenRule {
         const parsed = new RuleParser({ workspace }).parse(syntax);
         if (parsed instanceof IfThenRule) {
             return parsed;
         } else {
-            throw new Error(`Invalid syntax for IfThenRule: ${syntax}`);
+            throw new ParserError(`Invalid syntax for IfThenRule: ${syntax}`);
         }
+    }
+
+    public getExpression(): Expression {
+        return this.condition;
     }
 
     static parsed(syntax: string, condition: Expression, consequence: ExecutableAction): IfThenRule {
@@ -35,7 +40,7 @@ export class IfThenRule extends AbstractRule {
                 this.condition = parsed.condition;
                 this.consequence = parsed.consequence;
             } else {
-                throw new Error(`Invalid syntax for IfThenRule: ${syntax}`);
+                throw new ParserError(`Invalid syntax for IfThenRule: ${syntax}`);
             }
         }
         this.consequence = this.consequence || new ExceptionThrower(`Condition met: ${syntax} but no consequence provided`);
@@ -59,7 +64,7 @@ export class IfThenRule extends AbstractRule {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        throw new Error('Direct execution of IfThenRule is not supported. Please evaluate first to get the appropriate executor.');
+        throw new EvaluationError('Direct execution of IfThenRule is not supported. Please evaluate first to get the appropriate executor.');
     }
 }
 
@@ -71,12 +76,19 @@ export class IfThenElseRule extends AbstractRule {
 
     protected alternative: ExecutableAction;
 
-    static parse(syntax: string, workspace?: WorkSpace): IfThenElseRule {
+    public getExpression(): Expression {
+        // const trueSyntax = this.condition.toString();
+        // const both = new ExpressionParser({}).parse(`${trueSyntax} OR not(${trueSyntax})`);
+        // return both;
+        return this.condition;
+    }
+
+    static parse(syntax: string, workspace?: Workspace): IfThenElseRule {
         const parsed = new RuleParser({ workspace }).parse(syntax);
         if (parsed instanceof IfThenElseRule) {
             return parsed;
         } else {
-            throw new Error(`Invalid syntax for IfThenElseRule: ${syntax}`);
+            throw new ParserError(`Invalid syntax for IfThenElseRule: ${syntax}`);
         }
     }
 
@@ -96,7 +108,7 @@ export class IfThenElseRule extends AbstractRule {
                 this.consequence = parsed.consequence;
                 this.alternative = parsed.alternative;
             } else {
-                throw new Error(`Invalid syntax for IfThenElseRule: ${syntax}`);
+                throw new ParserError(`Invalid syntax for IfThenElseRule: ${syntax}`);
             }
         }
 
@@ -125,7 +137,7 @@ export class IfThenElseRule extends AbstractRule {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        throw new Error('Direct execution of IfThenElseRule is not supported. Please evaluate first to get the appropriate executor.');
+        throw new ExecutionError('Direct execution of IfThenElseRule is not supported. Please evaluate first to get the appropriate executor.');
     }
 }
 
@@ -135,12 +147,16 @@ export class IfThrowRule extends AbstractRule {
 
     protected consequence: ExceptionThrower;
 
-    static parse(syntax: string, workspace?: WorkSpace): IfThrowRule {
+    public getExpression(): Expression {
+        return this.condition;
+    }
+
+    static parse(syntax: string, workspace?: Workspace): IfThrowRule {
         const parsed = new RuleParser({ workspace }).parse(syntax);
         if (parsed instanceof IfThrowRule) {
             return parsed;
         } else {
-            throw new Error(`Invalid syntax for IfThrowRule: ${syntax}`);
+            throw new ParserError(`Invalid syntax for IfThrowRule: ${syntax}`);
         }
     }
 
@@ -161,7 +177,7 @@ export class IfThrowRule extends AbstractRule {
                 this.condition = parsed.condition;
                 this.consequence = parsed.consequence;
             } else {
-                throw new Error(`Invalid syntax for IfThrowRule: ${syntax}`);
+                throw new ParserError(`Invalid syntax for IfThrowRule: ${syntax}`);
             }
         }
         this.require(...this.condition.required(), ...this.consequence.required());
@@ -183,7 +199,7 @@ export class IfThrowRule extends AbstractRule {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        throw new Error('Direct execution of IfThrowRule is not supported. Please evaluate first to get the appropriate executor.');
+        throw new ExecutionError('Direct execution of IfThrowRule is not supported. Please evaluate first to get the appropriate executor.');
     }
 }
 

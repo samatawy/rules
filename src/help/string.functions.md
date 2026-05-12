@@ -57,7 +57,7 @@ Returns `true` when the string matches the wildcard pattern.
 if like(mobile_number, "010*") then mobile_operator = "Vodafone"
 ```
 
-- Wildcards include `%` representing a single character, and `*` representing zero or more characters. Regex patterns using `match()` offer more powerful control.
+- Wildcards include `_` representing a single character, and `%` representing zero or more characters. Regex patterns using `match()` offer more powerful control.
 
 ### `likeIgnoreCase(text, pattern)`
 Returns `true` when the string matches the wildcard pattern, ignoring upper/lower case differences.
@@ -139,18 +139,18 @@ Replaces the first matching substring.
 set normalized = replace(phone, "-", " ")
 ```
 
-### `toUpperCase(text)`
+### `upperCase(text)`
 Converts text to uppercase.
 
 ```
-set code = toUpperCase(country)
+set code = upperCase(country)
 ```
 
-### `toLowerCase(text)`
+### `lowerCase(text)`
 Converts text to lowercase.
 
 ```
-set emailKey = toLowerCase(email)
+set emailKey = lowerCase(email)
 ```
 
 ## Array Collection

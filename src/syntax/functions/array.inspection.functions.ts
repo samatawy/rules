@@ -3,6 +3,8 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import { WorkLogger } from "../../log/work.logger";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
 
@@ -31,7 +33,7 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
             case 'range':
                 return [{ type: 'number[]' }];
             default:
-                throw new Error(`Unknown array inspection function: ${this.name}`);
+                throw new TypeCheckError(`Unknown array inspection function: ${this.name}`);
         }
     }
 
@@ -40,6 +42,9 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         // If this function expects a parameter array, we need to convert the target argument and extra arguments 
         // into a single array argument for processing, unless the target is already an array.
         if (this.expectsParameterArray()) {
@@ -51,8 +56,8 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
 
         const targetValue = this.target_arg.evaluate(context);
         if (!Array.isArray(targetValue)) {
-            console.debug('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
-            throw new Error(`Target argument for function ${this.name} did not evaluate to an array`);
+            WorkLogger.warn('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to an array`);
         }
 
         switch (this.name) {
@@ -83,7 +88,7 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
                 return Math.max(...targetValue) - Math.min(...targetValue);
 
             default:
-                throw new Error(`Unknown array inspection function: ${this.name}`);
+                throw new EvaluationError(`Unknown array inspection function: ${this.name}`);
         }
     }
 

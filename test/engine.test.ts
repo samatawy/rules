@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RuleGraph } from '../src/engine/graph/rule.graph';
 import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
-import { WorkSpace } from '../src/engine/workspace';
+import { Workspace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
 import { RuleParser } from '../src/parser/rule.parser';
 import { CustomFunctionExpression } from '../src/syntax/functions/custom.function';
@@ -26,7 +26,7 @@ describe('Engine tests', () => {
 
   it('add rules to workspace and find applicable rules to context', async () => {
 
-    const space = new WorkSpace();
+    const space = new Workspace();
     const graph = space.getRuleGraph();
     const r1 = IfThenRule.parse('if x then y = true');
     expect(r1.required().size).toBe(1);
@@ -47,7 +47,7 @@ describe('Engine tests', () => {
 
 
   it('add rules to workspace and find applicable rules to context with nested keys', async () => {
-    const space = new WorkSpace();
+    const space = new Workspace();
     const graph = space.getRuleGraph();
 
     space.addRule('if x.y then z = true');
@@ -66,7 +66,7 @@ describe('Engine tests', () => {
 
 
   it('define custom functions and use them in rules', async () => {
-    const space = new WorkSpace();
+    const space = new Workspace();
     const expressionParser = new ExpressionParser({ workspace: space });
     const triple = CustomFunctionExpression.from({
       name: 'triple',
@@ -95,7 +95,7 @@ describe('Engine tests', () => {
 
 
   it('evaluate rules', async () => {
-    const space = new WorkSpace();
+    const space = new Workspace();
     const r1 = IfThenRule.parse('if x > 10 then result = 10 + 5 / 2');
     const r2 = IfThenRule.parse('if a == 5 then result = (10 + 5) / 2');
 
@@ -131,7 +131,7 @@ describe('Engine tests', () => {
 
 
   it('evaluate rules in iterations', async () => {
-    const space = new WorkSpace({ debugging: false });
+    const space = new Workspace({});
     space.addRule('if x > 10 then y = 15');
 
     let ctx = space.loadContext({ x: 12 });
@@ -158,7 +158,7 @@ describe('Engine tests', () => {
 
 
   it('handle composite actions', async () => {
-    const space = new WorkSpace({ strict_inputs: false, strict_outputs: false });
+    const space = new Workspace({ strict_inputs: false, strict_outputs: false });
     space.addRule('if x > 10 then SET y = 15; z = 20');
 
     expect(space.checkTypes().valid).toBe(true);
@@ -175,12 +175,18 @@ describe('Engine tests', () => {
     // Conflicting rules can be prevented by setting strict_conflicts to true in the workspace options. 
     // In this case, if two or more applicable rules have the same highest salience and affect the same output key, 
     // an error will be thrown to prevent non-deterministic behavior.
-    const space = new WorkSpace({ strict_conflicts: true });
+    const space = new Workspace({ strict_conflicts: true });
     space.addRule('if x > 10 then y = 15');
     space.addRule('if x > 20 then y = 20');
 
-    let ctx = space.loadContext({ x: 12 });
+    let ctx = space.loadContext({ x: 22 });
+    // more than one rule with the highest salience exist for x = 22
     expect(() => space.process(ctx)).toThrow(/Conflict detected.*/);
+
+    ctx = space.loadContext({ x: 12 });
+    // only one rule with the highest salience exists for x = 12
+    // expect(() => space.process(ctx)).toThrow(/Conflict detected.*/);
+    expect(space.process(ctx)).toBe(true);
 
     // If we set different salience values for the rules, the one with the higher salience will take precedence 
     // without throwing an error.

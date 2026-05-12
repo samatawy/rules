@@ -1,8 +1,9 @@
-import { WorkSpace } from "../engine/workspace";
+import { Workspace } from "../engine/workspace";
+import { WorkspaceTransaction } from "./workspace.transaction";
 import { FunctionParser } from "../parser/function.parser";
 import { RuleParser } from "../parser/rule.parser";
 import { TypeParser } from "../parser/type.parser";
-import type { AbstractRule } from "../rules/abstract.rule";
+import { AbstractRule } from "../rules/abstract.rule";
 import type { FunctionDefinition, RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
 
@@ -31,10 +32,15 @@ export interface GeneralFileReaderOptions extends FileReaderOptions {
 
 /**
  * Reader class for parsing general files that can contain constants, types, rules, and functions to be used within the rule engine.
- * You should use this class to read content from a text file, where each line (or block) defines a constant, type, rule, or function.
+ * You should use this class to read content from a text file or stream, where each line (or block) defines a constant, type, rule, or function.
  * The reader will parse the file content and return an object containing the successfully parsed elements as well as any errors encountered during parsing.
  * The reader supports both line-by-line and block-by-block reading, allowing for flexible formatting of the file.
  * It also includes error handling for invalid syntax and duplicate keys, ensuring that the resulting objects are valid and usable within the rule engine.
+ *
+ * N.B. Declarations do not need to be in order, although that is still recommended.
+ *  
+ * N.B. This is a transactional safe reader. If you provide a workspace and select the option accept: 'all', 
+ * then that workplace will not be affected if any errors are encountered. 
  */
 export class GeneralFileReader extends AbstractFileReader {
 
@@ -50,7 +56,9 @@ export class GeneralFileReader extends AbstractFileReader {
      * The workspace instance to which the parsed rules, functions, types, and constants will be added. 
      * This allows for components to recognize earlier declared components.
      */
-    protected workspace: WorkSpace;
+    protected workspace: Workspace;
+
+    protected blocks: string[];
 
     /**
      * Create a new instance of the GeneralFileReader with the specified options for parsing content from a file.
@@ -67,98 +75,143 @@ export class GeneralFileReader extends AbstractFileReader {
             ...options
         }
 
-        this.workspace = this.options.workspace || new WorkSpace();
+        this.workspace = this.options.workspace || new Workspace();
         this.ruleParser = new RuleParser({ workspace: this.workspace });
         this.functionParser = new FunctionParser({ workspace: this.workspace });
         this.typeParser = new TypeParser({ workspace: this.workspace });
+        this.blocks = [];
     }
 
     /**
-     * Parse the content of a file and return an array of strings, each representing a line or block of content based on the specified reading method.
+     * Parse the content of a functions file and return the result, including the successfully parsed components and any errors encountered during parsing.
      * A general file can read types, constants, rules, and functions.
+     * 
      * @param fileContent The content of the file to parse.
-     * @returns An array of strings, each representing a line or block of content based on the specified reading method.
+     * @returns The result of parsing, including the successfully parsed constants, functions, types, rules, and any errors encountered.
+
      */
     public parse(fileContent: string): GeneralReaderResult {
         let origin = fileContent.trim();
         let remainder = origin;
-        const syntaxes: string[] = [];
+        // const syntaxes: string[] = [];
         while (remainder.length > 0) {
             const { line, remainder: newRemainder } = this.options.read_by === 'block' ?
                 this.readBlock(remainder) :
                 this.readLine(remainder);
+
             if (line.length > 0 && !line.startsWith('//')) {
-                syntaxes.push(line);
+                this.blocks.push(line);
             }
             remainder = newRemainder;
         }
 
+        return this.parseAll();
+    }
+
+    protected parseAll(): GeneralReaderResult {
+
+        const transaction = WorkspaceTransaction.begin(this.workspace);
+
         const result: GeneralReaderResult = {
-            read: syntaxes.length,
+            read: this.blocks.length,
             passed: 0,
             failed: 0,
-            rules: [],
+            constants: {},
             functions: {},
             types: {},
-            constants: {},
-            errors: []
-        };
+            rules: [],
+            errors: [],
+        }
+        let unparsed: string[] = [...this.blocks];
+        let deferred: string[] = [];
 
-        for (const syntax of syntaxes) {
+        while (unparsed.length > 0) {
+            let success = 0;
+            // Take each unparsed block
+            for (const syntax of unparsed) {
+                // and try to parse it..
+                const parsed = this.parseBlock(syntax);
+                if (parsed) {
+                    // Success - add the component to be used
+                    if (this.isConstant(parsed)) {
+                        const key = Object.keys(parsed)[0]!;
+                        this.workspace.addConstant(key, parsed[key]);
+                        result.constants[key] = parsed[key];
+                        result.passed += 1;
+                    }
+                    else if (this.isRootType(parsed)) {
+                        this.workspace.typeRegistry().addRootType(parsed);
+                        result.types[parsed.key] = parsed;
+                        result.passed += 1;
+                    }
+                    else if (this.isFunctionDefnition(parsed)) {
+                        this.workspace.functionRegistry().addFunction(parsed);
+                        result.functions[parsed.name] = parsed;
+                        result.passed += 1;
+                    }
+                    else if (parsed instanceof AbstractRule) {
+                        this.workspace.addRule(parsed);
+                        result.rules.push(parsed);
+                        result.passed += 1;
+                    }
+                    else {
+                        result.errors.push('Unrecognized component: ' + JSON.parse(parsed));
+                        result.failed += 1;
+                    }
 
-            const constant = this.parseConstant(syntax);
-            if (constant) {
-                const key = Object.keys(constant)[0] || '';
-                if (!!key && result.constants.hasOwnProperty(key)) {
-                    result.errors.push(`Duplicate constant key: ${key}`);
-                    result.failed++;
-                    continue;
+                    success += 1;
+                } else {
+                    // Failure - may be missing dependencies
+                    // Return the block to be parsed in a later iteration
+                    deferred.push(syntax);
                 }
-                result.constants[key] = constant[key];
-                this.workspace.addConstant(key, constant[key]);
-                result.passed++;
-                continue;
             }
-
-            const rule = this.parseRule(syntax);
-            if (rule) {
-                result.rules.push(rule);
-                result.passed++;
-                continue;
+            if (success === 0) {
+                // no more parsing can succeed
+                break;
+            } else {
+                // return to parse deferred blocks
+                unparsed = [...deferred];
+                deferred = [];
             }
+        }
 
-            const func = this.parseFunction(syntax);
-            if (func) {
-                const key = func.name;
-                if (result.functions.hasOwnProperty(key)) {
-                    result.errors.push(`Duplicate function name: ${key}`);
-                    result.failed++;
-                    continue;
-                }
-                result.functions[key] = func;
-                this.workspace.functionRegistry().addFunction(func);
-                result.passed++;
-                continue;
-            }
+        result.failed += deferred.length;
+        for (const syntax of deferred) {
+            result.errors.push(`Failed to parse syntax: [${syntax}]`);
+        }
 
-            const type = this.parseType(syntax);
-            if (type) {
-                if (result.types.hasOwnProperty(type.key)) {
-                    result.errors.push(`Duplicate type key: ${type.key}`);
-                    result.failed++;
-                    continue;
-                }
-                result.types[type.key] = type;
-                this.workspace.typeRegistry().addRootType(type);
-                result.passed++;
-                continue;
-            }
-
-            result.errors.push(`Unrecognized syntax: ${syntax}`);
-            result.failed++;
+        if (this.options.accept === 'all' && result.errors.length > 0) {
+            transaction.rollback();
+        } else {
+            transaction.commit();
         }
 
         return result;
+    }
+
+    protected parseBlock(syntax: string): any {
+        const constant = this.parseConstant(syntax);
+        if (constant) {
+            return constant;
+        }
+
+        const rule = this.parseRule(syntax);
+        if (rule) {
+            return rule;
+        }
+
+        const func = this.parseFunction(syntax);
+        if (func) {
+            return func;
+        }
+
+        const type = this.parseType(syntax);
+        if (type) {
+            return type;
+        }
+
+        return undefined;
     }
 
     protected parseRule(content: string): AbstractRule | null {
@@ -182,7 +235,12 @@ export class GeneralFileReader extends AbstractFileReader {
         const match = /^\s*(?:CONST\s+)?(\w+)\s*=\s*(.+)$/i.exec(content);
         if (match) {
             const key = match[1];
-            const value = match[2];
+            let value = match[2];
+            if (value === undefined) return null;
+            // Remove quotes from string
+            let quoted = /"(.*)"/.exec(value) || /'(.*)'/.exec(value);
+            if (quoted) value = quoted[1];
+
             return { ['' + key]: value };
         } else {
             return null;

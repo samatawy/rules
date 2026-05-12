@@ -3,7 +3,8 @@ import { FunctionParser } from "../parser/function.parser";
 import type { ArrayType, AtomicType, FunctionDefinition } from "../types";
 import type { TypeChecker, ValidationResult } from "../interfaces";
 import { ScopeTypeChecker } from "./scope.memory";
-import type { WorkSpaceOptions } from "./workspace";
+import type { WorkspaceOptions } from "./workspace";
+import { ParserError } from "../rules/exception";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
@@ -15,13 +16,13 @@ export class FunctionRegistry {
 
     private functions: Map<string, FunctionDefinition>;
 
-    protected options: Partial<WorkSpaceOptions>;
+    protected options: Partial<WorkspaceOptions>;
 
     /**
      * Create a new instance of FunctionRegistry.
      * @param options Optional workspace options to configure the behavior of the function registry.
      */
-    constructor(options?: Partial<WorkSpaceOptions>) {
+    constructor(options?: Partial<WorkspaceOptions>) {
         this.functions = new Map<string, FunctionDefinition>();
 
         this.options = {
@@ -32,7 +33,7 @@ export class FunctionRegistry {
      * Set or update the options for the registry.
      * @param options an object containing the options to set or update.
      */
-    public setOptions(options: Partial<WorkSpaceOptions>): void {
+    public setOptions(options: Partial<WorkspaceOptions>): void {
         this.options = { ...this.options, ...options };
     }
 
@@ -61,10 +62,10 @@ export class FunctionRegistry {
      */
     public addFunction(func: FunctionDefinition): void {
         if (FunctionParser.isReservedName(func.name)) {
-            throw new Error(`Cannot add function with reserved name: ${func.name}`);
+            throw new ParserError(`Cannot add function with reserved name: ${func.name}`);
         }
         if (this.functions.has(func.name)) {
-            throw new Error(`Function with name ${func.name} already exists`);
+            throw new ParserError(`Function with name ${func.name} already exists`);
         }
         this.functions.set(func.name, func);
     }
@@ -138,9 +139,4 @@ export class FunctionRegistry {
         this.functions.clear();
     }
 
-    // private debug(...args: any[]): void {
-    //     if (this.options.debugging) {
-    //         console.debug('[FunctionRegistry DEBUG]', ...args);
-    //     }
-    // }
 }

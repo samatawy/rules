@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { NumericExpression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class RandomFunction extends NumericFunctionExpression {
 
@@ -17,15 +18,18 @@ export class RandomFunction extends NumericFunctionExpression {
             case 'randomInteger':
                 return [{ type: 'number' }, { type: 'number' }];
             default:
-                throw new Error(`Unknown random function: ${this.name}`);
+                throw new TypeCheckError(`Unknown random function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const evaluatedArgs = this.args.map(arg => arg.evaluate(context));
         evaluatedArgs.forEach((arg, index) => {
             if (typeof arg !== 'number') {
-                throw new Error(`Argument ${index} for function ${this.name} did not evaluate to a number`);
+                throw new EvaluationError(`Argument ${index} for function ${this.name} did not evaluate to a number`);
             }
         });
 
@@ -41,7 +45,7 @@ export class RandomFunction extends NumericFunctionExpression {
                 const intMax = Math.floor(Math.max(evaluatedArgs[0], evaluatedArgs[1]));
                 return Math.floor(intMin + (Math.random() * (intMax - intMin + 1)));
             default:
-                throw new Error(`Unknown random function: ${this.name}`);
+                throw new EvaluationError(`Unknown random function: ${this.name}`);
         }
     }
 

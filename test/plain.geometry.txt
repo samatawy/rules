@@ -1,0 +1,37 @@
+# Common rules for plain geometry
+
+CONST CIRCLE = 'circle'
+
+CONST RECTANGLE = 'rectangle'
+
+CONST SQUARE = 'square'
+
+CONST TRIANGLE = 'triangle'
+
+circle_area(radius: number) = pi() * radius * radius
+
+square_area(side: number) = side * side
+
+rectangle_area(length: number, height: number) = length * breadth
+
+triangle_area(base: number, height: number) = base * height * 0.5
+
+{
+    key: 'shape',
+    properties: {
+        type: 'string',
+        radius: 'number',
+        side: 'number',
+        base: 'number',
+        length: 'number',
+        height: 'number',
+    }
+}
+
+IF lowerCase(shape.type) == CIRCLE THEN shape.area = circle_area(shape.radius)
+
+IF lowerCase(shape.type) == SQUARE THEN shape.area = square_area(shape.side)
+
+IF lowerCase(shape.type) == RECTANGLE THEN shape.area = rectangle_area(shape.length, shape.height)
+
+IF lowerCase(shape.type) == TRIANGLE THEN shape.area = triangle_area(shape.base, shape.height)

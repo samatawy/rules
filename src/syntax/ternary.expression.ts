@@ -3,6 +3,7 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
+import { TypeCheckError } from "../rules/exception";
 
 export class TernaryExpression extends Expression {
 
@@ -17,6 +18,12 @@ export class TernaryExpression extends Expression {
         this.condition = condition;
         this.trueExpression = trueExpression;
         this.falseExpression = falseExpression;
+
+        this.syntax = this.toString();
+    }
+
+    public getParts(): Expression[] {
+        return this.condition.getParts();
     }
 
     public required(): Set<string> {
@@ -32,7 +39,7 @@ export class TernaryExpression extends Expression {
         if (trueType && falseType && trueType === falseType) {
             return trueType as AtomicType | ArrayType;
         }
-        throw new Error(`Unable to determine return type of ternary expression: true branch returns ${trueType}, false branch returns ${falseType}`);
+        throw new TypeCheckError(`Unable to determine return type of ternary expression: true branch returns ${trueType}, false branch returns ${falseType}`);
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
@@ -71,6 +78,9 @@ export class TernaryExpression extends Expression {
     }
 
     public evaluate(context: WorkingContext): any {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const conditionValue = this.condition.evaluate(context);
         return conditionValue ? this.trueExpression.evaluate(context) : this.falseExpression.evaluate(context);
     }

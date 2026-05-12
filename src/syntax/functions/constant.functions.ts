@@ -1,6 +1,7 @@
 import type { TypedParameter } from "../../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
 import { DateFunctionExpression, NumericFunctionExpression } from "../function.expression";
+import { EvaluationError } from "../../rules/exception";
 
 export class ConstantNumbers extends NumericFunctionExpression {
 
@@ -59,7 +60,7 @@ export class ConstantNumbers extends NumericFunctionExpression {
                 return 6.67430e-11;
 
             default:
-                throw new Error(`Unknown constant function: ${this.name}`);
+                throw new EvaluationError(`Unknown constant function: ${this.name}`);
         }
     }
 
@@ -106,7 +107,7 @@ export class ConstantDates extends DateFunctionExpression {
                 return new Date(nowMonthEnd.getFullYear(), nowMonthEnd.getMonth() + 1, 0);
 
             default:
-                throw new Error(`Unknown constant function: ${this.name}`);
+                throw new EvaluationError(`Unknown constant function: ${this.name}`);
         }
     }
 

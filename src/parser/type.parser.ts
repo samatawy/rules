@@ -35,19 +35,19 @@ export class TypeParser {
         try {
             const json = JSON5.parse(syntax);
             if (typeof json !== 'object' || json === null || Array.isArray(json)) {
-                throw new Error(`Invalid JSON syntax for type definition: ${syntax}`);
+                throw new ParserError(`Invalid JSON syntax for type definition: ${syntax}`);
             }
             if (!json.hasOwnProperty('key') || typeof json.key !== 'string') {
-                throw new Error(`Type definition must have a "key" property of type string: ${syntax}`);
+                throw new ParserError(`Type definition must have a "key" property of type string: ${syntax}`);
             }
             if (!json.hasOwnProperty('type') && !json.hasOwnProperty('properties')) {
-                throw new Error(`Type definition must have either a "type" or "properties" property: ${syntax}`);
+                throw new ParserError(`Type definition must have either a "type" or "properties" property: ${syntax}`);
             }
             if (json.hasOwnProperty('type') && !this.isValidTypeDefinition(json.type)) {
-                throw new Error(`If "type" is defined, it must be a valid type definition: ${syntax}`);
+                throw new ParserError(`If "type" is defined, it must be a valid type definition: ${syntax}`);
             }
             if (json.hasOwnProperty('properties') && !TypeParser.isValidObjectType(json.properties)) {
-                throw new Error(`If "properties" is defined, it must be an valid object type: ${syntax}`);
+                throw new ParserError(`If "properties" is defined, it must be an valid object type: ${syntax}`);
             }
             return {
                 key: json.key,

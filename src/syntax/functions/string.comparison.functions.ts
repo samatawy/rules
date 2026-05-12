@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { StringExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
+import { EvaluationError } from "../../rules/exception";
 
 export class StringComparisonFunction extends BooleanFunctionExpression {
 
@@ -20,11 +21,14 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
     }
 
     public evaluate(context: WorkingContext): boolean {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const leftValue = this.left_arg.evaluate(context);
         const rightValue = this.right_arg.evaluate(context);
 
         if (typeof leftValue !== 'string' || typeof rightValue !== 'string') {
-            throw new Error(`Arguments for function ${this.name} did not evaluate to strings`);
+            throw new EvaluationError(`Arguments for function ${this.name} did not evaluate to strings`);
         }
 
         switch (this.name) {
@@ -59,7 +63,7 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             case 'matchesIgnoreCase':
                 return new RegExp(rightValue, 'i').test(leftValue);
             default:
-                throw new Error(`Unknown string comparison function: ${this.name}`);
+                throw new EvaluationError(`Unknown string comparison function: ${this.name}`);
         }
     }
 
@@ -67,10 +71,10 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
         // Escape regex special characters except for our wildcards
         const escapedPattern = pattern.replace(/([.+?^=!:${}()|[\]\/\\])/g, '\\$1');
 
-        // Replace % with . to match any single character and * with .* to match zero or more characters
+        // Replace _ with . to match any single character and % with .* to match zero or more characters
         return escapedPattern
-            .replace(/%/g, '.')
-            .replace(/\*/g, '.*');
+            .replace(/_/g, '.')
+            .replace(/\%/g, '.*');
     }
 
     static names = ['equals', 'equalsIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];

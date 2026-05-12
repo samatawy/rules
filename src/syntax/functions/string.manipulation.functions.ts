@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { Expression, StringExpression } from "../expression";
 import { StringFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class StringManipulationFunction extends StringFunctionExpression {
 
@@ -25,20 +26,23 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'append':
             case 'replace':
                 return [{ type: 'string' }, { type: 'string' }];
-            case 'toUpperCase':
-            case 'toLowerCase':
+            case 'upperCase':
+            case 'lowerCase':
                 return [{ type: 'string' }];
             default:
-                throw new Error(`Unknown string manipulation function: ${this.name}`);
+                throw new TypeCheckError(`Unknown string manipulation function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): string {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         let targetValue = this.target_arg.evaluate(context);
         if (typeof targetValue !== 'string') {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a string`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a string`);
         }
 
         switch (this.name) {
@@ -52,14 +56,14 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 return targetValue + evaluatedArgs[0];
             case 'replace':
                 return targetValue.replace(evaluatedArgs[0], evaluatedArgs[1]);
-            case 'toUpperCase':
+            case 'upperCase':
                 return targetValue.toUpperCase();
-            case 'toLowerCase':
+            case 'lowerCase':
                 return targetValue.toLowerCase();
             default:
-                throw new Error(`Unknown string manipulation function: ${this.name}`);
+                throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
     }
 
-    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'toUpperCase', 'toLowerCase'];
+    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase'];
 }

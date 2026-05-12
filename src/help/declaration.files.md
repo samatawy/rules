@@ -9,51 +9,33 @@ To configure the Rule engine, you need to declare your business logic. You can p
 Please note that you may have dependencies between files, e.g. a rules file may use functions declared in another file. 
 If so, the order of reading files into a workspace will matter, especially with strict options.
 
-You may get around loading order if you disable `strict_syntax`, `strict_inpouts`, and `strict_outputs` in your workspace. 
-After loading you can set them back as needed and run `checkTypes()` on the workspace instance to validate loaded components.
+There are multiple reader classes you can use to read files (even if out of order), so you can select the style you prefer.
 
-## General Files
-
-A general file contains mixed declarations. You can have one file for a specific type and its relevant rules.
-
-You can also declare constants and custom functions in the same file.
-
-These are parsed in order so a function or constant declared earlier can be used later but not the other way around.
-
-```
-// Set by state legislation
-TAX_RATE = 0.14
-
-TAX(total: number) = total * TAX_RATE
-
-// Invoices are accepted with only total
-{ key: 'Invoice',
-  properties: {
-    total: 'number',    // required
-    tax: 'number'       // calculated
-  }
-}
-
-@name(Invoice tax calculator)
-IF invoice.total > 0 
-THEN invoice.tax = TAX(invoice.total)
-ELSE THROW "Invalid invoice amount"
-```
-
-This approach encourages separation of declarations into business-relevant areas such as a single file for every domain of interest.
-
-### Reading a general file:
+## Reading Declaration Files
 
 In a node environment with known paths, the easiest way to load files (or folders) into a workspace is to use the helper class `WorkspaceFilesReader`: 
+
 ```
 const sales_space = new Workspace();
 const reader = new WorkspaceFilesReader(sales_space);
 
-let success = reader.readFromFile('<path>/common.functions.text');
-success &&= reader.readFromFile('<path>/sales.rules.txt');
+let success = reader.readFromFiles([
+    '<path>/sales.rule.text',
+    '<path>/common.functions.text',
+]);
+
+// Alternatively
+let folderSuccess = read.readFromFolder('<path>')
 ```
 
-Alternatively, in a browser or when you need more control (e.g. if building your own editor) you can use reader classes (e.g. `GeneralFileReader`) directly.
+The above will not fail if declarations are not properly ordered, e.g. if a function is used before it is declared. 
+However, although the above will work with any order of files, each call must leave the workspace in a valid state, so load all relevant files in one call.
+If your files depend on external declarations, these must have been already loaded.
+
+N.B. Keeping proper order will help keep your declaration/documentation file(s) readable and maintainable. 
+
+Alternatively, in a browser or when you need more control (e.g. if building your own editor) you can use reader classes (e.g. `GeneralFileReader`) directly. Using these readers, the order of declarations DOES matter, even within a single file.
+
 ```
 const fileContents = <load file as string>;
 const reader = new GeneralFileReader();
@@ -89,10 +71,37 @@ const reader = new GeneralFileReader({ workplace: myWorkplace });
 // After parsing a file, now your workplace can recognize and use all components declared in that file.
 ```
 
-- File readers should ONLY use your workplace directly if you have already ensured all your files are valid. If not certain, bad files may fail to load all components and leave your workplace in an unhealthy state. 
+- File readers are transactional. If you decide to accept `'partial'` declarations (e.g. in development / testing), errors will not cause the entire read method top fail. If you decide to accept `'all'` (e.g. in staging / production) then any error will prevent all components from being parsed. In that case, your workspace will not be affected unless all components are accepted.
 
-- It is safer to parse files in one step and assign them to your workplace only when all files have loaded without errors.
+## General Files
 
+A general file contains mixed declarations. You can have one file for a specific type and its relevant rules.
+
+You can also declare constants and custom functions in the same file.
+
+These are parsed in order so a function or constant declared earlier can be used later but not the other way around.
+
+```
+// Set by state legislation
+TAX_RATE = 0.14
+
+TAX(total: number) = total * TAX_RATE
+
+// Invoices are accepted with only total
+{ key: 'Invoice',
+  properties: {
+    total: 'number',    // required
+    tax: 'number'       // calculated
+  }
+}
+
+@name(Invoice tax calculator)
+IF invoice.total > 0 
+THEN invoice.tax = TAX(invoice.total)
+ELSE THROW "Invalid invoice amount"
+```
+
+This approach encourages separation of declarations into business-relevant areas such as a single file for every domain of interest.
 
 ## Markdown Files
 

@@ -1,13 +1,13 @@
 import { EngineError } from "../rules/exception";
-import { WorkSpace } from "./workspace";
+import { Workspace } from "./workspace";
 
 export class RulesEngine {
 
-    protected workspaces: Map<string, WorkSpace>;
+    protected workspaces: Map<string, Workspace>;
 
     private static _global_registry: RulesEngine;
 
-    private static _common_workspace: WorkSpace;
+    private static _common_workspace: Workspace;
 
     /**
      * Get the global registry instance of the RulesEngine. This is a singleton instance that can be used 
@@ -24,13 +24,13 @@ export class RulesEngine {
      * Get the common workspace instance. This is a singleton workspace that can be used as a shared space 
      * for common rules, constants, types, and functions that can be sufficient for small applications.
      * 
-     * @returns The common WorkSpace instance.
+     * @returns The common Workspace instance.
      */
-    public static commonSpace(): WorkSpace {
+    public static defaultSpace(): Workspace {
         if (!this._common_workspace) {
             const engine = this.registry();
             if (!engine.hasWorkspace("common")) {
-                engine.addWorkspace("common", new WorkSpace());
+                engine.addWorkspace("common", new Workspace());
             }
             this._common_workspace = engine.getWorkspace("common")!;
         }
@@ -38,7 +38,7 @@ export class RulesEngine {
     }
 
     protected constructor() {
-        this.workspaces = new Map<string, WorkSpace>();
+        this.workspaces = new Map<string, Workspace>();
     }
 
     /**
@@ -80,9 +80,9 @@ export class RulesEngine {
      * Get a workspace by name from this engine.
      * 
      * @param name The name of the workspace to retrieve.
-     * @returns The WorkSpace instance associated with the given name, or undefined if not found.
+     * @returns The Workspace instance associated with the given name, or undefined if not found.
      */
-    public getWorkspace(name: string): WorkSpace | undefined {
+    public getWorkspace(name: string): Workspace | undefined {
         return this.workspaces.get(name);
     }
 
@@ -90,9 +90,9 @@ export class RulesEngine {
      * Get a workspace by name from the global registry.
      * 
      * @param name The name of the workspace to retrieve.
-     * @returns The WorkSpace instance associated with the given name, or undefined if not found.
+     * @returns The Workspace instance associated with the given name, or undefined if not found.
      */
-    public static getWorkspace(name: string): WorkSpace | undefined {
+    public static getWorkspace(name: string): Workspace | undefined {
         return this.registry().getWorkspace(name);
     }
 
@@ -102,10 +102,10 @@ export class RulesEngine {
      * N.B. To reuse a name, get the workspace instance using getWorkspace() and call clear() to reset it.
      * 
      * @param name The name of the workspace.
-     * @param workspace The WorkSpace instance to add.
+     * @param workspace The Workspace instance to add.
      * @throws EngineError if a workspace with the same name already exists.
      */
-    public addWorkspace(name: string, workspace: WorkSpace): void {
+    public addWorkspace(name: string, workspace: Workspace): void {
         if (this.workspaces.has(name)) {
             throw new EngineError(`Workspace with name "${name}" already exists.`);
         }
@@ -118,10 +118,10 @@ export class RulesEngine {
      * N.B. To reuse a name, get the workspace instance using getWorkspace() and call clear() to reset it.
      * 
      * @param name The name of the workspace.
-     * @param workspace The WorkSpace instance to add.
+     * @param workspace The Workspace instance to add.
      * @throws EngineError if a workspace with the same name already exists.
      */
-    public static addWorkspace(name: string, workspace: WorkSpace): void {
+    public static addWorkspace(name: string, workspace: Workspace): void {
         if (this.registry().hasWorkspace(name)) {
             throw new EngineError(`Workspace with name "${name}" already exists in the global registry.`);
         }
@@ -129,7 +129,7 @@ export class RulesEngine {
     }
 
     /**
-     * Create a clone of the original WorkSpace instance, including all rules, constants, types, and functions.
+     * Create a clone of the original Workspace instance, including all rules, constants, types, and functions.
      * This is useful for creating isolated copies of the workspace for testing, experimentation, or parallel processing 
      * without affecting the original workspace.
      * You can safely mutate a cloned workspace without affecting the source, since no references are shared.
@@ -137,13 +137,13 @@ export class RulesEngine {
      * N.B. To clone a Workspace without adding it to a registry, you can simply call the clone() method on the Workspace instance itself, 
      * which will return a deep clone of the workspace.
      * 
-     * @param source the WorkSpace instance or name of the workspace to clone.
+     * @param source the Workspace instance or name of the workspace to clone.
      * @param target_name name for the cloned workspace. The cloned workspace will be added to the engine's workspace map with this name.
-     * @returns a new WorkSpace instance that is a deep clone of the original workspace.
+     * @returns a new Workspace instance that is a deep clone of the original workspace.
      * @throws EngineError if the source workspace is not found in the engine's workspace map 
      * or if a workspace with the new name already exists in the engine's workspace map.
      */
-    public cloneWorkspace(source: WorkSpace | string, target_name: string): WorkSpace {
+    public cloneWorkspace(source: Workspace | string, target_name: string): Workspace {
         if (this.hasWorkspace(target_name)) {
             throw new EngineError(`Workspace with name "${target_name}" already exists.`);
         }
@@ -154,7 +154,7 @@ export class RulesEngine {
             throw new EngineError(`Workspace not found: ${source}`);
         }
 
-        // We can use the clone method of the WorkSpace class, which is designed to create a deep clone of the workspace, 
+        // We can use the clone method of the Workspace class, which is designed to create a deep clone of the workspace, 
         // including all its components (rules, constants, types, functions).
         const cloned = original.clone();
         this.addWorkspace(target_name, cloned);
@@ -166,11 +166,11 @@ export class RulesEngine {
      * 
      * @param source the workspace instance or name of the workspace to clone.
      * @param target_name the name for the cloned workspace in the global registry.
-     * @returns a new WorkSpace instance that is a deep clone of the original workspace, added to the global registry with the new name.
+     * @returns a new Workspace instance that is a deep clone of the original workspace, added to the global registry with the new name.
      * @throws EngineError if the source workspace is not found in the global registry 
      * or if a workspace with the new name already exists in the global registry.
      */
-    public static cloneWorkspace(source: WorkSpace | string, target_name: string): WorkSpace {
+    public static cloneWorkspace(source: Workspace | string, target_name: string): Workspace {
         return this.registry().cloneWorkspace(source, target_name);
     }
 

@@ -5,8 +5,9 @@ import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResul
 import { RuleParser } from "../parser/rule.parser";
 import { getReturnType, isAtomicType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
+import { ParserError } from "./exception";
 
 export class OutputRule extends AbstractRule {
 
@@ -14,12 +15,16 @@ export class OutputRule extends AbstractRule {
 
     protected expression: Expression;
 
-    static parse(syntax: string, workspace?: WorkSpace): OutputRule {
+    public getExpression(): Expression {
+        return this.expression;
+    }
+
+    static parse(syntax: string, workspace?: Workspace): OutputRule {
         const parsed = new RuleParser({ workspace }).parse(syntax);
         if (parsed instanceof OutputRule) {
             return parsed;
         } else {
-            throw new Error(`Invalid syntax for OutputRule: ${syntax}`);
+            throw new ParserError(`Invalid syntax for OutputRule: ${syntax}`);
         }
     }
 
@@ -39,7 +44,7 @@ export class OutputRule extends AbstractRule {
                 this.outputKey = parsed.outputKey;
                 this.expression = parsed.expression;
             } else {
-                throw new Error(`Invalid syntax for OutputRule: ${syntax}`);
+                throw new ParserError(`Invalid syntax for OutputRule: ${syntax}`);
             }
         }
         this.require(...this.expression.required());

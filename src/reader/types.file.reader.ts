@@ -1,3 +1,5 @@
+import { Workspace } from "../engine/workspace";
+import { WorkspaceTransaction } from "./workspace.transaction";
 import { TypeParser } from "../parser/type.parser";
 import { ParserError } from "../rules/exception";
 import type { RootType } from "../types";
@@ -30,12 +32,19 @@ export interface TypesFileReaderOptions extends FileReaderOptions {
  * The reader will parse the file content and return an object containing the successfully parsed types as well as any errors encountered during parsing.
  * The reader supports both line-by-line and block-by-block reading, but blocks are the default and highly recommended.
  * It also includes error handling for invalid syntax and duplicate keys, ensuring that the resulting types object is valid and usable within the rule engine.
+ *
+ * N.B. Declarations need to be in order, otherwise errors will be returned.
+ *  
+ * N.B. This is a transactional safe reader. If you provide a workspace and select the option accept: 'all', 
+ * then that workplace will not be affected if any errors are encountered. 
  */
 export class TypesFileReader extends AbstractFileReader {
 
     protected options: TypesFileReaderOptions;
 
     protected typeParser: TypeParser;
+
+    protected workspace: Workspace;
 
     /**
      * Create a new instance of the TypesFileReader with the specified options for parsing types from a file.
@@ -53,16 +62,21 @@ export class TypesFileReader extends AbstractFileReader {
             ...options
         };
         this.typeParser = new TypeParser({ workspace: options?.workspace });
+        this.workspace = this.options.workspace || new Workspace();
     }
 
     /**
      * Parse the content of a types file and return the result, including the successfully parsed types and any errors encountered.
+     * If a Workspace was passed in options, that Workspace will be changed to reflect successful declarations.
+     * 
      * @param fileContent The content of the types file to parse.
      * @returns The result of parsing, including the successfully parsed types and any errors encountered.
      */
     public parse(fileContent: string): TypesFileResult {
 
-        let read = 0, passed = 0, failed = 0, errors: string[] = [];
+        const transaction = WorkspaceTransaction.begin(this.workspace);
+
+        let read = 0, errors: string[] = [];
         try {
             let origin = fileContent.trim();
             let remainder = origin;
@@ -80,12 +94,25 @@ export class TypesFileReader extends AbstractFileReader {
             }
             const attempts: (RootType | null)[] = syntaxes.map(syntax => {
                 try {
-                    return this.parseType(syntax);
+                    const type = this.parseType(syntax);
+                    if (type) {
+                        this.workspace.typeRegistry().addRootType(type);
+                    }
+                    return type;
+
                 } catch (e) {
                     errors.push(`Failed to parse type syntax: ${syntax}. Error: ${e instanceof Error ? e.message : String(e)}`);
                     return null;
                 }
             });
+
+            if (this.options.accept === 'all' && errors.length > 0) {
+                transaction.rollback();
+            } else {
+                // Already added to workspace..
+                transaction.commit();
+            }
+
             if (attempts.includes(null) && this.options.accept === 'all') {
                 return {
                     read,
@@ -150,7 +177,7 @@ export class TypesFileReader extends AbstractFileReader {
         for (const item of array) {
             const key = item.key;
             if (result[key!] !== undefined) {
-                throw new Error(`Duplicate type key found: ${key}`);
+                throw new ParserError(`Duplicate type key found: ${key}`);
             }
             result[key!] = item;
         }

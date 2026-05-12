@@ -7,6 +7,7 @@ import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class ArrayLambdaFunction extends FunctionExpression {
 
@@ -77,11 +78,11 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 this.localChecker = this.getLocalChecker(checker);
                 const lambdaReturnType = getReturnType(this.lambda_arg, this.localChecker);
                 if (!lambdaReturnType) {
-                    throw new Error(`Unable to determine return type of lambda argument in function ${this.name}`);
+                    throw new TypeCheckError(`Unable to determine return type of lambda argument in function ${this.name}`);
                 }
                 return makeArrayType(lambdaReturnType);
             default:
-                throw new Error(`Unknown lambda function: ${this.name}`);
+                throw new TypeCheckError(`Unknown lambda function: ${this.name}`);
         }
     }
 
@@ -128,13 +129,16 @@ export class ArrayLambdaFunction extends FunctionExpression {
     }
 
     public evaluate(context: WorkingContext): any {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const targetArray = this.target_arg.evaluate(context);
 
         if (!Array.isArray(targetArray)) {
-            throw new Error(`First argument to ${this.name} must evaluate to an array, but got ${typeof targetArray}`);
+            throw new EvaluationError(`First argument to ${this.name} must evaluate to an array, but got ${typeof targetArray}`);
         }
         if (!(this.lambda_arg instanceof LambdaExpression)) {
-            throw new Error(`Second argument to ${this.name} must be a lambda expression`);
+            throw new EvaluationError(`Second argument to ${this.name} must be a lambda expression`);
         }
 
         // Run the lambda expression for each item in the array and collect the results
@@ -154,7 +158,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
             case 'map':
                 return values;
             default:
-                throw new Error(`Unknown lambda function: ${this.name}`);
+                throw new EvaluationError(`Unknown lambda function: ${this.name}`);
         }
     }
 

@@ -8,6 +8,12 @@ export class LiteralExpression extends Expression {
     constructor(value: any) {
         super();
         this.value = value;
+
+        this.syntax = this.toString();
+    }
+
+    public getParts(): Expression[] {
+        return [this];
     }
 
     public required(): Set<string> {

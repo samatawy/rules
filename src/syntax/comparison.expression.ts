@@ -2,6 +2,7 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getReturnType, isArrayType, makeItemType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
+import { EvaluationError } from "../rules/exception";
 
 export class ComparisonExpression extends BooleanExpression {
 
@@ -16,6 +17,12 @@ export class ComparisonExpression extends BooleanExpression {
         this.operator = operator;
         this.left = left;
         this.right = right;
+
+        this.syntax = this.toString();
+    }
+
+    public getParts(): Expression[] {
+        return [this.left, this.right];
     }
 
     public required(): Set<string> {
@@ -97,6 +104,9 @@ export class ComparisonExpression extends BooleanExpression {
     }
 
     public evaluate(context: WorkingContext): boolean {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const leftValue = this.left.evaluate(context);
         const rightValue = this.right.evaluate(context);
 
@@ -128,7 +138,7 @@ export class ComparisonExpression extends BooleanExpression {
                 return new Date(leftValue) > new Date(rightValue);
 
             default:
-                throw new Error(`Unknown operator: ${this.operator}`);
+                throw new EvaluationError(`Unknown operator: ${this.operator}`);
         }
     }
 

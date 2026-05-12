@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { WorkSpace } from '../src/engine/workspace';
+import { Workspace } from '../src/engine/workspace';
 import { RulesFileReader } from '../src/reader/rules.file.reader';
 import { ConstantsFileReader } from '../src/reader/constants.file.reader';
 import { TypesFileReader } from '../src/reader/types.file.reader';
 import { FunctionsFileReader } from '../src/reader/functions.file.reader';
 import { GeneralFileReader } from '../src/reader/general.file.reader';
 import { MarkdownFileReader } from '../src/reader/markdown.file.reader';
+import { WorkspaceFilesReader } from '../src/reader/workspace.files.reader';
+import { RulesEngine } from '../src';
 
 describe('Readers Tests', () => {
 
@@ -60,7 +62,7 @@ describe('Readers Tests', () => {
     expect(blockResult.rules.length).toBe(3);
     expect(blockResult.errors.length).toBe(1);
 
-    const space = new WorkSpace();
+    const space = new Workspace();
     blockResult.rules.forEach(rule => space.addRule(rule));
     const r1 = space.getRule('Split over lines');
     expect(r1).toBeDefined();
@@ -98,7 +100,7 @@ describe('Readers Tests', () => {
     expect(Object.keys(strictResult.constants).length).toBe(0);
     expect(strictResult.errors.length).toBe(1);
 
-    const space = new WorkSpace();
+    const space = new Workspace();
     space.addConstants(result.constants);
     expect(space.getConstant('YEAR')).toBe('365');
     expect(space.getConstant('AVOGADRO')).toBe('6.022e23');
@@ -131,7 +133,7 @@ describe('Readers Tests', () => {
       invalid syntax
     `;
     const result = parser.parse(content);
-    console.debug('Functions file parsing result:', result);
+    // console.debug('Functions file parsing result:', result);
     expect(result.read).toBe(5);
     expect(result.passed).toBe(4);
     expect(result.failed).toBe(1);
@@ -145,14 +147,14 @@ describe('Readers Tests', () => {
     expect(Object.keys(strictResult.functions).length).toBe(0);
     expect(strictResult.errors.length).toBe(1);
 
-    const space = new WorkSpace({});
+    const space = new Workspace({});
     space.functionRegistry().addFunctions(result.functions);
     space.addRule('SET tripled = triple(n)');
     space.addRule('SET greeting = join_spaced("Hello", name)');
     space.addRule('SET rounded = round_double(fp)');
     space.addRule('SET tax = sales_tax(invoice.total)');
 
-    console.debug(space.checkTypes());
+    // console.debug(space.checkTypes());
     expect(space.checkTypes().valid).toBe(true);
 
     const ctx = space.loadContext({ n: 4, fp: 3.2, name: 'world!', invoice: { total: 50 } });
@@ -263,6 +265,75 @@ describe('Readers Tests', () => {
     expect(result.types.Person).toBeDefined();
     expect(result.rules.length).toBe(1);
     expect(result.errors.length).toBe(1);
+  });
+
+  it('reads ordered file contents', async () => {
+    const reader = new GeneralFileReader({ accept: 'all' });
+    const content = `
+      // This is a comment
+      CONST PI = 3.14159
+
+      circle_area(radius: number) = PI * radius * radius
+
+      { key: "circle",
+        properties: {
+          radius: 'number',
+        }
+      }
+
+      if circle.radius then circle.area = circle_area(circle.radius)
+
+      invalid syntax here
+    `;
+    const result = reader.parse(content);
+    // console.debug('Markdown file parsing result:', result);
+    expect(result.read).toBe(5);
+    expect(result.passed).toBe(4);
+    expect(result.failed).toBe(1);
+    expect(result.constants.PI).toBe('3.14159');
+    expect(result.types.circle).toBeDefined();
+    expect(result.rules.length).toBe(1);
+    expect(result.errors.length).toBe(1);
+  });
+
+  it('reads declarations out of order', async () => {
+    const space = new Workspace({ strict_inputs: false });
+    const reader = new WorkspaceFilesReader(space, 'partial');
+    // const reader = new GeneralFileReader({ workspace: space, accept: 'all' });
+    const content = `
+      if circle.radius > 0 then circle.area = circle_area(circle.radius)
+
+      circle_area(radius: number) = PI * radius * radius
+
+      // This is a comment
+      CONST PI = 3.14159
+
+      { key: "circle",
+        properties: {
+          radius: 'number',
+        }
+      }
+
+      invalid syntax here
+    `;
+    const result = reader.parse(content);
+    // console.debug('Markdown file parsing result:', result);
+    expect(result.read).toBe(5);
+    expect(result.passed).toBe(4);
+    expect(result.failed).toBe(1);
+    expect(result.constants.PI).toBe('3.14159');
+    expect(result.types.circle).toBeDefined();
+    expect(result.rules.length).toBe(1);
+    expect(result.errors.length).toBe(1);
+  });
+
+  it('reads from file system', async () => {
+    const reader = new WorkspaceFilesReader(RulesEngine.defaultSpace());
+    await reader.loadFileSystem();
+    const __dirname = import.meta.dirname;
+
+    const result = reader.readFromFile(`${__dirname}/plain.geometry.txt`);
+    expect(result).toBe(true);
   });
 
 });

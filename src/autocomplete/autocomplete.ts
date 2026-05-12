@@ -1,4 +1,4 @@
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
 import { FunctionFactory } from "../parser/function.factory";
 import type { FunctionDefinition } from "../types";
 import { isArrayType, makeItemType } from "../type.utils";
@@ -21,17 +21,14 @@ export interface AutocompleteSuggestion {
 
 export class Autocomplete {
 
-    private workspace: WorkSpace;
-
-    // private expressionParser: ExpressionParser;
+    private workspace: Workspace;
 
     private functionFactory: FunctionFactory;
 
     private suggestions: AutocompleteSuggestion[];
 
-    constructor(workspace: WorkSpace) {
+    constructor(workspace: Workspace) {
         this.workspace = workspace;
-        // this.expressionParser = new ExpressionParser({ workspace });
         this.functionFactory = new FunctionFactory({ workspace });
 
         this.suggestions = [];
@@ -65,36 +62,10 @@ export class Autocomplete {
             // If the prefix is not empty, we should only suggest things that can come after the prefix suggestion
             if (prefixSuggestion) {
                 subset = subset.filter(s => this.canComeAfter(s, prefixSuggestion));
-                // if (prefixSuggestion.comes_before) {
-                //     if (prefixSuggestion.comes_before.includes('array')) {
-                //         subset = subset.filter(s => isArrayType(s.returns === 'array'));
-                //     } else {
-                //         subset = subset.filter(s => prefixSuggestion.comes_before!.includes(s.returns || '') || prefixSuggestion.comes_before!.includes('any'));
-                //     }
-                // }
-                // else if (prefixSuggestion.returns) {
-                //     if (prefixSuggestion.returns === 'array') {
-                //         subset = subset.filter(s => s.comes_after?.some(after => isArrayType(after)));
-                //     } else {
-                //         subset = subset.filter(s => s.comes_after?.includes(prefixSuggestion.returns + '' || '') || s.comes_after?.includes('any'));
-                //     }
-                // }
-                // else {
-                //     subset = subset.filter(s => s.comes_after === undefined);
-                // }
             }
             // If the suffix is not empty, we should only suggest things that can come before the suffix suggestion
             if (suffixSuggestion) {
                 subset = subset.filter(s => this.canComeBefore(s, suffixSuggestion));
-                // if (suffixSuggestion.comes_after) {
-                //     subset = subset.filter(s => suffixSuggestion.comes_after!.includes(s.returns || ''));
-                // }
-                // else if (suffixSuggestion.returns) {
-                //     subset = subset.filter(s => s.comes_before?.includes(suffixSuggestion.returns + '' || '') || s.comes_before?.includes('any'));
-                // }
-                // else {
-                //     subset = subset.filter(s => s.comes_before === undefined);
-                // }
             }
 
             return subset;
@@ -173,14 +144,12 @@ export class Autocomplete {
                             const argument = builtin.expectsParameters()[argument_index || 0];
                             return { type: argument ? argument.type : undefined };
                         }
-                        // return { type: builtin.returnsType() + '' };
                     }
                     const custom = this.workspace.functionRegistry().getFunction(funcToken);
                     if (custom) {
                         const argument = custom.parameters[argument_index || 0];
                         const type = argument ? argument.type : undefined;
                         return { type: type ? type + '' : undefined };
-                        // return { type: custom.expression ? getReturnType(custom.expression) + '' : 'any' };
                     }
                 }
                 break;
@@ -304,23 +273,4 @@ export class Autocomplete {
         return suggestionAllows && followingAllows;
     }
 
-    //     if (suggestion.comes_before) {
-    //                 if (suggestion.comes_before.includes('array')) {
-    //                     return isArrayType(after.returns === 'array');
-    //                 } else {
-    //                     subset = subset.filter(s => prefixSuggestion.comes_before!.includes(s.returns || '') || prefixSuggestion.comes_before!.includes('any'));
-    //                 }
-    //             }
-    //             else if (prefixSuggestion.returns) {
-    //                 if (prefixSuggestion.returns === 'array') {
-    //                     subset = subset.filter(s => s.comes_after?.some(after => isArrayType(after)));
-    //                 } else {
-    //                     subset = subset.filter(s => s.comes_after?.includes(prefixSuggestion.returns + '' || '') || s.comes_after?.includes('any'));
-    //                 }
-    //             }
-    //             else {
-    //                 subset = subset.filter(s => s.comes_after === undefined);
-    //             }
-    //     return false;
-    // }
 }

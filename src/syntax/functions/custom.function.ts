@@ -1,11 +1,12 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import { RuleException } from "../../rules/exception";
+import { EvaluationError, RuleException, TypeCheckError } from "../../rules/exception";
 import type { ArrayType, AtomicType, FunctionDefinition, TypedParameter } from "../../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
 import { getLiteralType, getReturnType, isArrayType, isAtomicType } from "../../type.utils";
 import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
+import { WorkLogger } from "../../log/work.logger";
 
 export class CustomFunctionExpression extends FunctionExpression {
 
@@ -25,7 +26,7 @@ export class CustomFunctionExpression extends FunctionExpression {
 
     protected getLocalChecker(checker?: TypeChecker): ScopeTypeChecker {
         if (!this.definition) {
-            throw new Error(`Function definition not found for function ${this.name}`);
+            throw new TypeCheckError(`Function definition not found for function ${this.name}`);
         }
 
         if (!this.localChecker) {
@@ -65,18 +66,18 @@ export class CustomFunctionExpression extends FunctionExpression {
 
     public returnsType(checker?: TypeChecker): AtomicType | ArrayType {
         if (!this.definition) {
-            throw new Error(`Function definition not found for function ${this.name}`);
+            throw new TypeCheckError(`Function definition not found for function ${this.name}`);
         }
         this.localChecker = this.getLocalChecker(checker);
 
         const returnType = getReturnType(this.definition.expression, this.localChecker);
         if (!returnType) {
-            throw new Error(`Unable to determine return type of function ${this.name}`);
+            throw new TypeCheckError(`Unable to determine return type of function ${this.name}`);
         }
         if (isAtomicType(returnType) || isArrayType(returnType)) {
             return returnType;
         } else {
-            throw new Error(`Invalid return type for function ${this.name}: expected atomic or array type, got ${returnType}`);
+            throw new TypeCheckError(`Invalid return type for function ${this.name}: expected atomic or array type, got ${returnType}`);
         }
     }
 
@@ -84,13 +85,13 @@ export class CustomFunctionExpression extends FunctionExpression {
         if (this.definition) {
             return this.definition.parameters;
         } else {
-            throw new Error(`Function definition not found for function ${this.name}`);
+            throw new TypeCheckError(`Function definition not found for function ${this.name}`);
         }
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
         if (!this.definition) {
-            throw new Error(`Function definition not found for function ${this.name}`);
+            throw new TypeCheckError(`Function definition not found for function ${this.name}`);
         }
 
         this.localChecker = this.getLocalChecker(checker);
@@ -112,14 +113,14 @@ export class CustomFunctionExpression extends FunctionExpression {
             if (expectedType === 'array') {
                 // This is a special case, parameters of type array can accept any array type (string[], number[], etc.)
                 if (argType && !isArrayType(argType!)) {
-                    // console.debug(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
+                    WorkLogger.warn(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
                     checks.push({
                         valid: false,
                         errors: [`Argument ${i + 1} for function ${this.name} must be of type array, but got ${argType}`],
                     });
                 }
             } else if (argType && argType != expectedType) {
-                // console.debug(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
+                WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,
                     errors: [`Argument ${i + 1} for function ${this.name} must be of type ${expectedType}, but got ${argType}`],
@@ -153,8 +154,11 @@ export class CustomFunctionExpression extends FunctionExpression {
     }
 
     public evaluate(context: WorkingContext): any {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         if (!this.definition) {
-            throw new Error(`Undefined function ${this.name}`);
+            throw new EvaluationError(`Undefined function ${this.name}`);
         }
 
         this.localChecker = this.getLocalChecker();
@@ -175,8 +179,6 @@ export class CustomFunctionExpression extends FunctionExpression {
                     const newValue = scope.getOutput(effect.changed);
                     this.localChecker?.setType(effect.changed, getLiteralType(newValue));
                 }
-                // console.debug(`Executed line in function ${this.name} with effect:`, effect);
-                // console.debug(`Current scope after executing line in function ${this.name}:`, scope.getOutput());
             }
         }
         return this.definition.expression.evaluate(scope);

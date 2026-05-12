@@ -1,7 +1,7 @@
-import { AbstractException } from "../rules/exception";
+import { AbstractException, ExecutionError } from "../rules/exception";
 import { cloneDeep, getPathValue, pathExists } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
-import type { WorkSpace } from "./workspace";
+import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
 
 export interface LoggedRule {
@@ -11,7 +11,7 @@ export interface LoggedRule {
 
 export class WorkingMemory implements WorkingContext {
 
-    private workspace: WorkSpace;
+    private workspace: Workspace;
 
     private input: any;
 
@@ -21,7 +21,7 @@ export class WorkingMemory implements WorkingContext {
 
     private logged: LoggedRule[];
 
-    constructor(data: any, workspace: WorkSpace) {
+    constructor(data: any, workspace: Workspace) {
         this.input = data === undefined ? {} : data;
         this.workspace = workspace;
 
@@ -62,6 +62,41 @@ export class WorkingMemory implements WorkingContext {
         return Array.from(keys);
     }
 
+    protected cache: Map<string, any> = new Map<string, any>();
+
+    protected cacheMetrics: { sets: number, hits: number, misses: number } = {
+        sets: 0,
+        hits: 0,
+        misses: 0,
+    };
+
+    public getCached(id: string) {
+        const found = this.cache.get(id);
+        if (found === undefined) {
+            this.cacheMetrics.misses += 0;
+        } else {
+            this.cacheMetrics.hits += 1;
+        }
+        return found;
+    }
+
+    public setCache(id: string, value: any): void {
+        this.cache.set(id, value);
+        this.cacheMetrics.sets += 1;
+    }
+
+    public clearCache(id?: string): void {
+        if (id === undefined) {
+            this.cache.clear();
+        } else {
+            this.cache.delete(id);
+        }
+    }
+
+    public getCacheMetrics(): { sets: number; hits: number; misses: number; } {
+        return this.cacheMetrics;
+    }
+
     public addException(exception: AbstractException): void {
         this.exceptions.push(exception);
     }
@@ -92,13 +127,13 @@ export class WorkingMemory implements WorkingContext {
                 const target = current[part];
                 if (Array.isArray(target)) {
                     // cannot handle arrays yet, throw error if we encounter an array in the path
-                    throw new Error(`Cannot set output for key: ${key} because ${part} is an array`);
+                    throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is an array`);
                 }
                 else if (target != null && typeof target === 'object') {
                     current = target;
                 } else if (target != null && typeof current[part] !== 'object') {
                     // cannot set output for key if the path already exists but is not an object
-                    throw new Error(`Cannot set output for key: ${key} because ${part} is not an object`);
+                    throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is not an object`);
                 } else if (target == null) {
                     // if the path does not exist, create an empty object at that path
                     current[part] = {};

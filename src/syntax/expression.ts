@@ -12,6 +12,7 @@ export abstract class Expression implements Evaluator, HasValidity {
     protected syntax: string;
 
     constructor() {
+        // Syntax should be provided by implementing classes
         this.syntax = '';
     }
 
@@ -28,6 +29,12 @@ export abstract class Expression implements Evaluator, HasValidity {
      * @returns a set of data keys required for this expression to be evaluated.
      */
     public abstract required(): Set<string>;
+
+    /**
+     * What expressions comprise the expression for use in caching/memoization.
+     * @returns an array of expressions that can be cached/memoized.
+     */
+    public abstract getParts(): Expression[];
 
     /**
      * Evaluate the expression in the given context to compute its value. 

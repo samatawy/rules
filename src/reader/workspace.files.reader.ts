@@ -1,24 +1,30 @@
-import { ConstantsFileReader } from "./constants.file.reader";
-import { FunctionsFileReader } from "./functions.file.reader";
-import { GeneralFileReader } from "./general.file.reader";
-import { MarkdownFileReader } from "./markdown.file.reader";
-import { RulesFileReader } from "./rules.file.reader";
-import { TypesFileReader } from "./types.file.reader";
+import type { GeneralReaderResult } from "./general.file.reader";
 import { EngineError, ParserError } from "../rules/exception";
-import type { WorkSpace } from "../engine/workspace";
+import type { Workspace } from "../engine/workspace";
+import { AbstractFileReader } from "./abstract.file.reader";
+import type { FunctionDefinition, RootType } from "../types";
+import { AbstractRule } from "../rules/abstract.rule";
+import { TypeParser } from "../parser/type.parser";
+import { FunctionParser } from "../parser/function.parser";
+import { RuleParser } from "../parser/rule.parser";
+import { WorkspaceTransaction } from "./workspace.transaction";
+
+export interface ComponentResult {
+    read: number;
+    failed: number;
+    components: any[]
+}
 
 /**
- * Helper class to read rules, functions, types, and constants from files and load them into a workspace. 
- * It supports reading from individual files or entire folders, and can handle different file formats 
+ * Helper class to safely read rules, functions, types, and constants from files and load them into a workspace. 
+ * It supports reading from strings, individual files, or entire folders, and can handle different file formats 
  * such as markdown, general, constants, rules, types, and functions files. The reader can be configured 
  * to either accept all valid components while logging errors for invalid ones, or to reject the entire file if any component is invalid. 
- * 
- * NB: This class relies on Node's 'fs' module for file system access, so it is intended for use in Node.js environments. 
- * In browser environments, file reading should be handled differently; this class will report errors in a browser environment.
- * 
- * NB: A workspace may become corrupt if some files are loaded and others are not (i.e. when reading from a folder). 
- * If you pass 'all' to the accept option, the reader will not load parts of an invalid file. However, one file may pass while another fails, 
- * which would lead to a partially loaded workspace.
+ *
+ * N.B. Declarations do not need to be in order, although that is still recommended.
+ *  
+ * N.B. This is a transactional safe reader. If you provide a workspace and select the option accept: 'all', 
+ * then that workplace will not be affected if any errors are encountered. 
  * 
  * Files should be named according to their content, with the following conventions:
  * - Constants files should include '.constants' in their name (e.g. 'my.constants.txt').
@@ -29,19 +35,78 @@ import type { WorkSpace } from "../engine/workspace";
  * - General (mixed) files can have any name (e.g. 'my.logic.txt').
  * 
  * The reader will determine the type of each file based on these naming conventions and use the appropriate parsing method to load its content into the workspace.
+ *
+ * NB: This class relies on Node's 'fs' module for file system access, so it is intended for use in Node.js environments. 
+ * In browser environments, file reading should be handled differently; this class will report errors in a browser environment.
  */
-export class WorkspaceFilesReader {
+export class WorkspaceFilesReader extends AbstractFileReader {
 
-    private workspace: WorkSpace;
+    private workspace: Workspace;
+
+    protected ruleParser: RuleParser;
+
+    protected functionParser: FunctionParser;
+
+    protected typeParser: TypeParser;
 
     private accept: 'all' | 'partial';
 
+    private blocks: string[];
+
     private fs?: typeof import('fs') | undefined;
 
-    constructor(workspace: WorkSpace, accept: 'all' | 'partial' = 'all') {
+    constructor(workspace: Workspace, accept: 'all' | 'partial' = 'all') {
+        super();
         this.workspace = workspace;
+        this.ruleParser = new RuleParser({ workspace });
+        this.functionParser = new FunctionParser({ workspace });
+        this.typeParser = new TypeParser({ workspace });
+
         this.accept = accept;
-        this.loadFileSystem();
+        this.blocks = [];
+    }
+
+    /**
+     * This method is intended for use in the browser where File System access is not supported. 
+     * In a node environment, use readFromFile() or readFromFiles().
+     * 
+     * @param fileContent The content of the file to parse.
+     * @returns The result of parsing, including the successfully parsed constants, functions, types, rules, and any errors encountered.
+     */
+    public parse(fileContent: string): GeneralReaderResult {
+        const read: string[] = [];
+
+        let origin = fileContent.trim();
+        let remainder = origin;
+
+        // First, Read blocks until done
+        while (remainder.length > 0) {
+            const { line, remainder: newRemainder } = this.readBlock(remainder);
+
+            if (line.length > 0) {
+                read.push(line);
+            }
+            remainder = newRemainder;
+        }
+        this.blocks = [...read];
+
+        // Second, try to parse all blocks
+        const parseResult = this.parseAll();
+
+        if (this.accept === 'all') {
+            if (parseResult.failed > 0) return {
+                read: parseResult.read,
+                passed: 0,
+                failed: parseResult.failed,
+                constants: {},
+                functions: {},
+                types: {},
+                rules: [],
+                errors: []
+            };
+        }
+
+        return parseResult;
     }
 
     /**
@@ -50,24 +115,42 @@ export class WorkspaceFilesReader {
      * If any file fails to load and the accept option is set to 'partial', the reader will continue loading the remaining files while logging errors for the failed ones. 
      * If the accept option is set to 'all', the reader will stop loading further files upon encountering an error in any file.
      * 
-     * NB: This may lead to a partially loaded workspace if some files are valid and others are not. 
-     * This method will return false if ANY file fails to load, even if the accept option is set to 'partial', 
-     * to allow the caller to know that there were issues during loading.
-     * 
      * @param folderPath the path of the folder containing the files to read. The reader will attempt to read all files in this folder.
-     * @returns true if all files were read successfully, false if ANY file had errors.
+     * @returns true if components were registered successfully (according to 'all' or 'partial' option), otherwise false.
      */
     public readFromFolder(folderPath: string): boolean {
         const paths = this.readFolderPaths(folderPath);
-        let proceed = true;
-        if (paths) {
-            for (const path of paths) {
-                proceed &&= this.readFromFile(path);
 
-                if (!proceed && this.rejectOnErrors()) break;
+        return this.readFromFiles(paths || []);
+    }
+
+    /**
+     * Attempt to read all given files and load their contents into the workspace.
+     * The reader will determine the type of each file based on its name and extension, and use the appropriate parsing method. 
+     * If any file fails to load and the accept option is set to 'partial', the reader will continue loading the remaining files while logging errors for the failed ones. 
+     * If the accept option is set to 'all', the reader will stop loading further files upon encountering an error in any file.
+     * 
+     * @param paths an array of file paths to read.
+     * @returns true if components were registered successfully (according to 'all' or 'partial' option), otherwise false.
+     */
+    public readFromFiles(paths: string[]): boolean {
+        if (paths?.length > 0) {
+            for (const path of paths) {
+                const read = this.readBlocksFromFile(path);
+                this.blocks.push(...read);
             }
         }
-        return proceed;
+
+        if (this.blocks.length === 0) {
+            return false;
+        }
+
+        // Second, try to parse all blocks
+        const parseResult = this.parseAll();
+
+        return (this.accept === 'all') ?
+            parseResult.errors.length === 0 && parseResult.passed > 0
+            : parseResult.passed > 0;
     }
 
     /**
@@ -75,36 +158,30 @@ export class WorkspaceFilesReader {
      * The reader will determine the type of the file based on its name and extension, and use the appropriate parsing method.
      * 
      * @param path the path of the file to read.
-     * @returns true if the file was read successfully, false if there were errors.
+     * @returns true if components were registered successfully (according to 'all' or 'partial' option), otherwise false.
      */
-    public readFromFile(path: string): boolean {
-        const content = this.readFileContents(path);
-        if (content) {
-            if (path.endsWith('.md')) {
-                return this.readMarkdown(content);
-            } else if (path.includes('.constants')) {
-                return this.readConstants(content);
-            } else if (path.includes('.general')) {
-                return this.readGeneral(content);
-            } else if (path.includes('.rules')) {
-                return this.readRules(content);
-            } else if (path.includes('.types')) {
-                return this.readTypes(content);
-            } else if (path.includes('.functions')) {
-                return this.readFunctions(content);
-            } else {
-                return this.readGeneral(content);
-            }
-        } else {
-            this.logError(`No content read from path: ${path}`, "");
+    public readFromFile(path: string): boolean {    // GeneralReaderResult {
+
+        // First, read all blocks
+        const read = this.readBlocksFromFile(path);
+        this.blocks.push(...read);
+        if (this.blocks.length === 0) {
             return false;
         }
+
+        // Second, try to parse all blocks
+        const parseResult = this.parseAll();
+
+        return (this.accept === 'all') ?
+            parseResult.errors.length === 0 && parseResult.passed > 0
+            : parseResult.passed > 0;
     }
 
-    protected async loadFileSystem(): Promise<any> {
+    public async loadFileSystem(): Promise<any> {
         if (typeof process !== 'undefined' && process.versions && process.versions.node) {
             try {
                 // Dynamic import prevents bundle errors in pure browser environments
+                // this.fs = await (async () => import('fs'))();
                 this.fs = await import('fs');
                 return this.fs;
             } catch (e) {
@@ -112,6 +189,235 @@ export class WorkspaceFilesReader {
             }
         }
         return undefined;
+    }
+
+    protected readFolderPaths(folderPath: string): string[] | undefined {
+        if (this.fs) {
+            try {
+                const files = this.fs.readdirSync(folderPath);
+                return files.map(file => `${folderPath}/${file}`);
+            } catch (e) {
+                this.logError(e, `while reading folder: ${folderPath}`);
+                return undefined;
+            }
+        } else {
+            this.logError("File system access requested but fs module is not available", `while reading folder: ${folderPath}`);
+            return undefined;
+        }
+    }
+
+    protected readFileContents(path: string): string | undefined {
+        if (this.fs) {
+            return this.fs.readFileSync(path, 'utf8');
+        } else {
+            this.logError("File system access requested but fs module is not available", `while reading file: ${path}`);
+            return undefined;
+        }
+    }
+
+    protected readBlocksFromFile(path: string): string[] {
+        const read: string[] = [];
+        if (this.fs) {
+            try {
+                const fileContent = this.fs.readFileSync(path, 'utf8');
+                let origin = fileContent.trim();
+                let remainder = origin;
+
+                // Read blocks until done
+                while (remainder.length > 0) {
+                    const { line, remainder: newRemainder } = this.readBlock(remainder);
+
+                    if (line.length > 0) {
+                        read.push(line);
+                    }
+                    remainder = newRemainder;
+                }
+                return read;
+            } catch (e) {
+                // const message = (e instanceof Error) ? e.message : `${String(e)}`;
+                this.logError(e, `while reading ${path}`);
+                return [];
+            }
+        } else {
+            this.logError('File system access requested but fs module is not available', `while reading ${path}`);
+            return [];
+        }
+    }
+
+    protected parseAll(): GeneralReaderResult {
+
+        const transaction = WorkspaceTransaction.begin(this.workspace);
+
+        const result: GeneralReaderResult = {
+            read: this.blocks.length,
+            passed: 0,
+            failed: 0,
+            constants: {},
+            functions: {},
+            types: {},
+            rules: [],
+            errors: [],
+        }
+        let unparsed: string[] = [...this.blocks];
+        let deferred: string[] = [];
+
+        while (unparsed.length > 0) {
+            let success = 0;
+            // Take each unparsed block
+            for (const syntax of unparsed) {
+                // and try to parse it..
+                const parsed = this.parseBlock(syntax);
+                if (parsed) {
+                    // Success - add the component to be used
+                    if (this.isConstant(parsed)) {
+                        const key = Object.keys(parsed)[0]!;
+                        this.workspace.addConstant(key, parsed[key]);
+                        result.constants[key] = parsed[key];
+                        result.passed += 1;
+                    }
+                    else if (this.isRootType(parsed)) {
+                        this.workspace.typeRegistry().addRootType(parsed);
+                        result.types[parsed.key] = parsed;
+                        result.passed += 1;
+                    }
+                    else if (this.isFunctionDefnition(parsed)) {
+                        this.workspace.functionRegistry().addFunction(parsed);
+                        result.functions[parsed.name] = parsed;
+                        result.passed += 1;
+                    }
+                    else if (parsed instanceof AbstractRule) {
+                        this.workspace.addRule(parsed);
+                        result.rules.push(parsed);
+                        result.passed += 1;
+                    }
+                    else {
+                        result.errors.push('Unrecognized component: ' + JSON.parse(parsed));
+                        result.failed += 1;
+                    }
+
+                    success += 1;
+                } else {
+                    // Failure - may be missing dependencies
+                    // Return the block to be parsed in a later iteration
+                    deferred.push(syntax);
+                }
+            }
+            if (success === 0) {
+                // no more parsing can succeed
+                break;
+            } else {
+                // return to parse deferred blocks
+                unparsed = [...deferred];
+                deferred = [];
+            }
+        }
+
+        result.failed += deferred.length;
+        for (const syntax of deferred) {
+            result.errors.push(`Failed to parse syntax: [${syntax}]`);
+        }
+
+        if (this.accept === 'all' && result.failed > 0) {
+            transaction.rollback();
+        } else {
+            transaction.commit();
+        }
+
+        return result;
+    }
+
+    protected parseBlock(syntax: string): any {
+        const constant = this.parseConstant(syntax);
+        if (constant) {
+            return constant;
+        }
+
+        const rule = this.parseRule(syntax);
+        if (rule) {
+            return rule;
+        }
+
+        const func = this.parseFunction(syntax);
+        if (func) {
+            return func;
+        }
+
+        const type = this.parseType(syntax);
+        if (type) {
+            return type;
+        }
+
+        return undefined;
+    }
+
+    protected parseRule(content: string): AbstractRule | null {
+        try {
+            return this.ruleParser.parse(content);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    protected parseFunction(content: string): FunctionDefinition | null {
+        try {
+            return this.functionParser.parse(content);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    protected parseConstant(content: string): Record<string, any> | null {
+        // Parse a line assigning a key to a value, e.g. CONST YEAR = 365 or YEAR= 365 (with or without the CONST keyword)
+        const match = /^\s*(?:CONST\s+)?(\w+)\s*=\s*(.+)$/i.exec(content);
+        if (match) {
+            const key = match[1];
+            let value = match[2];
+            if (value === undefined) return null;
+            // Remove quotes from string
+            let quoted = /"(.*)"/.exec(value) || /'(.*)'/.exec(value);
+            if (quoted) value = quoted[1];
+
+            return { ['' + key]: value };
+        } else {
+            return null;
+        }
+    }
+
+    protected parseType(content: string): RootType | null {
+        // Parse a line defining a type, expected in JSON format with at least a "key" property, 
+        // e.g. { "key": "Person", "properties": { "name": "string", "age": "number" } }
+        // Should also be able to read JSON5 format to allow for comments and more flexible syntax, e.g.
+        // {
+        //     // This is a comment
+        //     key: 'Person', // The unique key for this type
+        //     properties: { // The properties of the Person type
+        //         name: 'string', // The name property is a string
+        //         age: 'number', // The age property is a number
+        //         isAdult: 'boolean' // The isAdult property is a boolean
+        //     }
+        // }
+        try {
+            return this.typeParser.parseRootType(content);
+
+        } catch (e) {
+            return null;
+        }
+    }
+
+    protected isConstant(component: any): component is Record<string, any> {
+        const constant = component as Record<string, any>;
+        const keys = Object.keys(constant);
+        return (keys.length === 1 && !!keys[0] && constant[keys[0]!] !== undefined);
+    }
+
+    protected isFunctionDefnition(component: any): component is FunctionDefinition {
+        const funcdef = component as FunctionDefinition;
+        return (!!funcdef.name && !!funcdef.parameters && !!funcdef.expression);
+    }
+
+    protected isRootType(component: any): component is RootType {
+        const type = component as RootType;
+        return (!!type.key && (!!type.type || !!type.properties));
     }
 
     protected rejectOnErrors(): boolean {
@@ -136,187 +442,6 @@ export class WorkspaceFilesReader {
     protected logErrors(errors: any[], context: string): void {
         if (errors.length > 0) {
             errors.forEach(error => this.logError(error, context));
-            // console.warn(`Errors encountered ${context}: ${errors.join('; ')}`);
-        }
-    }
-
-    protected readFolderPaths(folderPath: string): string[] | undefined {
-        if (this.fs) {
-            try {
-                const files = this.fs.readdirSync(folderPath);
-                return files.map(file => `${folderPath}/${file}`);
-            } catch (e) {
-                this.logError(e, `while reading folder: ${folderPath}`);
-                return undefined;
-            }
-        } else {
-            console.warn(`File system access requested for folder: ${folderPath}, but fs module is not available.`);
-            return undefined;
-        }
-    }
-
-    protected readFileContents(path: string): string | undefined {
-        if (this.fs) {
-            return this.fs.readFileSync(path, 'utf8');
-        } else {
-            this.logError("File system access requested but fs module is not available.", `while reading file: ${path}`);
-            // console.warn(`File system access requested for path: ${path}, but fs module is not available.`);
-            return undefined;
-        }
-
-        // Check if we are in a Node-like environment where 'fs' might exist
-        // if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-        //     try {
-        //         // Dynamic import prevents bundle errors in pure browser environments
-        //         const fs = await import('fs');
-        //         return fs.readFileSync(path, 'utf8');
-        //     } catch (e) {
-        //         console.warn("fs module requested but not found.");
-        //     }
-        // }
-    }
-
-    protected readConstants(string: string): boolean {
-        const reader = new ConstantsFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing constants file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.constants) {
-                    this.workspace.addConstants(result.constants);
-                    return true;
-                }
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, "while reading constants file");
-            return false;
-        }
-    }
-
-    protected readFunctions(string: string): boolean {
-        const reader = new FunctionsFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing functions file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.functions) {
-                    this.workspace.functionRegistry().addFunctions(result.functions);
-                    return true;
-                }
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, "while reading functions file");
-            return false;
-        }
-    }
-
-    protected readTypes(string: string): boolean {
-        const reader = new TypesFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing types file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.types) {
-                    this.workspace.typeRegistry().addRootTypes(result.types);
-                    return true;
-                }
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, "while reading types file");
-            return false;
-        }
-    }
-
-    protected readRules(string: string): boolean {
-        const reader = new RulesFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing rules file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.rules) {
-                    result.rules.forEach(rule => this.workspace.addRule(rule));
-                    return true;
-                }
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, "while reading rules file");
-            return false;
-        }
-    }
-
-    protected readGeneral(string: string): boolean {
-        const reader = new GeneralFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing general file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.constants) {
-                    this.workspace.addConstants(result.constants);
-                }
-                if (result.functions) {
-                    this.workspace.functionRegistry().addFunctions(result.functions);
-                }
-                if (result.types) {
-                    this.workspace.typeRegistry().addRootTypes(result.types);
-                }
-                if (result.rules) {
-                    result.rules.forEach(rule => this.workspace.addRule(rule));
-                }
-                return true;
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, "while reading general file");
-            return false;
-        }
-    }
-
-    protected readMarkdown(string: string): boolean {
-        const reader = new MarkdownFileReader();
-        try {
-            const result = reader.parse(string);
-            if (result) {
-                if (result.errors.length) {
-                    this.logErrors(result.errors, "while parsing markdown file");
-                    if (this.rejectOnErrors()) return false;
-                }
-                if (result.constants) {
-                    this.workspace.addConstants(result.constants);
-                }
-                if (result.functions) {
-                    this.workspace.functionRegistry().addFunctions(result.functions);
-                }
-                if (result.types) {
-                    this.workspace.typeRegistry().addRootTypes(result.types);
-                }
-                if (result.rules) {
-                    result.rules.forEach(rule => this.workspace.addRule(rule));
-                }
-                return true;
-            }
-            return false;
-        } catch (e: any) {
-            this.logError(e, 'while reading markdown file');
-            return false;
         }
     }
 

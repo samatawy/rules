@@ -21,7 +21,7 @@ export abstract class AbstractNode {
     }
 
     public findChild(key: string): AbstractNode | undefined {
-        return this.children.find(child => child instanceof DataNode && child.key === key);
+        return this.children.find(child => child instanceof InputNode && child.key === key);
     }
 }
 
@@ -29,7 +29,7 @@ export abstract class AbstractNode {
  * DataNode represents a node that corresponds to a specific data key in the rule graph.
  * It holds a key and can have child nodes that represent nested data, rules, or combinations that depend on this data key.
  */
-export class DataNode extends AbstractNode {
+export class InputNode extends AbstractNode {
 
     public key: string;
 
@@ -54,7 +54,7 @@ export class CombinationNode extends AbstractNode {
  * RuleNode represents a node that is directly associated with a rule.
  * It holds a reference to an AbstractRule and can be evaluated within the context of the rule engine.
  */
-export class RuleNode extends AbstractNode {
+export class RuleOutputNode extends AbstractNode {
 
     public rule: AbstractRule;
 

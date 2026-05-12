@@ -2,6 +2,7 @@ import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { DateExpression, Expression } from "../expression";
 import { NumericFunctionExpression } from "../function.expression";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class DateTimeInspectionFunction extends NumericFunctionExpression {
 
@@ -21,6 +22,7 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
             case 'month':
             case 'week':
             case 'day':
+            case 'weekday':
             case 'hour':
             case 'minute':
             case 'second':
@@ -28,14 +30,17 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
             case 'timestamp':
                 return [{ type: 'date' }];
             default:
-                throw new Error(`Unknown date/time inspection function: ${this.name}`);
+                throw new TypeCheckError(`Unknown date/time inspection function: ${this.name}`);
         }
     }
 
     public evaluate(context: WorkingContext): number {
+        const cached = context.getCached(this.syntax);
+        if (cached !== undefined) return cached;
+
         const targetValue = this.target_arg.evaluate(context);
         if (!(targetValue instanceof Date)) {
-            throw new Error(`Target argument for function ${this.name} did not evaluate to a date`);
+            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a date`);
         }
         // const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
@@ -50,6 +55,8 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
                 return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
             case 'day':
                 return targetValue.getDate();
+            case 'weekday':
+                return targetValue.getDay() === 0 ? 7 : targetValue.getDay(); // Convert Sunday from 0 to 7
             case 'hour':
                 return targetValue.getHours();
             case 'minute':
@@ -60,7 +67,7 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
             case 'timestamp':
                 return targetValue.getTime();
             default:
-                throw new Error(`Unknown date/time inspection function: ${this.name}`);
+                throw new EvaluationError(`Unknown date/time inspection function: ${this.name}`);
         }
     }
 

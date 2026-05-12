@@ -24,6 +24,7 @@
     "include": [
         "src",
         "test",
-        "vitest.config.ts"
+        "vitest.config.ts",
+        "../deprecated/rules/reader/workspace.old.files.reader.ts"
     ]
 }

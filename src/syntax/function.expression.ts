@@ -3,6 +3,8 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getArrayType, getReturnType, isArrayType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
+import { WorkLogger } from "../log/work.logger";
+// import { RulesEngine } from "../engine/rules.engine";
 
 export abstract class FunctionExpression extends Expression {
 
@@ -14,10 +16,16 @@ export abstract class FunctionExpression extends Expression {
         super();
         this.name = name;
         this.args = args;
+
+        this.syntax = this.toString();
     }
 
     public getName(): string {
         return this.name;
+    }
+
+    public getParts(): Expression[] {
+        return [...this.args];
     }
 
     public required(): Set<string> {
@@ -106,19 +114,17 @@ export abstract class FunctionExpression extends Expression {
                 argType = expectedType;
             }
 
-            // console.debug(`Checking argument ${i + 1} for function ${this.name}: expected type ${expectedType}, actual type ${argType}`);
             if (expectedType === 'array') {
                 // This is a special case, parameters of type array can accept any array type (string[], number[], etc.)
                 if (!isArrayType(argType!)) {
-                    // console.debug(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
+                    WorkLogger.warn(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
                     checks.push({
                         valid: false,
                         errors: [`Argument ${i + 1} for function ${this.name} must be an array type, but got ${argType}`],
                     });
                 }
             } else if (argType != expectedType && expectedType !== 'any') {
-                // } else if (argType && argType != expectedType) {
-                // console.debug(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
+                WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,
                     errors: [`Argument ${i + 1} for function ${this.name} must be of type ${expectedType}, but got ${argType}`],
@@ -141,7 +147,7 @@ export abstract class FunctionExpression extends Expression {
     }
 
     public toString(): string {
-        const argsString = this.args.map(arg => arg.toString()).join(', ');
+        const argsString = this.args.map(arg => arg?.toString() || '').join(', ');
         return `${this.name}(${argsString})`;
     }
 

@@ -1,7 +1,37 @@
 import type { AbstractException } from "./rules/exception";
 import type { ArrayType, AtomicType, PropertyType } from "./types";
 
-export interface WorkingContext {
+export interface Cache {
+
+    /**
+     * Keep a value under a given identifier.
+     * @param id the identifier to set,
+     * @param value the value to keep for the identifier.
+     */
+    setCache(id: string, value: any): void;
+
+    /**
+     * Get the value kept under a given identifer.
+     * @param id the identifer to look for.
+     * @returns the value kept under that identifer, or undefined if the id was not found.
+     */
+    getCached(id: string): any;
+
+    /**
+     * Delete a single identifier and its value, or entirely delete all values.
+     * @param id the identifier to delete. If not provided, the entire cache will be cleared.
+     */
+    clearCache(id?: string): void;
+
+    /**
+     * Retrieve metrics for this cache instance.
+     * This is mainly a debugging/monitoring method.
+     * @returns a metrics object containing sets, hits, and misses.
+     */
+    getCacheMetrics(): { sets: number, hits: number, misses: number };
+}
+
+export interface WorkingContext extends Cache {
 
     /**
      * Read data from the context using the given key or path. 
