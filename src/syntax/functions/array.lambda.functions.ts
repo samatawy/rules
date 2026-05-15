@@ -1,13 +1,15 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
-import { getReturnType, makeArrayType } from "../../type.utils";
+import { getReturnType, makeArrayType, makeItemType } from "../../type.utils";
 import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import { TypeParser } from "../../parser/type.parser";
+import { WorkLogger } from "../../log/work.logger";
 
 export class ArrayLambdaFunction extends FunctionExpression {
 
@@ -23,17 +25,24 @@ export class ArrayLambdaFunction extends FunctionExpression {
         this.lambda_arg = args[1] as LambdaExpression;
     }
 
+    protected setLambdaTargetType(type: AtomicType | ObjectType): void {
+        this.localChecker?.setType(this.lambda_arg.getVariableName(), type);
+    }
+
     protected getLocalChecker(checker?: TypeChecker): ScopeTypeChecker {
         if (!this.localChecker) {
             this.localChecker = new ScopeTypeChecker(checker);
 
-            const arrayType = getReturnType(this.target_arg, checker);
-            if ((arrayType as ObjectArrayType) && (arrayType as ObjectArrayType).items) {
-                this.localChecker.setType(this.lambda_arg.getVariableName(), (arrayType as ObjectArrayType).items!);
-            } else {
-                const itemType = (arrayType as ArrayType).endsWith('[]') ? (arrayType as ArrayType).slice(0, -2) as AtomicType : {} as ObjectType;
-                if (itemType) {
-                    this.localChecker.setType(this.lambda_arg.getVariableName(), itemType);
+            const arrayType = getReturnType(this.target_arg, checker) || 'array';
+            if (arrayType) {
+                if ((arrayType as ObjectArrayType) && (arrayType as ObjectArrayType).items) {
+                    const items = (arrayType as ObjectArrayType).items!;
+                    this.localChecker.setType(this.lambda_arg.getVariableName(), items);
+                } else {
+                    const itemType = (arrayType as ArrayType).endsWith('[]') ? (arrayType as ArrayType).slice(0, -2) as AtomicType : {} as ObjectType;
+                    if (itemType) {
+                        this.localChecker.setType(this.lambda_arg.getVariableName(), itemType);
+                    }
                 }
             }
         }
@@ -95,6 +104,19 @@ export class ArrayLambdaFunction extends FunctionExpression {
 
         const checks: ValidationResult[] = [];
         checks.push(this.target_arg.checkTypes(checker));
+
+        const targetType = getReturnType(this.target_arg, checker);
+        const target_is_array = TypeParser.isValidArrayType(targetType);
+        if (!target_is_array) {
+            checks.push({
+                valid: false,
+                errors: ['First parameter of lambda function must be an array type']
+            });
+            WorkLogger.warn('First argument to lambda function is not an array');
+        }
+
+        const lambdaTargetType = target_is_array ? makeItemType(targetType) : undefined;
+        if (lambdaTargetType) this.setLambdaTargetType(lambdaTargetType);
 
         const lambdaReturns = getReturnType(this.lambda_arg, this.localChecker);
 

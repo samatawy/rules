@@ -1,3 +1,4 @@
+import JSON5 from "json5";
 import type { GeneralReaderResult } from "./general.file.reader";
 import { EngineError, ParserError } from "../rules/exception";
 import type { Workspace } from "../engine/workspace";
@@ -291,7 +292,7 @@ export class WorkspaceFilesReader extends AbstractFileReader {
                         result.passed += 1;
                     }
                     else {
-                        result.errors.push('Unrecognized component: ' + JSON.parse(parsed));
+                        result.errors.push('Unrecognized component: ' + JSON5.parse(parsed));
                         result.failed += 1;
                     }
 

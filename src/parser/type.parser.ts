@@ -1,5 +1,5 @@
-import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "../types";
 import JSON5 from "json5";
+import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "../types";
 import { isArrayType, isAtomicType } from "../type.utils";
 import type { ParserOptions } from "./rule.parser";
 import { ParserError } from "../rules/exception";
@@ -49,6 +49,9 @@ export class TypeParser {
             if (json.hasOwnProperty('properties') && !TypeParser.isValidObjectType(json.properties)) {
                 throw new ParserError(`If "properties" is defined, it must be an valid object type: ${syntax}`);
             }
+            // If propertes, exist, they become the object type..
+            json.type = json.properties || json.type;
+
             return {
                 key: json.key,
                 type: json.type,

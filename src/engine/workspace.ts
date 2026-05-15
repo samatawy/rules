@@ -740,7 +740,7 @@ export class Workspace implements Clonable<Workspace> {
         } else {
             WorkLogger.info(`Evaluation completed in a single iteration.`);
         }
-        WorkLogger.info('Final output after evaluation:', context.getOutput());
+        WorkLogger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
         WorkLogger.info('Cache metrics', context.getCacheMetrics());
 
         return context.getExceptions().length === 0;

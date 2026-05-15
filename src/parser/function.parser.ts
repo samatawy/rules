@@ -1,5 +1,6 @@
-import type { AtomicType, FunctionDefinition, NamedParameter, PropertyType } from "../types";
-import { isAtomicType } from "../type.utils";
+import JSON5 from "json5";
+import type { ArrayType, AtomicType, FunctionDefinition, NamedParameter, ObjectType, PropertyType } from "../types";
+import { isArrayType, isAtomicType } from "../type.utils";
 import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
@@ -21,6 +22,7 @@ import type { Expression } from "../syntax/expression";
 import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../log/work.logger";
+import { TypeParser } from "./type.parser";
 
 /**
  * Parser class for parsing function syntax into CustomFunctionExpression objects.
@@ -196,18 +198,50 @@ export class FunctionParser {
         const params: NamedParameter[] = [];
         const paramSyntaxes = syntax.split(',').map(s => s.trim()).filter(s => s.length > 0);
         for (const paramSyntax of paramSyntaxes) {
-            const match = paramSyntax.match(/^(\w+)\s*:\s*(\w+)$/);
-            if (match) {
-                if (isAtomicType(match[2]! as PropertyType)) {
+            // allow type names to include atomic, array, or object syntax (allowing []{}, )
+            let ok = false;
+            const matchAtomic = paramSyntax.match(/^(\w+)\s*:\s*(\w+)$/);
+            if (matchAtomic) {
+                if (isAtomicType(matchAtomic[2]! as PropertyType)) {
                     params.push({
-                        name: match[1]!,
-                        type: match[2]! as AtomicType,
+                        name: matchAtomic[1]!,
+                        type: matchAtomic[2]! as AtomicType,
                         optional: false
                     } as NamedParameter);
-                } else {
-                    throw new ParserError(`Invalid parameter type for parameter ${match[1]!}: ${match[2]!}`);
+                    ok = true;
                 }
-            } else {
+            }
+            if (!ok) {
+                const matchArray = paramSyntax.match(/^(\w+)\s*:\s*(\w*\[\])\s*$/);
+                if (matchArray) {
+                    if (isArrayType(matchArray[2]! as PropertyType)) {
+                        params.push({
+                            name: matchArray[1]!,
+                            type: matchArray[2]! as ArrayType,
+                            optional: false
+                        } as NamedParameter);
+                        ok = true;
+                    }
+                }
+            }
+            if (!ok) {
+                const matchObject = paramSyntax.match(/^(\w+)\s*:\s*(\{[^{}]*\})\s*$/);
+                if (matchObject) {
+                    try {
+                        if (TypeParser.isValidObjectType(JSON5.parse(matchObject[2]!))) {
+                            params.push({
+                                name: matchObject[1]!,
+                                type: JSON5.parse(matchObject[2]!) as ObjectType,
+                                optional: false
+                            } as NamedParameter);
+                            ok = true;
+                        }
+                    } catch (e) {
+                        throw new ParserError(`Parameter syntax does not match expected pattern "name: type": ${paramSyntax}`);
+                    }
+                }
+            }
+            if (!ok) {
                 throw new ParserError(`Parameter syntax does not match expected pattern "name: type": ${paramSyntax}`);
             }
         }

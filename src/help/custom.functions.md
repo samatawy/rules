@@ -15,6 +15,8 @@ You are encouraged to wrap complex calculations into functions, especially if yo
 
 - Each function has a unique name, accepts atomic data types (`string`, `number`, `boolean`, or `date`) and returns a single atomic value.
 
+- Experimentally, the syntax will support functions that  accept arrays of atomic types (`string[]`, `number[]`, `boolean[]`, or `date[]`), untyped arrays (`array`), as well as complex object types (`{}`, `{ age: number }`, etc.) and functions that return arrays or object values. These have still not been fully tested.
+
 - Rules can then use functions in their syntax and pass in the correct parameters to get the return value.
 
 - Functions operate in their own scope, using only the values passed to them. They cannot directly access inputs beyond the parameters passed to them although they can use constants and other functions. 

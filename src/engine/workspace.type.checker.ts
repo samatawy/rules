@@ -6,6 +6,7 @@ import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../log/work.logger";
+import { equalsDeep } from "../common.utils";
 
 export class WorkspaceTypeChecker implements TypeChecker {
 
@@ -116,7 +117,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         if (isAtomicType(expectedType)) {
             // A leaf node with an atomic type
             const actualType = typeof value;
-            if (actualType === expectedType) {
+            if (actualType === expectedType) {     //} || equalsDeep(actualType, expectedType)) {
                 return { valid: true };
             } else {
                 WorkLogger.warn(`Actual type: ${actualType}, Expected Atomic type: ${expectedType}.`);

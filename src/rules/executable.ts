@@ -2,7 +2,7 @@ import type { Expression } from "../syntax/expression";
 import type { ArrayType, AtomicType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult } from "../interfaces";
 import { getReturnType, isAtomicType } from "../type.utils";
-import { mergeValidationResults } from "../common.utils";
+import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 
 /**
@@ -103,7 +103,8 @@ export class OutputAction extends ExecutableAction {
         const oldValue = context.getOutput(this.key);
         const newValue = this.value.evaluate(context);
 
-        if (oldValue === newValue) {
+        if (equalsDeep(oldValue, newValue)) {
+            // if (oldValue == newValue) {
             return {};
         } else {
             context.setOutput(this.key, newValue);

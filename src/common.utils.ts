@@ -1,4 +1,6 @@
 import type { ValidationResult } from "./interfaces";
+import { WorkLogger } from "./log/work.logger";
+import { ExecutionError } from "./rules/exception";
 
 /**
  * Check if a given key exists in the context, supporting nested keys using dot notation (e.g., "person.name.first").
@@ -61,6 +63,59 @@ export function getPathValue(context: any, key: string): any {
         return currentContext;
     } else {
         return context[key];
+    }
+}
+
+/**
+ * Write a value to a context using a key that can be a nested path with dot notation.
+ * TODO: Support arrays in the path (e.g., "person.children.name").
+ * 
+ * @param context the context object to write the value from.
+ * @param key the key to write the value at, which can be a simple key or a nested key using dot notation.
+ * @returns the context after setting the value.
+ */
+export function setPathValue(context: any, key: string, value: any): any {
+    if (key.includes('.')) {
+        // if the key is a nested path, we need to traverse the output object to set the value at the correct path
+        const parts = key.split('.');
+        let current = context;
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i]!;
+            const target = current[part];
+            if (Array.isArray(target)) {
+                // cannot handle arrays yet, throw error if we encounter an array in the path
+                throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is an array`);
+            }
+            else if (target != null && typeof target === 'object') {
+                current = target;
+            } else if (target != null && typeof current[part] !== 'object') {
+                // cannot set output for key if the path already exists but is not an object
+                throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is not an object`);
+            } else if (target == null) {
+                // if the path does not exist, create an empty object at that path
+                current[part] = {};
+                current = current[part];
+            } else {
+                current = target;
+            }
+        }
+        current[parts[parts.length - 1]!] = value;
+    } else {
+        // if the key is a simple key, we can set the value directly on the output object
+        context[key] = value;
+    }
+    return context;
+}
+
+export function equalsDeep(A: any, B: any): boolean {
+    if (A === B) return true;
+    try {
+        const jsonA = JSON.stringify(A);
+        const jsonB = JSON.stringify(B);
+        return jsonA == jsonB;
+    } catch (e) {
+        WorkLogger.warn(`Could not compare facts: ${A} and ${B}`);
+        return false;
     }
 }
 

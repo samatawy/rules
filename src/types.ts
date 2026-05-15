@@ -64,7 +64,9 @@ export interface TypedParameter {
      * The type of the parameter, which can be an atomic type, an array type, a lambda type, or any type. 
      * This defines the expected type of the parameter value when the function is called.
      */
-    type: AtomicType | ArrayType | 'lambda' | 'any';
+    type: AtomicType | ArrayType | ObjectType | 'lambda' | 'any';
+    // TODO: May we revert to this?
+    // type: AtomicType | ArrayType | 'lambda' | 'any';
 
     optional?: boolean;
 }

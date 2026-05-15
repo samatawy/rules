@@ -1,10 +1,9 @@
-import type { ArrayType, AtomicType, ObjectArrayType, TypedParameter } from "../types";
+import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
-import { getArrayType, getReturnType, isArrayType } from "../type.utils";
+import { assignableTo, getArrayType, getReturnType, isArrayType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { WorkLogger } from "../log/work.logger";
-// import { RulesEngine } from "../engine/rules.engine";
 
 export abstract class FunctionExpression extends Expression {
 
@@ -67,7 +66,7 @@ export abstract class FunctionExpression extends Expression {
      * 
      * @param checker Optional type checker to use for determining the return type.
      */
-    public abstract returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectArrayType;
+    public abstract returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectType | ObjectArrayType;
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
@@ -123,7 +122,7 @@ export abstract class FunctionExpression extends Expression {
                         errors: [`Argument ${i + 1} for function ${this.name} must be an array type, but got ${argType}`],
                     });
                 }
-            } else if (argType != expectedType && expectedType !== 'any') {
+            } else if (argType != expectedType && !assignableTo(argType, expectedType)) {       // && expectedType !== {}) {
                 WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,

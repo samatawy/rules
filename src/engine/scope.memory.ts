@@ -1,7 +1,7 @@
 import { EvaluationError, type AbstractException } from "../rules/exception";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
-import { getPathValue, pathExists } from "../common.utils";
+import { getPathValue, pathExists, setPathValue } from "../common.utils";
 
 export class ScopeContext implements WorkingContext {
 
@@ -18,7 +18,7 @@ export class ScopeContext implements WorkingContext {
     }
 
     public setData(key: string, value: any): void {
-        this.variables[key] = value;
+        setPathValue(this.variables, key, value);
     }
 
     public getData(key: string): any {
@@ -26,7 +26,7 @@ export class ScopeContext implements WorkingContext {
         if (value !== undefined) {
             return value;
         } else if (this.parent) {
-            return this.parent.getData(key);
+            return this.parent.getConstant(key);
         } else {
             throw new EvaluationError(`Undefined variable: ${key}`);
         }
@@ -36,7 +36,7 @@ export class ScopeContext implements WorkingContext {
         if (key in this.variables) {
             return true;
         } else if (this.parent) {
-            return this.parent.hasData(key);
+            return this.parent.hasConstant(key);
         } else {
             return false;
         }
@@ -60,8 +60,6 @@ export class ScopeContext implements WorkingContext {
         return Array.from(keys);
     }
 
-    protected cache: Map<string, any> = new Map<string, any>();
-
     protected cacheMetrics: { sets: number, hits: number, misses: number } = {
         sets: 0,
         hits: 0,
@@ -69,26 +67,14 @@ export class ScopeContext implements WorkingContext {
     };
 
     public getCached(id: string) {
-        const found = this.cache.get(id);
-        if (found === undefined) {
-            this.cacheMetrics.misses += 0;
-        } else {
-            this.cacheMetrics.hits += 1;
-        }
-        return found;
+        this.cacheMetrics.misses += 1;
+        return undefined;
     }
 
     public setCache(id: string, value: any): void {
-        this.cache.set(id, value);
-        this.cacheMetrics.sets += 1;
     }
 
     public clearCache(id?: string): void {
-        if (id === undefined) {
-            this.cache.clear();
-        } else {
-            this.cache.delete(id);
-        }
     }
 
     public getCacheMetrics(): { sets: number; hits: number; misses: number; } {
@@ -104,7 +90,7 @@ export class ScopeContext implements WorkingContext {
     }
 
     public setOutput(key: string, value: any): void {
-        this.variables[key] = value;
+        setPathValue(this.variables, key, value);
     }
 
     public getOutput(key?: string): any {
@@ -128,7 +114,9 @@ export class ScopeTypeChecker implements TypeChecker {
     }
 
     public setType(key: string, type: AtomicType | ArrayType | ObjectType): void {
-        this.types[key] = type;
+        if (typeof type === 'object') type = { ...type };
+
+        setPathValue(this.types, key, type);
     }
 
     public hasType(key: string): boolean {

@@ -87,9 +87,9 @@ or simply if in one line:
 greeting(name: string) = concat('Hello ', name)
 ```
 
-- Each function has a unique name, accepts atomic data types (string, number, boolean, opr date) and returns a single atomic atomic value.
+- Each function has a unique name, accepts atomic data types (string, number, boolean, opr date) and returns a single atomic atomic value. (N.B. Experimental functions can support more data types as parameters or returned values.)
 
-- Functions can use other custom functions, however they MUST be registered in the correct order.
+- Functions can use other custom functions, however they MUST be registered in the correct order. (N.B. Some reader classes can help you overcome this strict order requirement.)
 
 - Rules can then use functions in their syntax and pass in the correct parameters to get the return value.
 

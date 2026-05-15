@@ -1,5 +1,5 @@
-import { AbstractException, ExecutionError } from "../rules/exception";
-import { cloneDeep, getPathValue, pathExists } from "../common.utils";
+import { AbstractException } from "../rules/exception";
+import { cloneDeep, getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
@@ -73,7 +73,7 @@ export class WorkingMemory implements WorkingContext {
     public getCached(id: string) {
         const found = this.cache.get(id);
         if (found === undefined) {
-            this.cacheMetrics.misses += 0;
+            this.cacheMetrics.misses += 1;
         } else {
             this.cacheMetrics.hits += 1;
         }
@@ -118,35 +118,7 @@ export class WorkingMemory implements WorkingContext {
     }
 
     public setOutput(key: string, value: any): void {
-        if (key.includes('.')) {
-            // if the key is a nested path, we need to traverse the output object to set the value at the correct path
-            const parts = key.split('.');
-            let current = this.output;
-            for (let i = 0; i < parts.length - 1; i++) {
-                const part = parts[i]!;
-                const target = current[part];
-                if (Array.isArray(target)) {
-                    // cannot handle arrays yet, throw error if we encounter an array in the path
-                    throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is an array`);
-                }
-                else if (target != null && typeof target === 'object') {
-                    current = target;
-                } else if (target != null && typeof current[part] !== 'object') {
-                    // cannot set output for key if the path already exists but is not an object
-                    throw new ExecutionError(`Cannot set output for key: ${key} because ${part} is not an object`);
-                } else if (target == null) {
-                    // if the path does not exist, create an empty object at that path
-                    current[part] = {};
-                    current = current[part];
-                } else {
-                    current = target;
-                }
-            }
-            current[parts[parts.length - 1]!] = value;
-        } else {
-            // if the key is a simple key, we can set the value directly on the output object
-            this.output[key] = value;
-        }
+        setPathValue(this.output, key, value);
     }
 
     public getOutput(key?: string): any {

@@ -4,7 +4,7 @@ import type { ArrayType, AtomicType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../interfaces";
 import { RuleParser } from "../parser/rule.parser";
 import { getReturnType, isAtomicType } from "../type.utils";
-import { mergeValidationResults } from "../common.utils";
+import { equalsDeep, mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ParserError } from "./exception";
@@ -85,7 +85,8 @@ export class OutputRule extends AbstractRule {
         const oldValue = context.getOutput(this.outputKey);
         const newValue = this.expression.evaluate(context);
 
-        if (oldValue === newValue) {
+        if (equalsDeep(oldValue, newValue)) {
+            // if (oldValue === newValue) {
             return null;
         } else {
             return new OutputAction(this.outputKey, this.expression);
@@ -96,7 +97,8 @@ export class OutputRule extends AbstractRule {
         const oldValue = context.getOutput(this.outputKey);
         const newValue = this.expression.evaluate(context);
 
-        if (oldValue === newValue) {
+        if (equalsDeep(oldValue, newValue)) {
+            // if (oldValue === newValue) {
             return {};
         } else {
             context.setOutput(this.outputKey, newValue);

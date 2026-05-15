@@ -272,6 +272,10 @@ export function makeItemType(type: ArrayType | ObjectArrayType | unknown): Atomi
     throw new TypeCheckError(`Unable to determine item type for array type: ${type}`);
 }
 
+export function isObjectType(type: PropertyType | unknown): type is ObjectType {
+    return TypeParser.isValidObjectType(type);
+}
+
 export function getLiteralType(value: any): AtomicType | ArrayType {
     const type = typeof value;
     if (type === 'string' || type === 'number' || type === 'boolean') {
@@ -292,3 +296,19 @@ export function getLiteralType(value: any): AtomicType | ArrayType {
     throw new TypeCheckError(`Unsupported literal type: ${type}`);
 }
 
+export function assignableTo(type: unknown, expectedType: unknown): boolean {
+
+    if (!type || !expectedType) {
+        throw new TypeCheckError("Invalid type check requested");
+    }
+    if (typeof type !== 'object') return type === expectedType;
+
+    for (const [key, expected] of Object.entries(expectedType)) {
+        const found = (type as any)[key];
+        if (found === undefined) {
+            return false;
+        }
+        if (!assignableTo(found, expected)) return false;
+    }
+    return true;
+}

@@ -1,8 +1,8 @@
 import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
 import { EvaluationError, RuleException, TypeCheckError } from "../../rules/exception";
-import type { ArrayType, AtomicType, FunctionDefinition, TypedParameter } from "../../types";
+import type { ArrayType, AtomicType, FunctionDefinition, ObjectType, TypedParameter } from "../../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
-import { getLiteralType, getReturnType, isArrayType, isAtomicType } from "../../type.utils";
+import { assignableTo, getLiteralType, getReturnType, isArrayType, isAtomicType, isObjectType } from "../../type.utils";
 import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
@@ -64,7 +64,7 @@ export class CustomFunctionExpression extends FunctionExpression {
         return vars;
     }
 
-    public returnsType(checker?: TypeChecker): AtomicType | ArrayType {
+    public returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectType {
         if (!this.definition) {
             throw new TypeCheckError(`Function definition not found for function ${this.name}`);
         }
@@ -74,7 +74,7 @@ export class CustomFunctionExpression extends FunctionExpression {
         if (!returnType) {
             throw new TypeCheckError(`Unable to determine return type of function ${this.name}`);
         }
-        if (isAtomicType(returnType) || isArrayType(returnType)) {
+        if (isAtomicType(returnType) || isArrayType(returnType) || isObjectType(returnType)) {  // || returnType === 'any') {
             return returnType;
         } else {
             throw new TypeCheckError(`Invalid return type for function ${this.name}: expected atomic or array type, got ${returnType}`);
@@ -119,11 +119,11 @@ export class CustomFunctionExpression extends FunctionExpression {
                         errors: [`Argument ${i + 1} for function ${this.name} must be of type array, but got ${argType}`],
                     });
                 }
-            } else if (argType && argType != expectedType) {
+            } else if (argType && !assignableTo(argType, expectedType)) {   // argType } != expectedType) {
                 WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,
-                    errors: [`Argument ${i + 1} for function ${this.name} must be of type ${expectedType}, but got ${argType}`],
+                    errors: [`Argument ${i + 1} for function ${this.name} must be of type ${JSON.stringify(expectedType)}, but got ${JSON.stringify(argType)}`],
                 });
             }
 
