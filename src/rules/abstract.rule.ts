@@ -1,6 +1,5 @@
 import type { ArrayType, AtomicType } from "../types";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
-import type { BooleanExpression } from "@cartona/feel";
 import type { Expression } from "../syntax/expression";
 
 /**
