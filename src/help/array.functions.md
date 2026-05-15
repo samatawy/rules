@@ -93,7 +93,7 @@ Returns a sorted array sorted by the expression returned by each item.
 ```
 set youngest_to_oldest = sort(Person.family, member : member.age)
 
-set mostExpensive = sort(Store.products, product: product.price * -1);
+set mostExpensive = sort(Store.products, product: neg(product.price));
 ```
 
 ### `filter(array, item : predicate)`
