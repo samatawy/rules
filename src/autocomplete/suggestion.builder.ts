@@ -2,9 +2,10 @@ import type { Workspace } from "../engine/workspace";
 import { FunctionFactory } from "../parser/function.factory";
 import { FunctionParser } from "../parser/function.parser";
 import type { ObjectArrayType, ObjectType, PropertyType } from "../types";
-import { getReturnType, isArrayType, isAtomicType, makeItemType } from "../type.utils";
+import { getReturnType, makeItemType } from "../type.utils";
 import type { AutocompleteSuggestion } from "./autocomplete";
 import { Closers, ComparisonOperators, LogicalOperators, NumericOperators, Openers, Quoters, Separators, TernaryOperators } from "./constants";
+import { isArrayType, isAtomicType, TypeParser } from "../parser/type.parser";
 
 export class SuggestionBuilder {
 

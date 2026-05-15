@@ -1,8 +1,9 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
-import { getReturnType, isArrayType, makeItemType } from "../type.utils";
+import { getReturnType, makeItemType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 import { EvaluationError } from "../rules/exception";
+import { isArrayType } from "../parser/type.parser";
 
 export class ComparisonExpression extends BooleanExpression {
 

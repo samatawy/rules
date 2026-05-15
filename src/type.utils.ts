@@ -1,4 +1,4 @@
-import { TypeParser } from "./parser/type.parser";
+import { isArrayType, isAtomicType, isTypedObjectType, TypeParser } from "./parser/type.parser";
 import { ArrayExpression } from "./syntax/array.expression";
 import { BooleanExpression, DateExpression, Expression, NumericExpression, StringExpression } from "./syntax/expression";
 import { LambdaExpression } from "./syntax/lambda.expression";
@@ -88,7 +88,7 @@ export function getArrayType(array: ArrayExpression | Expression[], checker?: Ty
             return elementType;
         } else if (elementType === 'string' || elementType === 'number' || elementType === 'boolean' || elementType === 'date') {
             return elementType + '[]' as ArrayType;
-        } else if (TypeParser.isValidObjectType(elementType)) {
+        } else if (isTypedObjectType(elementType)) {
             return { type: 'array', items: elementType } as ObjectArrayType;
         }
     }
@@ -227,29 +227,6 @@ export function getDefinedType(type: RootType | PropertyType | any, key?: string
     return undefined;
 }
 
-/**
- * Check if a given type is an atomic type (string, number, boolean, or date).
- * 
- * @param type the type to check.
- * @returns true if the type is an atomic type, false otherwise.
- */
-export function isAtomicType(type: PropertyType | unknown): type is AtomicType {
-    return type === 'string' || type === 'number' || type === 'boolean' || type === 'date';
-}
-
-/**
- * Check if a given type is an array type (array, string[], number[], boolean[], or date[]).
- * 
- * @param type the type to check.
- * @returns true if the type is an array type, false otherwise.
- */
-export function isArrayType(type: PropertyType | unknown): type is ArrayType {
-    if ((type as ObjectArrayType)?.items !== undefined) {
-        return true;
-    }
-    return type === 'array' || type === 'string[]' || type === 'number[]' || type === 'boolean[]' || type === 'date[]';
-}
-
 export function makeArrayType(type: AtomicType | ObjectType | unknown): ArrayType | ObjectArrayType {
     if (isAtomicType(type)) {
         return type + '[]' as ArrayType;
@@ -270,10 +247,6 @@ export function makeItemType(type: ArrayType | ObjectArrayType | unknown): Atomi
         }
     }
     throw new TypeCheckError(`Unable to determine item type for array type: ${type}`);
-}
-
-export function isObjectType(type: PropertyType | unknown): type is ObjectType {
-    return TypeParser.isValidObjectType(type);
 }
 
 export function getLiteralType(value: any): AtomicType | ArrayType {

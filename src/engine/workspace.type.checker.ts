@@ -1,12 +1,13 @@
 import type { AtomicType, PropertyType, RootType, ComplexType, ArrayType, ObjectArrayType } from "../types";
 import type { TypeChecker, ValidationResult } from "../interfaces";
 import type { WorkspaceOptions } from "./workspace";
-import { isArrayType, isAtomicType, makeItemType } from "../type.utils";
+import { makeItemType } from "../type.utils";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../log/work.logger";
 import { equalsDeep } from "../common.utils";
+import { isArrayType, isAtomicType } from "../parser/type.parser";
 
 export class WorkspaceTypeChecker implements TypeChecker {
 

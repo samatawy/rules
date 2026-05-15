@@ -1,9 +1,10 @@
 import type { Workspace } from "../engine/workspace";
 import { FunctionFactory } from "../parser/function.factory";
-import type { FunctionDefinition } from "../types";
-import { isArrayType, makeItemType } from "../type.utils";
+import type { ArgumentType, FunctionDefinition } from "../types";
+import { makeItemType } from "../type.utils";
 import { SuggestionBuilder } from "./suggestion.builder";
 import { Closers, ComparisonOperators, LogicalOperators, NumericOperators, Openers, Quoters, Separators, TernaryOperators } from "./constants";
+import { isArrayType } from "../parser/type.parser";
 
 export type AutocompleteKind = 'operator' | 'function' | 'type' | 'constant' | 'variable' | 'literal' | 'opener' | 'closer' | 'separator' | 'quoter';
 
@@ -118,7 +119,7 @@ export class Autocomplete {
         return true;
     }
 
-    protected isFunctionArgument(prior_tokens: string[]): { type: string | undefined } {
+    protected isFunctionArgument(prior_tokens: string[]): { type: ArgumentType | undefined } {
         let in_list = false;
         let in_block = false;
         let in_function: FunctionDefinition | undefined = undefined;
@@ -139,7 +140,7 @@ export class Autocomplete {
                         if (expectsArray) {
                             const argument = builtin.expectsParameters()[0];
                             const type = argument ? makeItemType(argument.type) : undefined;
-                            return { type: type ? type + '' : undefined };
+                            return { type: type ? type : undefined };
                         } else {
                             const argument = builtin.expectsParameters()[argument_index || 0];
                             return { type: argument ? argument.type : undefined };
@@ -149,7 +150,7 @@ export class Autocomplete {
                     if (custom) {
                         const argument = custom.parameters[argument_index || 0];
                         const type = argument ? argument.type : undefined;
-                        return { type: type ? type + '' : undefined };
+                        return { type: type ? type : undefined };
                     }
                 }
                 break;

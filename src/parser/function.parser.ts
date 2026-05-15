@@ -1,6 +1,6 @@
 import JSON5 from "json5";
 import type { ArrayType, AtomicType, FunctionDefinition, NamedParameter, ObjectType, PropertyType } from "../types";
-import { isArrayType, isAtomicType } from "../type.utils";
+import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.parser";
 import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
@@ -228,7 +228,7 @@ export class FunctionParser {
                 const matchObject = paramSyntax.match(/^(\w+)\s*:\s*(\{[^{}]*\})\s*$/);
                 if (matchObject) {
                     try {
-                        if (TypeParser.isValidObjectType(JSON5.parse(matchObject[2]!))) {
+                        if (isTypedObjectType(JSON5.parse(matchObject[2]!))) {
                             params.push({
                                 name: matchObject[1]!,
                                 type: JSON5.parse(matchObject[2]!) as ObjectType,

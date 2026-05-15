@@ -87,6 +87,15 @@ Returns `true` when at least one item satisfies the lambda condition.
 if any(Person.family, member : member.age < 18) then Person.hasMinor = true
 ```
 
+### `sort(array, item : predicate)`
+Returns a sorted array sorted by the expression returned by each item.
+
+```
+set youngest_to_oldest = sort(Person.family, member : member.age)
+
+set mostExpensive = sort(Store.products, product: product.price * -1);
+```
+
 ### `filter(array, item : predicate)`
 Returns a filtered array containing only matching items.
 

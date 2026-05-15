@@ -124,4 +124,48 @@ describe('Engine tests', () => {
     expect(space.checkTypes().valid).toBe(false);
   });
 
+  it('sorts arrays by lamda', async () => {
+    const space = new Workspace({ strict_inputs: false });
+    space.typeRegistry().addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+        children: 'string[]',
+        ages: 'number[]',
+        family: {
+          type: 'array',
+          items: {
+            name: 'string',
+            age: 'number',
+          }
+        }
+      }
+    });
+
+    space.addRule('if count(Person.ages) > 1 then Person.ages = sort(Person.ages, age: -age)');
+    space.addRule('if count(Person.family) > 1 then Person.family = sort(Person.family, member: member.age)');
+
+    // console.debug(space.checkTypes());
+    expect(space.checkTypes().valid).toBe(true);
+
+    const ctx = space.loadContext({
+      Person: {
+        name: 'Alice', age: 30,
+        ages: [20, 25, 15],
+        family: [{ name: 'Bob', age: 15 }, { name: 'Charlie', age: 25 }, { name: 'David', age: 20 }]
+      }
+    });
+    expect(space.applicableRules(ctx).length).toBe(2);
+    const ok = space.process(ctx);
+    expect(ok).toBe(true);
+    const output = ctx.getOutput();
+    console.debug('Output with lambda expression:', output);
+    expect(output.Person.ages[0]).toBe(25);
+    expect(output.Person.ages[2]).toBe(15);
+    expect(output.Person.family[0].age).toBe(15);
+    expect(output.Person.family[2].age).toBe(25);
+
+  });
+
 });

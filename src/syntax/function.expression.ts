@@ -1,9 +1,10 @@
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
-import { assignableTo, getArrayType, getReturnType, isArrayType } from "../type.utils";
+import { assignableTo, getArrayType, getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { WorkLogger } from "../log/work.logger";
+import { isArrayType } from "../parser/type.parser";
 
 export abstract class FunctionExpression extends Expression {
 

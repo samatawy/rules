@@ -25,6 +25,9 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'log10':
             case 'log2':
             case 'exp':
+
+            case 'neg':
+            case 'negative':
             case 'ceil':
             case 'floor':
             case 'round':
@@ -52,6 +55,9 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         }
 
         switch (this.name) {
+            case 'neg':
+            case 'negative':
+                return -targetValue;
             case 'abs':
                 return Math.abs(targetValue);
             case 'sign':
@@ -85,5 +91,5 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['ceil', 'floor', 'round', 'roundTo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
+    static names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
 }

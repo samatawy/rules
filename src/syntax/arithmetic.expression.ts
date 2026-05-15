@@ -22,11 +22,11 @@ export class ArithmeticExpression extends NumericExpression {
     }
 
     public getParts(): Expression[] {
-        return [this.left, this.right];
+        return (this.left) ? [this.left, this.right] : [this.right];
     }
 
     public required(): Set<string> {
-        const leftRequirements = this.left.required();
+        const leftRequirements = this.left?.required() || [];
         const rightRequirements = this.right.required();
         return new Set([...leftRequirements, ...rightRequirements]);
     }

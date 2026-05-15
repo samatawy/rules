@@ -3,11 +3,12 @@ import type { Expression } from "../syntax/expression";
 import type { ArrayType, AtomicType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../interfaces";
 import { RuleParser } from "../parser/rule.parser";
-import { getReturnType, isAtomicType } from "../type.utils";
+import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ParserError } from "./exception";
+import { isAtomicType } from "../parser/type.parser";
 
 export class OutputRule extends AbstractRule {
 

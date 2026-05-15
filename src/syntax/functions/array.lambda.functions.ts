@@ -8,7 +8,7 @@ import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { TypeParser } from "../../parser/type.parser";
+import { isArrayType, TypeParser } from "../../parser/type.parser";
 import { WorkLogger } from "../../log/work.logger";
 
 export class ArrayLambdaFunction extends FunctionExpression {
@@ -73,12 +73,15 @@ export class ArrayLambdaFunction extends FunctionExpression {
             case 'every':
             case 'any':
                 return 'boolean';
+
+            case 'sort':
             case 'filter':
                 // The following in case created without arguments, e.g. in autocomplete suggestions
                 if (!this.target_arg || !this.lambda_arg) {
                     return 'array';
                 }
                 return getReturnType(this.target_arg, checker) as ArrayType | ObjectArrayType;
+
             case 'map':
                 // The following in case created without arguments, e.g. in autocomplete suggestions
                 if (!this.target_arg || !this.lambda_arg) {
@@ -106,7 +109,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
         checks.push(this.target_arg.checkTypes(checker));
 
         const targetType = getReturnType(this.target_arg, checker);
-        const target_is_array = TypeParser.isValidArrayType(targetType);
+        const target_is_array = isArrayType(targetType);
         if (!target_is_array) {
             checks.push({
                 valid: false,
@@ -131,6 +134,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 }
                 break;
             case 'map':
+            case 'sort':
             case 'filter':
                 if (!lambdaReturns) {
                     checks.push({
@@ -175,6 +179,14 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 return values.reduce((acc, val) => acc && !!val, true);
             case 'any':
                 return values.reduce((acc, val) => acc || !!val, false);
+            case 'sort':
+                const indices = targetArray.map((_, idx) => idx);
+                indices.sort((a, b) => {
+                    const item_a = values[a], item_b = values[b];
+                    return this.defaultCompare(item_a, item_b);
+                });
+                return indices.map(idx => targetArray[idx]);
+
             case 'filter':
                 return targetArray.filter((_: any, index: number) => !!values[index]);
             case 'map':
@@ -184,5 +196,19 @@ export class ArrayLambdaFunction extends FunctionExpression {
         }
     }
 
-    static names = ['every', 'any', 'filter', 'map'];
+    private defaultCompare(a: unknown, b: unknown): number {
+        if (a === b) return 0;
+        if (a == null) return -1;
+        if (b == null) return 1;
+
+        // Strings: locale-aware comparison
+        if (typeof a === 'string' && typeof b === 'string') {
+            return a.localeCompare(b);
+        }
+
+        // Numbers, Dates, or other comparable primitives
+        return a < b ? -1 : a > b ? 1 : 0;
+    }
+
+    static names = ['every', 'any', 'sort', 'filter', 'map'];
 }

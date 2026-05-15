@@ -1,7 +1,8 @@
 import type { AtomicType, RootType, ComplexType, ArrayType, ObjectArrayType, ObjectType, PropertyType } from "../types";
 import type { WorkspaceOptions } from "./workspace";
-import { getDefinedType, hasDefinedType, isArrayType, isAtomicType } from "../type.utils";
+import { getDefinedType, hasDefinedType } from "../type.utils";
 import { ParserError } from "../rules/exception";
+import { isArrayType, isAtomicType } from "../parser/type.parser";
 
 /**
  * TypeRegistry is responsible for storing and managing type definitions within the working context. 

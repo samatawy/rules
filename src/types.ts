@@ -55,6 +55,8 @@ export interface RootType {
     properties?: ObjectType;
 }
 
+export type ArgumentType = AtomicType | ArrayType | ObjectType | 'lambda' | 'any';
+
 /**
  * A typed parameter definition to specify the expected type of each parameter in a built-in (or custom) function.
  * This is used for type checking and validation of function arguments when the function is called in rules and expressions.
@@ -64,7 +66,7 @@ export interface TypedParameter {
      * The type of the parameter, which can be an atomic type, an array type, a lambda type, or any type. 
      * This defines the expected type of the parameter value when the function is called.
      */
-    type: AtomicType | ArrayType | ObjectType | 'lambda' | 'any';
+    type: ArgumentType;
     // TODO: May we revert to this?
     // type: AtomicType | ArrayType | 'lambda' | 'any';
 

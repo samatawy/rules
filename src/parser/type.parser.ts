@@ -1,6 +1,6 @@
 import JSON5 from "json5";
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "../types";
-import { isArrayType, isAtomicType } from "../type.utils";
+// import { isArrayType, isAtomicType } from "../type.utils";
 import type { ParserOptions } from "./rule.parser";
 import { ParserError } from "../rules/exception";
 
@@ -46,7 +46,7 @@ export class TypeParser {
             if (json.hasOwnProperty('type') && !this.isValidTypeDefinition(json.type)) {
                 throw new ParserError(`If "type" is defined, it must be a valid type definition: ${syntax}`);
             }
-            if (json.hasOwnProperty('properties') && !TypeParser.isValidObjectType(json.properties)) {
+            if (json.hasOwnProperty('properties') && !TypeParser.isTypedObjectType(json.properties)) {
                 throw new ParserError(`If "properties" is defined, it must be an valid object type: ${syntax}`);
             }
             // If propertes, exist, they become the object type..
@@ -63,27 +63,57 @@ export class TypeParser {
     }
 
     public isValidTypeDefinition(json: any): boolean {
-        return isAtomicType(json) || isArrayType(json) || TypeParser.isValidComplexType(json);
+        return TypeParser.isAtomicType(json) || TypeParser.isArrayType(json) || TypeParser.isComplexType(json);
     }
 
-    public static isValidAtomicType(type: any): type is AtomicType {
-        return isAtomicType(type);
+    /**
+     * Check if a given type is an atomic type (string, number, boolean, or date).
+     * 
+     * @param type the type to check.
+     * @returns true if the type is an atomic type, otherwise false.
+     */
+    public static isAtomicType(type: unknown): type is AtomicType {
+        return type === 'string' || type === 'number' || type === 'boolean' || type === 'date';
     }
 
-    public static isValidArrayType(type: any): type is ArrayType {
-        return isArrayType(type);
+    /**
+     * Check if a given type is an array type (string[], number[], boolean[], or date[]),
+     * knowing that Array Object types are also accepted as array types.
+     * The loosely typed 'array' is also accepted by this function.
+     * 
+     * @param type the type to check.
+     * @returns true if the type is an array type, otherwise false.
+     */
+    public static isArrayType(type: unknown): type is ArrayType {
+        if ((type as ObjectArrayType)?.items !== undefined) {
+            return true;
+        }
+        return type === 'array' || type === 'string[]' || type === 'number[]' || type === 'boolean[]' || type === 'date[]';
     }
 
-    public static isValidComplexType(type: PropertyType | unknown): type is ComplexType {
-        return type === 'object' || TypeParser.isValidObjectType(type);
+    /**
+     * Check if a given type is an object type or the unspecified type 'object'.
+     * 
+     * @param type the type to check.
+     * @returns true if the type is an object type, otherwise false.
+     */
+    public static isComplexType(type: unknown): type is ComplexType {
+        return type === 'object' || TypeParser.isTypedObjectType(type);
     }
 
-    public static isValidObjectType(type: PropertyType | unknown): type is ObjectType {
+    /**
+     * Check if a given type is a stringly-typed Object type.
+     * The type 'object' is not accepted by this function.
+     * 
+     * @param type the type to check.
+     * @returns true if the type is a stringly-typed object, otherwise false.
+     */
+    public static isTypedObjectType(type: PropertyType | unknown): type is ObjectType {
         if ((typeof type !== 'object' || type === null) || Array.isArray(type)) {
             return false;
         }
         for (const [key, entry] of Object.entries(type)) {
-            const isType = isAtomicType(entry) || isArrayType(entry) || TypeParser.isValidComplexType(entry);
+            const isType = TypeParser.isAtomicType(entry) || TypeParser.isArrayType(entry) || TypeParser.isComplexType(entry);
             if (!isType) {
                 return false;
             }
@@ -91,7 +121,14 @@ export class TypeParser {
         return true;
     }
 
-    public static isValidObjectArrayType(type: PropertyType | unknown): type is ObjectArrayType {
+    /**
+     * Check if a given type is a stringly-type Array of Objects type.
+     * The loose type 'array' is not accepted by this function.
+     * 
+     * @param type the type to check.
+     * @returns true if the type is a stringly-typed Array type, otherwise false.
+     */
+    public static isObjectArrayType(type: PropertyType | unknown): type is ObjectArrayType {
         if (typeof type !== 'object' || type === null || Array.isArray(type)) {
             return false;
         }
@@ -99,14 +136,46 @@ export class TypeParser {
             return false;
         }
         for (const [key, entry] of Object.entries((type as ObjectArrayType).items!)) {
-            if (!TypeParser.isValidPropertyType(entry)) {
+            if (!TypeParser.isPropertyType(entry)) {
                 return false;
             }
         }
         return true;
     }
 
-    public static isValidPropertyType(type: any): type is PropertyType {
-        return isAtomicType(type) || isArrayType(type) || TypeParser.isValidComplexType(type) || TypeParser.isValidObjectArrayType(type);
+    /**
+     * Check if a given type can be used in type definitions as a PropertyType.
+     * Any Property type can be used in the type registry.
+     * 
+     * @param type the type to check.
+     * @returns true if the type can be used in the type regitsyr, otherwise false.
+     */
+    public static isPropertyType(type: unknown): type is PropertyType {
+        return TypeParser.isAtomicType(type) || TypeParser.isArrayType(type) || TypeParser.isComplexType(type) || TypeParser.isObjectArrayType(type);
     }
 }
+
+/** 
+ * @function
+ */
+export const isAtomicType = TypeParser.isAtomicType;
+
+/** 
+ * @function
+ */
+export const isArrayType = TypeParser.isArrayType;
+
+/** 
+ * @function
+ */
+export const isComplexType = TypeParser.isComplexType;
+
+/**
+ * @function
+ */
+export const isTypedObjectType = TypeParser.isTypedObjectType;
+
+/** 
+ * @function
+ */
+export const isObjectArrayType = TypeParser.isObjectArrayType;

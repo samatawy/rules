@@ -57,6 +57,15 @@ if between(age, 18, 65) then eligible = true
 
 ## Numeric Manipulation
 
+
+### `neg(number)` or `negative(number)`
+Returns the additive inverse of the number. A positive value becomes negative.
+
+```
+set negative_value = negative(positive_value)
+```
+- The purpose of this function is to avoid using the minus sign in front of variables to invert them. This common practice make expressions less clear and more error-prone. 
+
 ### `ceil(number)`
 Rounds a number up to the next integer.
 

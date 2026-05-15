@@ -83,6 +83,11 @@ export class ExpressionParser {
             return comparisonExpr;
         }
 
+        const negativeExpr = this.readNegativeExpression(tokens);
+        if (negativeExpr) {
+            return negativeExpr;
+        }
+
         const arithmeticExpr = this.readArithmeticExpression(['+', '-'], tokens);
         if (arithmeticExpr) {
             return arithmeticExpr;
@@ -379,6 +384,21 @@ export class ExpressionParser {
             const leftExpr = this.parse(left);
             const rightExpr = this.parse(right);
             return new ArithmeticExpression(operator, leftExpr, rightExpr);
+        }
+        return null;
+    }
+
+    public readNegativeExpression(tokens: string[]): ArithmeticExpression | LiteralExpression | null {
+        if (tokens[0]?.startsWith('-')) {
+            const right = tokens.join(' ').slice(1);
+            const rightExpr = this.parse(right);
+            if (rightExpr instanceof LiteralExpression) {
+                const value = rightExpr.evaluate();
+                if (!Number.isNaN(value)) {
+                    return new LiteralExpression(-1 * value);
+                }
+            }
+            return new ArithmeticExpression('-', new LiteralExpression(0), rightExpr);
         }
         return null;
     }

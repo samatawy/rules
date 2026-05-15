@@ -1,9 +1,10 @@
 import type { Expression } from "../syntax/expression";
 import type { ArrayType, AtomicType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult } from "../interfaces";
-import { getReturnType, isAtomicType } from "../type.utils";
+import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
+import { isAtomicType } from "../parser/type.parser";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.
