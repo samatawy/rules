@@ -11,6 +11,10 @@ const rankedLogLevels: Record<LogLevel, number> = {
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
+/**
+ * A common interface for logging classes that can write logs to any destination.
+ * Implement this interface to create a bridge to your preferred logging library: Pino, Windston, Sentry, etc. 
+ */
 export interface ILogger {
 
     trace(msg: string, ...args: unknown[]): void;
@@ -28,17 +32,24 @@ export interface ILogger {
     log(level: LogLevel, msg: string, ...args: unknown[]): void;
 }
 
+/**
+ * Helper class to handle and configure logging for all Rule engine classes.
+ */
 export class WorkLogger {
 
     private static logLevel: LogLevel = 'info';
 
     private static loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
 
+    /**
+     * Globally set the logging level for all Rule engine classes.
+     * @param level the level at which to start logging events.
+     */
     public static setLogLevel(level: LogLevel): void {
         this.logLevel = level;
     }
 
-    public static canLog(level: LogLevel): boolean {
+    protected static canLog(level: LogLevel): boolean {
         const current = rankedLogLevels[this.logLevel];
         const required = rankedLogLevels[level];
         return current <= required;
@@ -106,10 +117,19 @@ export class WorkLogger {
         }
     }
 
+    /**
+     * Register a new bridge to connect your preferred logging library through an ILogger implementation.
+     * @param name the local identifier for the bridge.
+     * @param logger an implementation of ILogger to register.
+     */
     public static register(name: string, logger: ILogger): void {
         this.loggerMap.set(name, logger);
     }
 
+    /**
+     * Remove a previously connected bridge to an external logging library.
+     * @param logger the identifier of the bridge (used to register).
+     */
     public static unregister(logger: string | ILogger): void {
         if (typeof logger === 'string') {
             this.loggerMap.delete(logger);

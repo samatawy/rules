@@ -8,6 +8,7 @@ children:
   - ./expression.syntax.md
   - ./rules.syntax.md
   - ./functions.md
+  - ./howto.design.rules.md
 ---
 
 # Rule Engine
@@ -23,3 +24,5 @@ Pages in this section:
 - [Expression Syntax](expression.syntax.md) for the language used inside conditions, assignments, and function calls.
 - [Rules Syntax](rules.syntax.md) for full rule shapes, annotations, comments, and authoring tips.
 - [Functions](functions.md) for how to use built-in and custom functions.
+- [How to Design Rules](howto.design.rules.md) for advice and best practices.
+

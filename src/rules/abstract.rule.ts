@@ -1,4 +1,4 @@
-import type { ArrayType, AtomicType } from "../types";
+import type { ArrayType, AtomicType, ObjectType } from "../types";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
 import type { Expression } from "../syntax/expression";
 
@@ -25,7 +25,7 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
 
     private requirements: Set<string>;
 
-    private changeTargets: Record<string, AtomicType | ArrayType>;
+    private changeTargets: Record<string, AtomicType | ArrayType | ObjectType>;
 
     constructor(syntax: string, salience?: number) {
         this.syntax = syntax;
@@ -58,6 +58,10 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
         this.salience = salience;
     }
 
+    /**
+     * The condition to be evaluated and satisified.
+     * @returns the expression to be evaluated in this rule.
+     */
     public abstract getExpression(): Expression;
 
     protected require(...requirements: string[]): void {
@@ -76,7 +80,11 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
         return new Set(this.requirements);
     }
 
-    public willChange(changes: Record<string, AtomicType | ArrayType>): void {
+    /**
+     * Declare what keys (and their types) that are expected in the relevant context when this rule is executed.
+     * @param changes a record mapping changed data keys to their expected types.
+     */
+    protected willChange(changes: Record<string, AtomicType | ArrayType | ObjectType>): void {
         for (const target of Object.keys(changes)) {
             if (changes[target]) {
                 this.changeTargets[target] = changes[target];
@@ -84,8 +92,8 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
         }
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType> {
-        const typedChanges: Record<string, AtomicType | ArrayType> = {};
+    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+        const typedChanges: Record<string, AtomicType | ArrayType | ObjectType> = {};
         for (const [key, type] of Object.entries(this.changeTargets)) {
             typedChanges[key] = type;
         }

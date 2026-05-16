@@ -42,7 +42,6 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
         if (!(targetValue instanceof Date)) {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a date`);
         }
-        // const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
 
         switch (this.name) {
             case 'year':

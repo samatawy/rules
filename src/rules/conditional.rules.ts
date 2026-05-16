@@ -7,6 +7,9 @@ import { mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { EvaluationError, ExecutionError, ParserError } from "./exception";
 
+/**
+ * A conditional rule that is executed if a condition is satisified.
+ */
 export class IfThenRule extends AbstractRule {
 
     protected condition: Expression;
@@ -68,6 +71,10 @@ export class IfThenRule extends AbstractRule {
     }
 }
 
+/**
+ * A conditional rule that will execute one action if its condition evaluates to true, 
+ * and another condition if it evaluates to false.
+ */
 export class IfThenElseRule extends AbstractRule {
 
     protected condition: Expression;
@@ -141,6 +148,9 @@ export class IfThenElseRule extends AbstractRule {
     }
 }
 
+/**
+ * A condition rule that throws an exception if its condition evaluates to true.
+ */
 export class IfThrowRule extends AbstractRule {
 
     protected condition: Expression;

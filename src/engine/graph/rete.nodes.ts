@@ -2,7 +2,7 @@ import type { AbstractRule } from "../../rules/abstract.rule";
 import type { Expression } from "../../syntax/expression";
 
 /**
- * AbstractNode represents a node in the rule graph. It can be a DataNode, a CombinationNode, or a RuleNode.
+ * AbstractNode represents a node in the Rete graph. It can be a DataNode, a DecisionNode, or a RuleNode.
  * Each node can have multiple parents and children, representing the dependencies between rules and data keys.
  */
 export abstract class AbstractReteNode {
@@ -30,8 +30,9 @@ export abstract class AbstractReteNode {
 }
 
 /**
- * DataNode represents a node that corresponds to a specific data key in the rule graph.
+ * DataNode represents a node that corresponds to a specific data key in the Rete graph.
  * It holds a key and can have child nodes that represent nested data, rules, or combinations that depend on this data key.
+ * Data nodes can be followed if they do not evaluate to `undefined`.
  */
 export class DataNode extends AbstractReteNode {
 
@@ -43,6 +44,11 @@ export class DataNode extends AbstractReteNode {
     }
 }
 
+/**
+ * DecisionNode represents a node that corresponds to a decision in the Rete graph.
+ * It holds an expression that represents part of he conditions necessary for relevant rules.
+ * Decision nodes can be followed if they evaluate to `true`.
+ */
 export class DecisionNode extends AbstractReteNode {
 
     public expression: Expression;

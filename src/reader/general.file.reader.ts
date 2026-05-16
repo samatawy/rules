@@ -1,4 +1,3 @@
-import JSON5 from "json5";
 import { Workspace } from "../engine/workspace";
 import { WorkspaceTransaction } from "./workspace.transaction";
 import { FunctionParser } from "../parser/function.parser";
@@ -7,6 +6,7 @@ import { TypeParser } from "../parser/type.parser";
 import { AbstractRule } from "../rules/abstract.rule";
 import type { FunctionDefinition, RootType } from "../types";
 import { AbstractFileReader, type FileReaderOptions } from "./abstract.file.reader";
+import { parseTypeJson } from "../common.utils";
 
 export interface GeneralReaderResult {
     read: number;
@@ -94,7 +94,6 @@ export class GeneralFileReader extends AbstractFileReader {
     public parse(fileContent: string): GeneralReaderResult {
         let origin = fileContent.trim();
         let remainder = origin;
-        // const syntaxes: string[] = [];
         while (remainder.length > 0) {
             const { line, remainder: newRemainder } = this.options.read_by === 'block' ?
                 this.readBlock(remainder) :
@@ -156,7 +155,7 @@ export class GeneralFileReader extends AbstractFileReader {
                         result.passed += 1;
                     }
                     else {
-                        result.errors.push('Unrecognized component: ' + JSON5.parse(parsed));
+                        result.errors.push('Unrecognized component: ' + parseTypeJson(parsed));
                         result.failed += 1;
                     }
 

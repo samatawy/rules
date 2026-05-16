@@ -1,8 +1,7 @@
-import JSON5 from "json5";
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "../types";
-// import { isArrayType, isAtomicType } from "../type.utils";
 import type { ParserOptions } from "./rule.parser";
 import { ParserError } from "../rules/exception";
+import { parseTypeJson } from "../common.utils";
 
 /**
  * Parser class for parsing type definitions from JSON syntax into RootType objects.
@@ -33,7 +32,8 @@ export class TypeParser {
      */
     public parseRootType(syntax: string): RootType {
         try {
-            const json = JSON5.parse(syntax);
+            const json = parseTypeJson(syntax);
+
             if (typeof json !== 'object' || json === null || Array.isArray(json)) {
                 throw new ParserError(`Invalid JSON syntax for type definition: ${syntax}`);
             }

@@ -102,6 +102,7 @@ describe('Engine tests', () => {
 
     space.clearRules();
     space.addRule('set adultChildren = count(filter(Person.family, member : member.age >= 21))');
+    space.addRule('set family.children = count(filter(Person.family, member : member.age >= 21))');
 
     // console.debug(space.checkTypes());
     expect(space.checkTypes().valid).toBe(true);
@@ -151,11 +152,13 @@ describe('Engine tests', () => {
 
     const ctx = space.loadContext({
       Person: {
-        name: 'Alice', age: 30,
+        name: 'Alice', age: '30',
         ages: [20, 25, 15],
         family: [{ name: 'Bob', age: 15 }, { name: 'Charlie', age: 25 }, { name: 'David', age: 20 }]
       }
     });
+    console.debug(space.typeChecker().checkData(ctx.getOutput()));
+
     expect(space.applicableRules(ctx).length).toBe(2);
     const ok = space.process(ctx);
     expect(ok).toBe(true);

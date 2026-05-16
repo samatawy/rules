@@ -75,7 +75,7 @@ export class CustomFunctionExpression extends FunctionExpression {
         if (!returnType) {
             throw new TypeCheckError(`Unable to determine return type of function ${this.name}`);
         }
-        if (isAtomicType(returnType) || isArrayType(returnType) || isTypedObjectType(returnType)) {  // || returnType === 'any') {
+        if (isAtomicType(returnType) || isArrayType(returnType) || isTypedObjectType(returnType)) {
             return returnType;
         } else {
             throw new TypeCheckError(`Invalid return type for function ${this.name}: expected atomic or array type, got ${returnType}`);
@@ -120,7 +120,7 @@ export class CustomFunctionExpression extends FunctionExpression {
                         errors: [`Argument ${i + 1} for function ${this.name} must be of type array, but got ${argType}`],
                     });
                 }
-            } else if (argType && !assignableTo(argType, expectedType)) {   // argType } != expectedType) {
+            } else if (argType && !assignableTo(argType, expectedType)) {
                 WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,
@@ -174,6 +174,7 @@ export class CustomFunctionExpression extends FunctionExpression {
             for (const line of this.definition.lines) {
                 const effect = line.execute(scope);
                 if (effect.exception) {
+                    // Scoped context will bubble up exceptions to the parent context
                     scope.addException(new RuleException(effect.exception, { function: this.name }));
                     break;
                 } else if (effect.changed) {

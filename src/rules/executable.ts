@@ -1,5 +1,5 @@
 import type { Expression } from "../syntax/expression";
-import type { ArrayType, AtomicType } from "../types";
+import type { ArrayType, AtomicType, ObjectType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, HasValidity, TypeChecker, ValidationResult } from "../interfaces";
 import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
@@ -28,7 +28,7 @@ export abstract class ExecutableAction implements Executor, HasValidity {
      * What data keys will be changed when this action is executed, along with their expected types?
      * @returns a record mapping data keys to their expected types.
      */
-    public abstract typedChanges(): Record<string, AtomicType | ArrayType>;
+    public abstract typedChanges(): Record<string, AtomicType | ArrayType | ObjectType>;
 
     public prepareEffect(partial: Partial<RuleEffect>): this {
         this.preparedEffect = { ...this.preparedEffect, ...partial };
@@ -63,8 +63,8 @@ export class OutputAction extends ExecutableAction {
         return this.value.required();
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType> {
-        return { [this.key]: getReturnType(this.value) as AtomicType | ArrayType };
+    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+        return { [this.key]: getReturnType(this.value) as AtomicType | ArrayType | ObjectType };
     }
 
     public toString(): string {
@@ -105,7 +105,6 @@ export class OutputAction extends ExecutableAction {
         const newValue = this.value.evaluate(context);
 
         if (equalsDeep(oldValue, newValue)) {
-            // if (oldValue == newValue) {
             return {};
         } else {
             context.setOutput(this.key, newValue);
@@ -138,8 +137,8 @@ export class CompositeAction extends ExecutableAction {
         return requirements;
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType> {
-        let changes: Record<string, AtomicType | ArrayType> = {};
+    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+        let changes: Record<string, AtomicType | ArrayType | ObjectType> = {};
         for (const action of this.actions) {
             changes = { ...changes, ...action.typedChanges() };
         }
@@ -200,7 +199,7 @@ export class ExceptionThrower extends ExecutableAction {
         return new Set();
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType> {
+    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
         return {}
     }
 

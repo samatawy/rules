@@ -5,8 +5,12 @@ import type { ObjectArrayType, ObjectType, PropertyType } from "../types";
 import { getReturnType, makeItemType } from "../type.utils";
 import type { AutocompleteSuggestion } from "./autocomplete";
 import { Closers, ComparisonOperators, LogicalOperators, NumericOperators, Openers, Quoters, Separators, TernaryOperators } from "./constants";
-import { isArrayType, isAtomicType, TypeParser } from "../parser/type.parser";
+import { isArrayType, isAtomicType } from "../parser/type.parser";
 
+/**
+ * Internal helper class used by Autocomplete.
+ * You should not need to use this class directly.
+ */
 export class SuggestionBuilder {
 
     private workspace: Workspace;

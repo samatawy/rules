@@ -41,7 +41,7 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - Input and output validation with configurable strictness
 - Custom functions and built-in functions
 - Built-in functions for numeric, string, date/time, boolean, array, lambda, constant, and random operations
-- Rule graphs for selecting relevant rules from the current working context
+- Rete algorithm implementation for highly scalable performance
 - Rule salience and conflict detection/resolution
 - Working memory, scope context, and function-local execution scope
 - Autocompletion support for editors

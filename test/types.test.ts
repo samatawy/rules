@@ -26,16 +26,16 @@ describe('Types Test', () => {
     expect(personType!.properties!.age).toBe('number');
 
     const validInput = { Person: { name: 'Alice', age: 30, children: ['Bob', 'Charlie'] } };
-    expect(types.validateData(validInput).valid).toBe(true);
+    expect(types.checkData(validInput).valid).toBe(true);
 
     const invalidArrayInput = { Person: { name: 'Alice', age: 30, children: [26, 'Bob'] } };
-    const invalidArrayResult = types.validateData(invalidArrayInput);
+    const invalidArrayResult = types.checkData(invalidArrayInput);
     // console.debug(invalidArrayResult);
     expect(invalidArrayResult.valid).toBe(false);
     expect(invalidArrayResult.errors?.length).toBeGreaterThan(0);
 
     const invalidInput = { Person: { name: 50, age: 'thirty' }, Extra: true };
-    const invalidResult = types.validateData(invalidInput);
+    const invalidResult = types.checkData(invalidInput);
     // console.debug(invalidResult);
     expect(invalidResult.valid).toBe(false);
     expect(invalidResult.errors?.length).toBeGreaterThan(0);

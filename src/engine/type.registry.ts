@@ -31,7 +31,11 @@ export class TypeRegistry {
         this.options = { ...this.options, ...options };
     }
 
-
+    /**
+     * Check whether a root type is identified by the given key.
+     * @param key the key to look for. If a nested key is given only the first token is considered.
+     * @returns true if a root type exists for the given key, otherwise false.
+     */
     public hasRootType(key: string): boolean {
         if (key.includes('.')) {
             key = key.split('.')[0] || '';
@@ -39,6 +43,11 @@ export class TypeRegistry {
         return this.types.has(key);
     }
 
+    /**
+     * Get the root type identified by the given key.
+     * @param key the key to look for. If a nested key is given only the first token is considered.
+     * @returns the root type identified by the given key, or undefined if no type is found.
+     */
     public getRootType(key: string): RootType | undefined {
         if (key.includes('.')) {
             key = key.split('.')[0] || '';
@@ -46,11 +55,19 @@ export class TypeRegistry {
         return this.types.get(key);
     }
 
+    /**
+     * Add a root type.
+     * @param type the type to add.
+     */
     public addRootType(type: RootType): void {
         type = this.replaceCustomTypes(type);
         this.types.set(type.key, type);
     }
 
+    /**
+     * Add a collection of root types.
+     * @param types the types to add, represented as a map, record, or array.
+     */
     public addRootTypes(types: Map<string, RootType> | Record<string, RootType> | RootType[]): void {
         if (types instanceof Map) {
             for (const type of types.values()) {
@@ -67,6 +84,10 @@ export class TypeRegistry {
         }
     }
 
+    /**
+     * List all registered root types.
+     * @returns a record mapping root keys to their known types.
+     */
     public getRootTypes(): Record<string, RootType> {
         const result: Record<string, RootType> = {};
         for (const [key, value] of this.types.entries()) {
@@ -75,10 +96,19 @@ export class TypeRegistry {
         return result;
     }
 
+    /**
+     * Delete all registered types.
+     */
     public clear(): void {
         this.types.clear();
     }
 
+    /**
+     * Check if the type checker knows the type of the given key.
+     * Nested keys can be checked using dot notation (e.g., "user.name").
+     * @param key the key to check.
+     * @returns true if the type is known, false otherwise.
+     */
     public hasType(key: string): boolean {
         const root = this.getRootType(key);
         if (key.includes('.')) {
@@ -89,6 +119,12 @@ export class TypeRegistry {
         }
     }
 
+    /**
+     * Get the type of the given key from the type checker.
+     * Nested keys can be accessed using dot notation (e.g., "user.name").
+     * @param key the key to look up in the type checker.
+     * @returns the type associated with the key, or undefined if the type is not known.
+     */
     public getType(key: string): AtomicType | ArrayType | ComplexType | ObjectArrayType | undefined {
         const root = this.getRootType(key);
         if (key.includes('.')) {

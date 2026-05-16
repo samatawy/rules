@@ -249,6 +249,54 @@ export function makeItemType(type: ArrayType | ObjectArrayType | unknown): Atomi
     throw new TypeCheckError(`Unable to determine item type for array type: ${type}`);
 }
 
+export function makeAtomic(value: unknown, expectedType: AtomicType): any {
+    switch (expectedType) {
+        case 'string': return makeString(value);
+        case 'number': return makeNumber(value);
+        case 'boolean': return makeBoolean(value);
+        case 'date': return makeDate(value);
+    }
+}
+
+export function makeString(value: unknown): string | undefined {
+    switch (typeof value) {
+        case 'undefined': return undefined;
+        case 'number': return `${value}`;
+        case 'bigint': return value.toString();
+        case 'string': return value;
+        default: throw new TypeCheckError(`Cannot accept [${value}] as a string.`);
+    }
+}
+
+export function makeNumber(value: unknown): number | bigint | undefined {
+    switch (typeof value) {
+        case 'undefined': return undefined;
+        case 'number': return value;
+        case 'bigint': return value;
+        case 'string': return isNaN(+value) ? undefined : +value;
+        default: throw new TypeCheckError(`Cannot accept [${value}] as a number.`);
+    }
+}
+
+export function makeBoolean(value: unknown): boolean | undefined {
+    switch (typeof value) {
+        case 'undefined': return undefined;
+        case 'boolean': return value;
+        case 'number': return value != 0;
+        default: throw new TypeCheckError(`Cannot accept [${value}] as a boolean.`);
+    }
+}
+
+export function makeDate(value: unknown): Date | undefined {
+    switch (typeof value) {
+        case 'undefined': return undefined;
+        case 'number': return new Date(value);
+        case 'string': return new Date(value);
+        case 'object': return (value instanceof Date) ? new Date(value) : undefined;
+        default: throw new TypeCheckError(`Cannot accept [${value}] as a date.`);
+    }
+}
+
 export function getLiteralType(value: any): AtomicType | ArrayType {
     const type = typeof value;
     if (type === 'string' || type === 'number' || type === 'boolean') {

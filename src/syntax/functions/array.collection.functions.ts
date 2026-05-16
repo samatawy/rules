@@ -14,7 +14,6 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
 
     constructor(name: string, target: Expression, args: Expression[]) {
         super(name, [target, ...args]);
-        // this.name = name;
         this.target_arg = target;
         this.extra_args = args;
     }

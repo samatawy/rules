@@ -134,7 +134,6 @@ export class ExpressionParser {
         return tokens;
     }
 
-
     protected splitOperands(tokens: string[], operators: string[]): { left: string, operator: string, right: string } | null {
         const stack: string[] = [];
         const openers = ['(', '[', '{', '"', '\''];
@@ -431,7 +430,7 @@ export class ExpressionParser {
 
     protected readVariableExpression(syntax: string): VariableExpression | null {
         // match alphanumeric strings that may include separating dots for nested variables, but do not start with a digit
-        if (/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$/.test(syntax)) {
+        if (/^\w+(?:\.\w+)*$/.test(syntax)) {
             return new VariableExpression(syntax);
         }
         return null;

@@ -1,14 +1,22 @@
 import { AbstractException } from "../rules/exception";
-import { cloneDeep, getPathValue, pathExists, setPathValue } from "../common.utils";
+import { getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
 
+/**
+ * An invoked rule and its effect on the context.
+ */
 export interface LoggedRule {
+
     rule: AbstractRule;
+
     effect: RuleEffect;
 }
 
+/**
+ * A context implementation that should be used whenever input data needs to be processed.
+ */
 export class WorkingMemory implements WorkingContext {
 
     private workspace: Workspace;
@@ -26,7 +34,11 @@ export class WorkingMemory implements WorkingContext {
         this.workspace = workspace;
 
         this.exceptions = [];
-        this.output = cloneDeep(this.input);
+        // TODO: maybe we should check if strict_inputs are enforced
+        // to decide which path to take
+        // this.output = cloneDeep(this.input);
+        this.output = workspace.typeChecker().coerceData(this.input);
+        console.debug(this.input, this.output);
         this.logged = [];
     }
 
@@ -36,14 +48,6 @@ export class WorkingMemory implements WorkingContext {
 
     public getConstant(key: string) {
         return this.workspace.getConstant(key);
-    }
-
-    private hasInput(key: string): boolean {
-        return pathExists(this.input, key);
-    }
-
-    private getInput(key: string): any {
-        return getPathValue(this.input, key);
     }
 
     public hasData(key: string): boolean {
@@ -101,18 +105,34 @@ export class WorkingMemory implements WorkingContext {
         this.exceptions.push(exception);
     }
 
+    /**
+     * List all exceptions raised in this context.
+     * @returns an array of exceptions.
+     */
     public getExceptions(): AbstractException[] {
         return this.exceptions;
     }
 
+    /**
+     * Add an invoked rule and its effect to the audit trail (log) of this context.
+     * @param rule the rule that was satisified.
+     * @param effect the effect it had on this context.
+     */
     public addToLog(rule: AbstractRule, effect: RuleEffect): void {
         this.logged.push({ rule, effect });
     }
 
+    /**
+     * Delete all rules and effects from the current audit trail (log).
+     */
     public clearLog(): void {
         this.logged = [];
     }
 
+    /**
+     * List all rules and their effects collected in this context.
+     * @returns an array of logged rules and effects.
+     */
     public getLog(): LoggedRule[] {
         return new Array(...this.logged);
     }

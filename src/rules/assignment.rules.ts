@@ -7,15 +7,23 @@ import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
-import { ParserError } from "./exception";
+import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
 
+/**
+ * A rule that assigns a value to a key whenever the requirements are provided.
+ * No condition is needed other than knowledge of the required inputs.
+ */
 export class OutputRule extends AbstractRule {
 
     protected outputKey: string;
 
     protected expression: Expression;
 
+    /**
+     * Get the expression that will return a value to be set.
+     * @returns the expression returning the required value.
+     */
     public getExpression(): Expression {
         return this.expression;
     }
@@ -87,7 +95,6 @@ export class OutputRule extends AbstractRule {
         const newValue = this.expression.evaluate(context);
 
         if (equalsDeep(oldValue, newValue)) {
-            // if (oldValue === newValue) {
             return null;
         } else {
             return new OutputAction(this.outputKey, this.expression);
@@ -98,8 +105,11 @@ export class OutputRule extends AbstractRule {
         const oldValue = context.getOutput(this.outputKey);
         const newValue = this.expression.evaluate(context);
 
+        if (oldValue && typeof oldValue === 'object') {
+            throw new ExecutionError('Should not override an "object" in an assignment');
+        }
+
         if (equalsDeep(oldValue, newValue)) {
-            // if (oldValue === newValue) {
             return {};
         } else {
             context.setOutput(this.outputKey, newValue);

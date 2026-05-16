@@ -10,7 +10,7 @@ export type CustomType = string;
 export type ComplexType = 'object' | ObjectType;
 
 // TODO: Should this have ObjectType instead of Record<string, ObjectType>?
-export type PropertyType = AtomicType | ArrayType | ObjectArrayType | ComplexType | Record<string, ObjectType>;
+export type PropertyType = AtomicType | ArrayType | ObjectArrayType | ComplexType;
 
 /** A defined object type with properties */
 export interface ObjectType {

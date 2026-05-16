@@ -27,7 +27,7 @@ describe('Logic Orders tests', () => {
         const ageFunc = funcParser.parse('adult(age: number) = age >= 21');
         if (ageFunc) space.functionRegistry().addFunction(ageFunc);
 
-        const personAgeFunc = funcParser.parse('personChecked(person: { age: "number" }) { person.adult = adult(person.age); return person }');
+        const personAgeFunc = funcParser.parse('personChecked(person: { age: number }) { person.adult = adult(person.age); return person }');
         if (personAgeFunc) space.functionRegistry().addFunction(personAgeFunc);
 
         space.addRule('IF count(Person.family) > 1 THEN Person.family = map(Person.family, member: personChecked(member))');
@@ -72,12 +72,12 @@ describe('Logic Orders tests', () => {
         const badTaxableRule = new RuleParser({ workspace: space })
             .parse('IF invoiceTaxable(Person) THEN Person.taxable = true');
         if (badTaxableRule) space.addRule(badTaxableRule);
-        console.debug(badTaxableRule?.checkTypes(space.typeChecker()));
+        // console.debug(badTaxableRule?.checkTypes(space.typeChecker()));
 
         const badShippableRule = new RuleParser({ workspace: space })
             .parse('IF invoiceShippable(invoice) THEN invoice.shippable = true');
         if (badShippableRule) space.addRule(badShippableRule);
-        console.debug(badShippableRule?.checkTypes(space.typeChecker()));
+        // console.debug(badShippableRule?.checkTypes(space.typeChecker()));
 
         ctx = space.loadContext({
             Person: {
@@ -90,6 +90,55 @@ describe('Logic Orders tests', () => {
         });
         space.process(ctx);
         console.debug(ctx);
+    });
+
+    it('handles arrays passed to functions', async () => {
+        const space = new Workspace({});
+        space.typeRegistry().addRootType({
+            key: 'Person',
+            properties: {
+                name: 'string',
+                age: 'number',
+                children: 'string[]',
+                ages: 'number[]',
+                family: {
+                    type: 'array',
+                    items: {
+                        name: 'string',
+                        age: 'number',
+                    }
+                }
+            }
+        });
+
+        const funcParser = new FunctionParser({ workspace: space });
+        const ageFunc = funcParser.parse('oldest(ages: number[]) = max(ages)');
+        if (ageFunc) space.functionRegistry().addFunction(ageFunc);
+
+        space.addRule('IF count(Person.family) > 1 THEN oldest_age = oldest(Person.family.age)');
+        space.addRule('IF count(Person.family) > 1 AND oldest_age THEN Person.eldest = filter(Person.family, member: member.age == oldest_age)');
+        const checkFirst = space.getRules()[0]!.checkTypes(space.typeChecker());
+        expect(checkFirst?.errors).toBeUndefined();
+        // console.debug(checkFirst);
+
+        let ctx = space.loadContext({
+            Person: {
+                name: 'Alice', age: 30,
+                family: [{
+                    'name': 'Bob', age: 22
+                }, {
+                    name: 'Charlie', age: 18
+                }]
+            }
+        });
+        expect(space.applicableRules(ctx).length).toBe(2);
+        const ok = space.process(ctx);
+        expect(ok).toBe(true);
+        const output = ctx.getOutput();
+        // console.debug('Output with ages:', output);
+
+        expect(output.oldest_age).toBe(22);
+        expect(output.Person.eldest[0].name).toBe('Bob');
     });
 
 });

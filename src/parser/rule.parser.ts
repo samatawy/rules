@@ -64,7 +64,9 @@ export class RuleParser {
         }
 
         // If this is a conditional assignment rule like "SET x = 5 IF condition"
-        if (syntax.match(/^SET\s+\w+\s*=\s*.+\s+IF\s+/i)) {
+        if (syntax.match(/^SET\s+\w+(\.\w+)*\s*=\s*.+\s+IF\s+/i)) {
+            // To support only flat keys:
+            // if (syntax.match(/^SET\s+\w+\s*=\s*.+\s+IF\s+/i)) {
             parsed = this.parseStateIfRule(syntax);
         }
 
@@ -214,8 +216,11 @@ export class RuleParser {
 
     protected parseStateRule(syntax: string): AbstractRule | null {
         // Parsing assignment rules like "SET x = 10"
+        // Maybe we should also accept nested states like "SET x.y.z = 10" ?
 
-        const match = syntax.match(/^SET\s+(\w+)\s*=\s*(.+)$/i);
+        const match = syntax.match(/^SET\s+(\w+(?:\.\w+)*)\s*=\s*(.+)$/i);
+        // To support only flat keys:
+        // const match = syntax.match(/^SET\s+(\w+)\s*=\s*(.+)$/i);
         if (match) {
             const variableName = match[1]!;
             const valueSyntax = match[2]!;
@@ -232,7 +237,9 @@ export class RuleParser {
     protected parseStateIfRule(syntax: string): AbstractRule | null {
         // Parsing conditional assignment rules like "SET x = 5 IF condition"
 
-        const match = syntax.match(/^SET\s+(\w+)\s*=\s*(.+)\s+IF\s+(.+)$/i);
+        const match = syntax.match(/^SET\s(\w+(?:\.\w+)*)\s*=\s*(.+)\s+IF\s+(.+)$/i);
+        // To support only flat keys:
+        // const match = syntax.match(/^SET\s+(\w+)\s*=\s*(.+)\s+IF\s+(.+)$/i);
         if (match) {
             const variableName = match[1]!;
             const valueSyntax = match[2]!;

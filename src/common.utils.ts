@@ -1,6 +1,7 @@
 import type { ValidationResult } from "./interfaces";
 import { WorkLogger } from "./log/work.logger";
 import { ExecutionError } from "./rules/exception";
+import JSON5 from "json5";
 
 /**
  * Check if a given key exists in the context, supporting nested keys using dot notation (e.g., "person.name.first").
@@ -154,3 +155,16 @@ export function mergeValidationResults(...results: ValidationResult[]): Validati
     return merged;
 }
 
+export function parseTypeJson(input: string): any {
+    input = quoteUnquotedTypes(input);
+    return JSON5.parse(input);
+}
+
+export function quoteUnquotedTypes(input: string): string {
+    // Matches identifiers (optionally followed by []) in value positions
+    // After `:`, `,`, or `[` and before `,`, `}`, or `]`
+    return input.replace(
+        /([:,\[])\s*([a-zA-Z_$][\w$]*(?:\[\])?)(?=\s*[,}\]])/g,
+        '$1 "$2"'
+    );
+}

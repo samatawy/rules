@@ -123,7 +123,7 @@ export abstract class FunctionExpression extends Expression {
                         errors: [`Argument ${i + 1} for function ${this.name} must be an array type, but got ${argType}`],
                     });
                 }
-            } else if (argType != expectedType && !assignableTo(argType, expectedType)) {       // && expectedType !== {}) {
+            } else if (argType != expectedType && !assignableTo(argType, expectedType)) {
                 WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,

@@ -8,18 +8,39 @@ import { isArrayType } from "../parser/type.parser";
 
 export type AutocompleteKind = 'operator' | 'function' | 'type' | 'constant' | 'variable' | 'literal' | 'opener' | 'closer' | 'separator' | 'quoter';
 
+/**
+ * A single suggested token
+ */
 export interface AutocompleteSuggestion {
+    /**
+     * The suggested token
+     */
     value: string;
 
+    /**
+     * The kind of suggested token
+     */
     kind: AutocompleteKind;
 
+    /**
+     * Optionally the type returned by this token
+     */
     returns?: string;
 
+    /**
+     * Optionally whether the token must follow certain types
+     */
     comes_after?: string[];
 
+    /**
+     * Optionally whether the token must come before certain types
+     */
     comes_before?: string[];
 }
 
+/**
+ * A helper class that can be used in syntax editors.
+ */
 export class Autocomplete {
 
     private workspace: Workspace;
@@ -28,6 +49,10 @@ export class Autocomplete {
 
     private suggestions: AutocompleteSuggestion[];
 
+    /**
+     * Create an autocomplete instance tailored to a given workspace.
+     * @param workspace the workspace to provide suggestions for.
+     */
     constructor(workspace: Workspace) {
         this.workspace = workspace;
         this.functionFactory = new FunctionFactory({ workspace });
@@ -36,6 +61,12 @@ export class Autocomplete {
         this.suggestions = new SuggestionBuilder(this.workspace).generateSuggestions();
     }
 
+    /**
+     * Get suggestions suitable for a given cursor position in a given line.
+     * @param cursor the position of the cursor relative to the start of the line.
+     * @param text the complete line where the cursor is positioned.
+     * @returns an array of suggestions that can be displayed.
+     */
     public getSuggestionsAt(cursor: number, text: string): AutocompleteSuggestion[] {
         const prior_tokens = this.tokenize(text.substring(0, cursor));
         const prefix = prior_tokens.pop() || '';
@@ -71,7 +102,6 @@ export class Autocomplete {
 
             return subset;
         }
-        return suggested;
     }
 
     protected normalizeSyntax(syntax: string): string {

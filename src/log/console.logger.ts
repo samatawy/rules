@@ -1,5 +1,9 @@
 import type { LogLevel, WorkLogger } from "./work.logger";
 
+/**
+ * A simple implementation of WorkLogger that outputs to the console.
+ * Write a class similar to this one to connect your preferred logging library, Pino, Winston, Sentry, etc.
+ */
 export class ConsoleLogger implements WorkLogger {
 
     public trace(msg: string, ...args: unknown[]): void {

@@ -1,5 +1,5 @@
 import type { AbstractException } from "./rules/exception";
-import type { ArrayType, AtomicType, PropertyType } from "./types";
+import type { ArrayType, AtomicType, ObjectType, PropertyType } from "./types";
 
 export interface Cache {
 
@@ -131,7 +131,7 @@ export interface Executor {
      * Get the data keys that this executor will change when executed, along with their expected types.
      * @returns a record mapping data keys to their expected types.
      */
-    typedChanges(): Record<string, AtomicType | ArrayType>;
+    typedChanges(): Record<string, AtomicType | ArrayType | ObjectType>;
 
     /**
      * Execute the required action in the given context and return the effects of the execution.
@@ -172,6 +172,25 @@ export interface TypeChecker {
      * @returns the result of the type check, indicating whether the target is valid and any errors if it is not.
      */
     checkTypes(target: HasValidity): ValidationResult;
+
+    /**
+     * Perform type checking on the given data, which can be any json object or array.
+     * Can be used to validate input to a context (e.g. from an HTTP request body).
+     * @param target the target to check types for.
+     * @returns the result of the type check, indicating whether the target is valid and any errors if it is not.
+     */
+    checkData(target: any): ValidationResult;
+
+    /**
+     * Coerce input data into types acceptable to the known types (as far as possible). 
+     * Input data can only be a json object but can contain arrays.
+     * Can be used to coerce input to a context (e.g. from an HTTP request body).
+     * N.B. Unknown keys (i.e. wihout registyered type definitions) will be passed on without coercion.
+     * N.B. Recommended to use ONLY after validating input.
+     * @param target the input data to coerce.
+     * @returns a deep clone of the input data, with values mutated as necessary to suite declared types.
+     */
+    coerceData(input: any): any;
 
     /**
      * Indicates whether the type checker should enforce strict syntax validation.

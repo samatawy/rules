@@ -1,4 +1,3 @@
-import JSON5 from "json5";
 import type { ArrayType, AtomicType, FunctionDefinition, NamedParameter, ObjectType, PropertyType } from "../types";
 import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.parser";
 import { ExpressionParser } from "./expression.parser";
@@ -22,7 +21,7 @@ import type { Expression } from "../syntax/expression";
 import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../log/work.logger";
-import { TypeParser } from "./type.parser";
+import { parseTypeJson } from "../common.utils";
 
 /**
  * Parser class for parsing function syntax into CustomFunctionExpression objects.
@@ -228,10 +227,11 @@ export class FunctionParser {
                 const matchObject = paramSyntax.match(/^(\w+)\s*:\s*(\{[^{}]*\})\s*$/);
                 if (matchObject) {
                     try {
-                        if (isTypedObjectType(JSON5.parse(matchObject[2]!))) {
+                        const parsedType = parseTypeJson(matchObject[2]!);
+                        if (isTypedObjectType(parsedType)) {
                             params.push({
                                 name: matchObject[1]!,
-                                type: JSON5.parse(matchObject[2]!) as ObjectType,
+                                type: parsedType,
                                 optional: false
                             } as NamedParameter);
                             ok = true;

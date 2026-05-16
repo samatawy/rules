@@ -428,7 +428,7 @@ export class Workspace implements Clonable<Workspace> {
                     found.add(rule);
                 }
             }
-            // return found;
+
         } else if (typeof currentContext === 'object' && currentContext !== null) {
             // Iterate over child keys of object context
             const childKeys = Object.keys(currentContext);
@@ -445,7 +445,6 @@ export class Workspace implements Clonable<Workspace> {
                         }
                     }
                 }
-                // return found;
             }
         }
         return found;
@@ -464,7 +463,7 @@ export class Workspace implements Clonable<Workspace> {
 
         context.clearLog();
 
-        const typeCheck = this.type_checker.validateData(context.getOutput());
+        const typeCheck = this.type_checker.checkData(context.getOutput());
         if (typeCheck.valid) {
             WorkLogger.debug('Input data passed type validation.');
         } else {
@@ -638,7 +637,7 @@ export class Workspace implements Clonable<Workspace> {
 
         context.clearLog();
 
-        const typeCheck = this.type_checker.validateData(context.getOutput());
+        const typeCheck = this.type_checker.checkData(context.getOutput());
         if (typeCheck.valid) {
             WorkLogger.debug('Input data passed type validation.');
         } else {
@@ -657,7 +656,6 @@ export class Workspace implements Clonable<Workspace> {
         }
 
         let satisfied: AbstractRule[] = [];
-        // let applicable = this.applicableRules(context);
         let rootKeys = this.flattenKeys(context.getOutput());
         let applicable = this.findReteRules(Array.from(rootKeys), context);
         let iterate = (applicable.size > 0), iteration = 0;

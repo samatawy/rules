@@ -3,6 +3,12 @@ import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../type
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getPathValue, pathExists, setPathValue } from "../common.utils";
 
+/**
+ * A context implementation internally used by functions (including lambda functions).
+ * This isolates changes made while the function is being executed, keeping the parent context clean.
+ * It does not cache values or return logs.
+ * You should not need to use this class directly.
+ */
 export class ScopeContext implements WorkingContext {
 
     private parent: WorkingContext | null;
@@ -26,17 +32,18 @@ export class ScopeContext implements WorkingContext {
         if (value !== undefined) {
             return value;
         } else if (this.parent) {
-            return this.parent.getConstant(key);
+            return this.parent.getConstant(key) || this.parent.getData(key);
         } else {
             throw new EvaluationError(`Undefined variable: ${key}`);
         }
     }
 
     public hasData(key: string): boolean {
-        if (key in this.variables) {
+        const local = pathExists(this.variables, key);
+        if (local) {
             return true;
         } else if (this.parent) {
-            return this.parent.hasConstant(key);
+            return this.parent.hasConstant(key) || this.parent.hasData(key);
         } else {
             return false;
         }
@@ -83,6 +90,7 @@ export class ScopeContext implements WorkingContext {
 
     public addException(exception: AbstractException): void {
         this.exceptions.push(exception);
+        this.parent?.addException(exception);
     }
 
     public getExceptions(): AbstractException[] {
@@ -102,6 +110,11 @@ export class ScopeContext implements WorkingContext {
     }
 }
 
+/**
+ * An implementation of TypeChecker used within a scope context.
+ * It holds the data types of custom function arguments for internal type checking.
+ * You should not need to use this class directly.
+ */
 export class ScopeTypeChecker implements TypeChecker {
 
     private parent: TypeChecker | null;
@@ -143,6 +156,14 @@ export class ScopeTypeChecker implements TypeChecker {
 
     public checkTypes(target: any): ValidationResult {
         return { valid: true };
+    }
+
+    public checkData(input: any): any {
+        return input;
+    }
+
+    public coerceData(input: any) {
+        return input;
     }
 
     public strictSyntax(): boolean {
