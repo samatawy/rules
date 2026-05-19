@@ -188,7 +188,7 @@ export interface TypeChecker {
      * Can be used to coerce input to a context (e.g. from an HTTP request body).
      * N.B. Unknown keys (i.e. wihout registyered type definitions) will be passed on without coercion.
      * N.B. Recommended to use ONLY after validating input.
-     * @param target the input data to coerce.
+     * @param input the input data to coerce.
      * @returns a deep clone of the input data, with values mutated as necessary to suite declared types.
      */
     coerceData(input: any): any;

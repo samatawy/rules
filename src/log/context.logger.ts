@@ -19,8 +19,6 @@ export class ContextLogger implements ILogger {
 
     private loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
 
-    private context: WorkingContext;
-
     private events: any[] = [];
 
     /**
@@ -30,22 +28,7 @@ export class ContextLogger implements ILogger {
      * to automatically register all loggers from WorkLogger to the new ContextLogger.
      * @param context the working context to associate with this logger.
      */
-    constructor(context: WorkingContext) {
-        this.context = context;
-    }
-
-    /**
-     * Flush all logged events to the registered loggers, writing them using any registered loggers.
-     * This allows you to control when the events are actually logged, 
-     * for example after a certain operation is completed or when an error occurs.
-     */
-    public flush(): void {
-        for (const event of this.events) {
-            if (this.canLog(event.level)) {
-                this.performAll(event.level, event.msg, ...event.args);
-            }
-        }
-        this.events = [];
+    constructor(private context: WorkingContext) {
     }
 
     /**
@@ -141,4 +124,19 @@ export class ContextLogger implements ILogger {
             }
         }
     }
+
+    /**
+     * Flush all logged events to the registered loggers, writing them using any registered loggers.
+     * This allows you to control when the events are actually logged, 
+     * for example after a certain operation is completed or when an error occurs.
+     */
+    public flush(): void {
+        for (const event of this.events) {
+            if (this.canLog(event.level)) {
+                this.performAll(event.level, event.msg, ...event.args);
+            }
+        }
+        this.events = [];
+    }
+
 }
