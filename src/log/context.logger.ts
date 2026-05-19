@@ -1,6 +1,7 @@
 import type { WorkingContext } from "../interfaces";
+import { AbstractLogger } from "./abstract.logger";
 import { ConsoleLogger } from "./console.logger";
-import { rankedLogLevels, type ILogger, type LogLevel } from "./interfaces";
+import type { ILogger, LogLevel } from "./interfaces";
 
 /**
  * Helper class to handle and configure logging for a specific working context.
@@ -13,9 +14,7 @@ import { rankedLogLevels, type ILogger, type LogLevel } from "./interfaces";
  * to automatically register all loggers from WorkLogger to the new ContextLogger.
  * You can also register and unregister loggers directly to a ContextLogger, which will not affect the loggers registered in WorkLogger or other ContextLoggers.
  */
-export class ContextLogger implements ILogger {
-
-    private logLevel: LogLevel = 'info';
+export class ContextLogger extends AbstractLogger {
 
     private loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
 
@@ -29,20 +28,7 @@ export class ContextLogger implements ILogger {
      * @param context the working context to associate with this logger.
      */
     constructor(private context: WorkingContext) {
-    }
-
-    /**
-     * Set the logging level for this context.
-     * @param level the level at which to start logging events.
-     */
-    public setLogLevel(level: LogLevel): void {
-        this.logLevel = level;
-    }
-
-    protected canLog(level: LogLevel): boolean {
-        const current = rankedLogLevels[this.logLevel];
-        const required = rankedLogLevels[level];
-        return current <= required;
+        super();
     }
 
     protected perform(logger: ILogger | any, func: string, msg: string, ...args: unknown[]) {

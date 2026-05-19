@@ -21,7 +21,7 @@ export class WorkLogger {
         this.logLevel = level;
     }
 
-    protected static canLog(level: LogLevel): boolean {
+    public static canLog(level: LogLevel): boolean {
         const current = rankedLogLevels[this.logLevel];
         const required = rankedLogLevels[level];
         return current <= required;
@@ -34,10 +34,15 @@ export class WorkLogger {
     }
 
     protected static performAll(func: LogLevel, msg: string, ...args: unknown[]) {
-        const impl = this.getImpl() as any;
-        if (impl !== WorkLogger && impl[func] && typeof impl[func] === 'function') {
-            // An override implementation is set, delegate to it directly
-            this.perform(impl, func, msg, ...args);
+        const impl = this.getImpl() as ILogger;
+        if (impl !== this) {
+            if (impl.canLog(func)) {
+                this.perform(impl, func, msg, ...args);
+            }
+            return;
+        }
+
+        if (!this.canLog(func)) {
             return;
         }
 
@@ -50,39 +55,39 @@ export class WorkLogger {
     }
 
     public static trace(msg: string, ...args: unknown[]): void {
-        if (this.canLog('trace')) {
-            this.performAll('trace', msg, ...args);
-        }
+        // if (this.canLog('trace')) {
+        this.performAll('trace', msg, ...args);
+        // }
     }
 
     public static debug(msg: string, ...args: unknown[]): void {
-        if (this.canLog('debug')) {
-            this.performAll('debug', msg, ...args);
-        }
+        // if (this.canLog('debug')) {
+        this.performAll('debug', msg, ...args);
+        // }
     }
 
     public static info(msg: string, ...args: unknown[]): void {
-        if (this.canLog('info')) {
-            this.performAll('info', msg, ...args);
-        }
+        // if (this.canLog('info')) {
+        this.performAll('info', msg, ...args);
+        // }
     }
 
     public static warn(msg: string, ...args: unknown[]): void {
-        if (this.canLog('warn')) {
-            this.performAll('warn', msg, ...args);
-        }
+        // if (this.canLog('warn')) {
+        this.performAll('warn', msg, ...args);
+        // }
     }
 
     public static error(msg: string, ...args: unknown[]): void {
-        if (this.canLog('error')) {
-            this.performAll('error', msg, ...args);
-        }
+        // if (this.canLog('error')) {
+        this.performAll('error', msg, ...args);
+        // }
     }
 
     public static fatal(msg: string, ...args: unknown[]): void {
-        if (this.canLog('fatal')) {
-            this.performAll('fatal', msg, ...args);
-        }
+        // if (this.canLog('fatal')) {
+        this.performAll('fatal', msg, ...args);
+        // }
     }
 
     public static log(level: LogLevel, msg: string, ...args: unknown[]): void {
@@ -182,7 +187,8 @@ export class WorkLogger {
  * const customLogger: ILogger = ...; 
  * 
  * withLogger(customLogger, () => {
- *     // Your code block where the custom logger is used
+ *      // Your code block where the custom logger is used
+ *      WorkLogger.info("This will be logged using the custom logger.");
  * });
  * 
  * // For wrapping a standalone function with the custom logger:

@@ -30,6 +30,12 @@ export interface ILogger {
     log(level: LogLevel, msg: string, ...args: unknown[]): void;
 
     /**
+     * Check if a message at the given log level would be logged by the current logger configuration.
+     * @param level the log level to check.
+     */
+    canLog(level: LogLevel): boolean;
+
+    /**
      * In case your logger buffers logs, flush should be called at the end of execution to ensure all logs are written out.
      * If your logger does not buffer logs, you can leave this method empty.
      */

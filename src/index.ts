@@ -65,5 +65,6 @@ export * from './syntax/functions/string.inspection.functions';
 // Logger components
 export * from './log/interfaces';
 export * from './log/work.logger';
+export * from './log/abstract.logger';
 export * from './log/context.logger';
 export * from './log/console.logger';
