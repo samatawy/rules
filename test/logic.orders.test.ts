@@ -89,7 +89,7 @@ describe('Logic Orders tests', () => {
             }
         });
         space.process(ctx);
-        console.debug(ctx);
+        // console.debug(ctx);
     });
 
     it('handles arrays passed to functions', async () => {

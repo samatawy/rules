@@ -1,5 +1,3 @@
-// TODO: Consider splitting exports to class and types for tree-shaking.
-
 // Basic files
 export * from './types';
 export * from './interfaces';
@@ -29,16 +27,6 @@ export * from './parser/function.parser';
 export * from './parser/rule.parser';
 export * from './parser/type.parser';
 
-// Reader components
-export * from './reader/abstract.file.reader';
-export * from './reader/constants.file.reader';
-export * from './reader/functions.file.reader';
-export * from './reader/general.file.reader';
-export * from './reader/rules.file.reader';
-export * from './reader/types.file.reader';
-export * from './reader/workspace.files.reader';
-export * from './reader/workspace.transaction';
-
 // Rule components
 export * from './rules/executable';
 export * from './rules/exception';
@@ -51,7 +39,6 @@ export * from './syntax/expression';
 export * from './syntax/arithmetic.expression';
 export * from './syntax/array.expression';
 export * from './syntax/comparison.expression';
-export * from './syntax/function.expression';
 export * from './syntax/lambda.expression';
 export * from './syntax/literal.expression';
 export * from './syntax/logical.expression';
@@ -74,11 +61,6 @@ export * from './syntax/functions/numeric.trigonometric.functions';
 export * from './syntax/functions/string.comparison.functions';
 export * from './syntax/functions/string.manipulation.functions';
 export * from './syntax/functions/string.inspection.functions';
-
-// Autocomplete components
-export * from './autocomplete/autocomplete';
-// export * from './autocomplete/suggestion.builder';
-// export * from './autocomplete/types';
 
 // Logger components
 export * from './log/work.logger';

@@ -218,6 +218,24 @@ Functions can be nested:
 set normalized = round(max(total, 10) / count(items))
 ```
 
+Another supported syntax is chaining functions; A function may follow any expression whereby that expression will be the first argument for the function.
+
+```
+circle_area(shape: { radius: number }) = pi() * radius.power(2) 
+
+IF is(shape.radius) THEN shape.area = shape.circle_area().roundTo(4)
+
+// You can use the same syntax for arrays and lambda functions
+IF Person.family.count() > 2 THEN Person.average_dependant_age = Person.family.age.filter(age : age < 21).average()
+
+// You can chain functions on literal values
+greet(name: string) = "Hello, ".concat(name, "!")
+
+IF Person.name THEN greeting = Person.name.upperCase().greet()
+```
+
+This may be cleaner if you want to avoid multiple nested parentheses or if you prefer a more method-like syntax.
+
 ## Array Literals and Array-Aware Paths
 
 Array literals use square brackets:

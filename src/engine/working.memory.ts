@@ -3,6 +3,8 @@ import { getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
+import type { ILogger } from "../log/interfaces";
+import { withLogger, WorkLogger } from "../log/work.logger";
 
 /**
  * An invoked rule and its effect on the context.
@@ -27,19 +29,23 @@ export class WorkingMemory implements WorkingContext {
 
     private output: any;
 
-    private logged: LoggedRule[];
+    private auditLog: LoggedRule[];
 
-    constructor(data: any, workspace: Workspace) {
+    private logImpl?: ILogger;
+
+    constructor(data: any, workspace: Workspace, logger?: ILogger) {
         this.input = data === undefined ? {} : data;
         this.workspace = workspace;
+        this.logImpl = logger || this.logger();
 
-        this.exceptions = [];
         // TODO: maybe we should check if strict_inputs are enforced
         // to decide which path to take
         // this.output = cloneDeep(this.input);
-        this.output = workspace.typeChecker().coerceData(this.input);
-        console.debug(this.input, this.output);
-        this.logged = [];
+        const coerceDataLogged = withLogger(this.logImpl, workspace.typeChecker().coerceData.bind(workspace.typeChecker()));
+        this.output = coerceDataLogged(this.input);
+
+        this.exceptions = [];
+        this.auditLog = [];
     }
 
     public hasConstant(key: string): boolean {
@@ -119,14 +125,14 @@ export class WorkingMemory implements WorkingContext {
      * @param effect the effect it had on this context.
      */
     public addToLog(rule: AbstractRule, effect: RuleEffect): void {
-        this.logged.push({ rule, effect });
+        this.auditLog.push({ rule, effect });
     }
 
     /**
      * Delete all rules and effects from the current audit trail (log).
      */
     public clearLog(): void {
-        this.logged = [];
+        this.auditLog = [];
     }
 
     /**
@@ -134,7 +140,7 @@ export class WorkingMemory implements WorkingContext {
      * @returns an array of logged rules and effects.
      */
     public getLog(): LoggedRule[] {
-        return new Array(...this.logged);
+        return new Array(...this.auditLog);
     }
 
     public setOutput(key: string, value: any): void {
@@ -146,5 +152,12 @@ export class WorkingMemory implements WorkingContext {
             return this.output;
         }
         return getPathValue(this.output, key);
+    }
+
+    public logger(): ILogger {
+        if (!this.logImpl) {
+            this.logImpl = WorkLogger.forContext(this);
+        }
+        return this.logImpl;
     }
 }

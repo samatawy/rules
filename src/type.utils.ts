@@ -1,4 +1,4 @@
-import { isArrayType, isAtomicType, isTypedObjectType, TypeParser } from "./parser/type.parser";
+import { isArrayType, isAtomicType, isTypedObjectType } from "./parser/type.parser";
 import { ArrayExpression } from "./syntax/array.expression";
 import { BooleanExpression, DateExpression, Expression, NumericExpression, StringExpression } from "./syntax/expression";
 import { LambdaExpression } from "./syntax/lambda.expression";
@@ -58,6 +58,7 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
         return 'date';
     }
 
+    // const logger = checker ? checker.logger() : WorkLogger;
     WorkLogger.warn(`Unable to determine return type for expression: ${expression}`);
     // For other expression types, we would need to implement logic to determine the return type based on the expression structure and the types of its components.
     return undefined;

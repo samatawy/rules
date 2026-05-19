@@ -80,5 +80,5 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['equals', 'notEquals', 'before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond'];
+    static names = ['before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant'];
 }

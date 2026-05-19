@@ -53,16 +53,6 @@ export class ExpressionParser {
             return this.parse(innerSyntax);
         }
 
-        const lambdaExpr = this.readLambdaExpression(tokens);
-        if (lambdaExpr) {
-            return lambdaExpr;
-        }
-
-        const functionExpr = this.readFunctionExpression(tokens);
-        if (functionExpr) {
-            return functionExpr;
-        }
-
         const logicalExpr = this.readLogicalExpression(tokens);
         if (logicalExpr) {
             return logicalExpr;
@@ -76,6 +66,11 @@ export class ExpressionParser {
         const switchExpr = this.readSwitchExpression(tokens);
         if (switchExpr) {
             return switchExpr;
+        }
+
+        const lambdaExpr = this.readLambdaExpression(tokens);
+        if (lambdaExpr) {
+            return lambdaExpr;
         }
 
         const comparisonExpr = this.readComparisonExpression(tokens);
@@ -103,7 +98,7 @@ export class ExpressionParser {
             return arithmeticExpr3;
         }
 
-        const literalExpr = this.readLiteralExpression(syntax);
+        const literalExpr = this.readLiteralExpression(tokens);
         if (literalExpr) {
             return literalExpr;
         }
@@ -113,7 +108,12 @@ export class ExpressionParser {
             return arrayExpr;
         }
 
-        const variableExpr = this.readVariableExpression(syntax);
+        const functionExpr2 = this.readFunctionExpression(tokens);
+        if (functionExpr2) {
+            return functionExpr2;
+        }
+
+        const variableExpr = this.readVariableExpression(tokens);
         if (variableExpr) {
             return variableExpr;
         }
@@ -122,15 +122,33 @@ export class ExpressionParser {
     }
 
     protected tokenize(syntax: string): string[] {
+
+        // Extract string literals to avoid corrupting them
+        const stringLiterals: string[] = [];
+        const protectedSyntax = syntax.replace(/(["'])(?:\\.|(?!\1).)*\1/g, (match) => {
+            const placeholder = `__STR_${stringLiterals.length}__`;
+            stringLiterals.push(match);
+            return placeholder;
+        });
+
         // insert spaces around parentheses and operators to ensure they are treated as separate tokens
         // Take care to treat ==, !=, <=, >= as single operators and not split them into two tokens
-        syntax = syntax.replace(/(==|!=|<=|>=|[()\[\]?:,%+=*/])/g, ' $1 ');
+        const spacedSyntax = protectedSyntax.replace(/(==|!=|<=|>=|&&|\|\||\+|\-|\*|\/|%|[()\[\]?:,%+<>=])/g, ' $1 ');
 
         // collapse multiple spaces into a single space
-        syntax = syntax.replace(/\s+/g, ' ').trim();
+        const normalizedSyntax = spacedSyntax.replace(/\s+/g, ' ').trim();
 
-        // split by spaces using simple regex
-        const tokens = syntax.split(/\s+/);
+        // Restore string literals
+        syntax = normalizedSyntax.replace(/__STR_(\d+)__/g, (_, idx) => stringLiterals[parseInt(idx)] || '');
+
+        const tokens = normalizedSyntax.split(/\s+/);
+
+        // restore string literals in tokens
+        for (let i = 0; i < tokens.length; i++) {
+            if (tokens[i]?.includes('__STR_')) {
+                tokens[i] = tokens[i]!.replace(/__STR_(\d+)__/, (_, idx) => stringLiterals[+idx]!);
+            }
+        }
         return tokens;
     }
 
@@ -211,21 +229,92 @@ export class ExpressionParser {
     }
 
     protected readFunctionExpression(tokens: string[]): Expression | null {
+        // Maybe this should accept the raw string and walk through it backwards character by character 
+        // instead of relying on tokenization, to better handle edge cases with nested function calls and complex arguments. 
+        // But for now let's try this approach and see if it works well enough.
 
+        // Read functions from the end to support chaining syntax like Person.children.age.average().roundTo(2) 
+        // where each function call is parsed with the entire left side as the first argument, 
+        // e.g. average(Person.children.age) and roundTo(average(Person.children.age), 2)
+        for (let i = tokens.length - 1; i >= 0; i--) {
+            const lastTokens = tokens.slice(i);
+            if (lastTokens.length >= 2 && lastTokens[1] === '(' && lastTokens[lastTokens.length - 1] === ')') {
+                if (!this.isEnclosedInParentheses(lastTokens.slice(1).join(' '))) {
+                    // unbalanced parentheses in function arguments, not a valid function expression
+                    continue;
+                }
+
+                const funcSyntax = lastTokens[0]!;
+                const argsSyntax = lastTokens.slice(2, -1).join(' ');
+                const args = this.splitArguments(argsSyntax);
+                const argExpressions = args.map(arg => this.parse(arg));
+
+                // Check if the function name is chained, e.g. Person.children.count()
+                const lastDotIndex = funcSyntax.lastIndexOf('.');
+                const functionName = lastDotIndex > -1 ? funcSyntax.slice(lastDotIndex + 1) : funcSyntax;
+
+                if (lastDotIndex > -1) {
+                    // function chaining syntax, e.g. Person.children.count()
+                    // we can treat this as a function call with the entire left side as the first argument, e.g. count(Person.children)
+                    const preceding = funcSyntax.slice(0, lastDotIndex);
+                    const firstArg = preceding.length ? tokens.slice(0, i).concat(preceding).join(' ') : tokens.slice(0, i).join(' ');
+
+                    argExpressions.unshift(this.parse(firstArg));
+                }
+                return new FunctionFactory(this.options).create(functionName, argExpressions);
+            }
+        }
+
+        // Also check if the entire expression is a function call without chaining, e.g. count(Person.children)
+        if (tokens.length >= 2 && tokens[1] === '(' && tokens[tokens.length - 1] === ')') {
+            if (tokens[0]?.includes('.')) {
+                // Sanity check: if it has dots but doesn't match the chaining pattern, it's not a valid function expression
+                return null;
+            }
+            if (!this.isEnclosedInParentheses(tokens.slice(1).join(' '))) {
+                // Required check: unbalanced parentheses in function arguments, not a valid function expression
+                return null;
+            }
+
+            let functionName = tokens[0]!;
+            const argsSyntax = tokens.slice(2, -1).join(' ');
+            const args = this.splitArguments(argsSyntax);
+            const argExpressions = args.map(arg => this.parse(arg));
+
+            return new FunctionFactory(this.options).create(functionName, argExpressions);
+        }
+
+        return null;
+    }
+
+    /* Older implementation
+    
+    protected readFunctionExpression(tokens: string[]): Expression | null {
         if (tokens.length >= 2 && tokens[1] === '(' && tokens[tokens.length - 1] === ')') {
             if (!this.isEnclosedInParentheses(tokens.slice(1).join(' '))) {
                 // unbalanced parentheses in function arguments, not a valid function expression
                 return null;
             }
 
-            const functionName = tokens[0]!;
+            let functionName = tokens[0]!;
             const argsSyntax = tokens.slice(2, -1).join(' ');
             const args = this.splitArguments(argsSyntax);
             const argExpressions = args.map(arg => this.parse(arg));
+
+            if (functionName.includes('.')) {
+                // function chaining syntax, e.g. Person.children.count()
+                // we can treat this as a function call with the entire left side as the first argument, e.g. count(Person.children)
+                const parts = functionName.split('.');
+                functionName = parts[parts.length - 1]!;
+                const firstArg = parts.slice(0, -1).join('.');
+                argExpressions.unshift(this.parse(firstArg));
+            }
+
             return new FunctionFactory(this.options).create(functionName, argExpressions);
         }
         return null;
     }
+    */
 
     protected splitArguments(argsSyntax: string): string[] {
         argsSyntax = argsSyntax.trim();
@@ -412,7 +501,11 @@ export class ExpressionParser {
         return null;
     }
 
-    protected readLiteralExpression(syntax: string): LiteralExpression | null {
+    protected readLiteralExpression(tokens: string[]): LiteralExpression | null {
+        if (tokens.length !== 1 || !tokens[0]) {
+            return null;
+        }
+        const syntax = tokens[0];
         // match numbers (integer and floating point), booleans, null, and quoted strings
         if (/^\d+(\.\d+)?$/.test(syntax)) {
             return new LiteralExpression(parseFloat(syntax));
@@ -428,7 +521,11 @@ export class ExpressionParser {
         return null;
     }
 
-    protected readVariableExpression(syntax: string): VariableExpression | null {
+    protected readVariableExpression(tokens: string[]): VariableExpression | null {
+        if (tokens.length !== 1 || !tokens[0]) {
+            return null;
+        }
+        const syntax = tokens[0].trim();
         // match alphanumeric strings that may include separating dots for nested variables, but do not start with a digit
         if (/^\w+(?:\.\w+)*$/.test(syntax)) {
             return new VariableExpression(syntax);

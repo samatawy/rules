@@ -23,6 +23,7 @@ export class TypeRegistry {
             ...options
         };
     }
+
     /**
      * Set or update the options for the registry.
      * @param options an object containing the options to set or update.
@@ -114,6 +115,7 @@ export class TypeRegistry {
         if (key.includes('.')) {
             const remainingKey = key.split('.').slice(1).join('.');
             return root ? hasDefinedType(root, remainingKey) : false;
+
         } else {
             return root !== undefined;
         }

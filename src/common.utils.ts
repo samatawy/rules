@@ -108,6 +108,8 @@ export function setPathValue(context: any, key: string, value: any): any {
     return context;
 }
 
+// Use withLogger to wrap the equalsDeep function, so that it can log any issues encountered during deep equality checks 
+// without needing to modify the original function logic. 
 export function equalsDeep(A: any, B: any): boolean {
     if (A === B) return true;
     try {

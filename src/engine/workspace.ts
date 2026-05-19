@@ -14,7 +14,8 @@ import { TypeRegistry } from "./type.registry";
 import { EngineError, EngineException, ParserError, TypeException } from "../rules/exception";
 import { RulesEngine } from "./rules.engine";
 import * as commonConstants from "./common.constants";
-import { WorkLogger } from "../log/work.logger";
+import { withLogger } from "../log/work.logger";
+import { ContextLogger } from "../log/context.logger";
 
 /**
  * Options for configuring the behavior of the Workspace, including debugging, conflict resolution, and iteration limits.
@@ -383,11 +384,12 @@ export class Workspace implements Clonable<Workspace> {
     public applicableRules(context: WorkingContext): AbstractRule[] {
 
         const applicable = new Set<AbstractRule>();
+        const logger = context.logger();
 
         for (const key of context.rootKeys()) {
             const root = this.graph.findRoot(key);
             if (!root) {
-                WorkLogger.warn('No root found for key:', key);
+                logger.warn('No root found for key:', key);
                 continue;
             }
             if (root) {
@@ -450,115 +452,6 @@ export class Workspace implements Clonable<Workspace> {
         return found;
     }
 
-    // /**
-    //  * Evaluate relevant rules against the given context, and execute their consequences. 
-    //  * This process is iterative and continues until no new rules become applicable 
-    //  * or a maximum iteration limit is reached to prevent infinite loops.
-    //  * In each iteration, all currently applicable rules are evaluated and their executors are collected.
-    //  * Then, all executors are executed in a batch.
-    //  * @param context the working memory context that contains the current state of data.
-    //  * @returns the final output after processing all applicable rules.
-    //  */
-    private processOld(context: WorkingMemory): boolean {
-
-        context.clearLog();
-
-        const typeCheck = this.type_checker.checkData(context.getOutput());
-        if (typeCheck.valid) {
-            WorkLogger.debug('Input data passed type validation.');
-        } else {
-            const errorMessage = `Input data failed type validation with errors: ${typeCheck.errors?.join('; ')}`;
-            WorkLogger.warn(errorMessage);
-            if (this.options.strict_inputs) {
-                for (const error of typeCheck.errors || []) {
-                    WorkLogger.error('Type validation error:', error);
-                    context.addException(new TypeException(error));
-                }
-                return false;
-
-            } else {
-                WorkLogger.warn('Proceeding with rule evaluation despite type validation errors due to non-strict input settings.');
-            }
-        }
-
-        let satisfied: AbstractRule[] = [];
-        let applicable = this.applicableRules(context);
-        let iterate = (applicable.length > 0), iteration = 0;
-        let executors: Executor[] = [];
-        const maxIterations = this.options.max_iterations;
-
-        while (iterate && iteration < maxIterations) {
-            iteration++;
-            iterate = false;
-            satisfied = [];
-            executors = [];
-
-            // Evaluate all applicable rules and collect their executors
-            const sorted = this.rules.sortRules(applicable);
-            for (const rule of sorted) try {
-                WorkLogger.debug('Evaluating rule:', rule.toString());
-                const executor = rule.evaluate(context);
-                if (executor) {
-                    satisfied.push(rule);
-                    executors.push(executor);
-                }
-            } catch (e) {
-                const errorMessage = `Error evaluating rule: ${e instanceof Error ? e.message : String(e)}`;
-                WorkLogger.warn(errorMessage);
-                context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
-                return false;
-            }
-
-            // Execute all collected executors and track if any outputs were changed
-            for (const executor of executors) try {
-                const idx = executors.indexOf(executor);
-
-                const effect = executor.execute(context);
-                // Log the rule being executed
-                if (satisfied[idx]) context.addToLog(satisfied[idx], effect);
-
-                if (effect.exception) {
-                    WorkLogger.warn('Executor threw an exception:', effect.exception);
-                    iterate = false;
-                    break;
-                }
-                if (effect.changed) {
-                    WorkLogger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
-                    iterate = true;
-                }
-            } catch (e) {
-                const errorMessage = `Error executing rule: ${e instanceof Error ? e.message : String(e)}`;
-                WorkLogger.warn(errorMessage, { executor: executor });
-                context.addException(new EngineException(errorMessage, { executor: executor }));
-                return false;
-            }
-
-            // If any executors changed outputs, we need to check if new rules have become applicable
-            if (iterate) {
-                const lastApplicable = applicable;
-                const nextApplicable = this.applicableRules(context);
-                iterate = nextApplicable.map(rule => !lastApplicable.includes(rule)).some(changed => changed);
-
-                if (iterate) {
-                    applicable = nextApplicable;
-                }
-            }
-        }
-
-        // After processing, optionally log results
-        if (iteration === maxIterations) {
-            console.warn(`Reached maximum iterations (${maxIterations}) while evaluating rules. There may be a cycle in the rules.`);
-        } else if (iteration > 1) {
-            WorkLogger.debug(`Evaluation completed in ${iteration} iterations.`);
-        } else {
-            WorkLogger.debug(`Evaluation completed in a single iteration.`);
-        }
-        WorkLogger.debug('Final output after evaluation:', context.getOutput());
-
-        return context.getExceptions().length === 0;
-    }
-
-
     private flattenKeys(data: any, prefix: string = ''): Set<string> {
         const paths = new Set<string>();
         const valueMap = new Map<string, any>();
@@ -583,7 +476,7 @@ export class Workspace implements Clonable<Workspace> {
                         paths.add(nested);
                     }
                 }
-            } else if (typeof value === 'object') {
+            } else if (typeof value === 'object' && value !== null) {
                 const nestedPaths = this.flattenKeys(value, path + '.');
                 for (const nested of nestedPaths) {
                     paths.add(nested);
@@ -636,22 +529,25 @@ export class Workspace implements Clonable<Workspace> {
     public process(context: WorkingMemory): boolean {
 
         context.clearLog();
+        const logger = context.logger();
 
-        const typeCheck = this.type_checker.checkData(context.getOutput());
+        const checkDataLogged = withLogger(logger, this.type_checker.checkData.bind(this.type_checker));
+        const typeCheck = checkDataLogged(context.getOutput());
+
         if (typeCheck.valid) {
-            WorkLogger.debug('Input data passed type validation.');
+            logger.debug('Input data passed type validation.');
         } else {
             const errorMessage = `Input data failed type validation with errors: ${typeCheck.errors?.join('; ')}`;
-            WorkLogger.warn(errorMessage);
+            logger.warn(errorMessage);
             if (this.options.strict_inputs) {
                 for (const error of typeCheck.errors || []) {
-                    WorkLogger.error('Type validation error:', error);
+                    logger.error('Type validation error:', error);
                     context.addException(new TypeException(error));
                 }
                 return false;
 
             } else {
-                WorkLogger.warn('Proceeding with rule evaluation despite type validation errors due to non-strict input settings.');
+                logger.warn('Proceeding with rule evaluation despite type validation errors due to non-strict input settings.');
             }
         }
 
@@ -664,7 +560,7 @@ export class Workspace implements Clonable<Workspace> {
         const maxIterations = this.options.max_iterations;
 
         while (iterate && iteration < maxIterations) {
-            WorkLogger.debug(`Iteration ${iteration + 1}: Applicable rules:`, applicable.size);
+            logger.debug(`Iteration ${iteration + 1}: Applicable rules:`, applicable.size);
 
             iteration++;
             iterate = false;
@@ -673,17 +569,20 @@ export class Workspace implements Clonable<Workspace> {
             changes = [];
 
             // Evaluate all applicable rules and collect their executors
-            const sorted = this.rules.sortRules(Array.from(applicable));
+            const sorted = this.rules.sortRules(Array.from(applicable), logger);
             for (const rule of sorted) try {
-                WorkLogger.debug('Evaluating rule:', rule.toString());
-                const executor = rule.evaluate(context);
+                logger.debug('Evaluating rule:', rule.toString());
+
+                const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
+                const executor = evaluateLogged(context);
+
                 if (executor) {
                     satisfied.push(rule);
                     executors.push(executor);
                 }
             } catch (e) {
                 const errorMessage = `Error evaluating rule: ${e instanceof Error ? e.message : String(e)}`;
-                WorkLogger.warn(errorMessage, { rule: rule.getSyntax() });
+                logger.warn(errorMessage, { rule: rule.getSyntax() });
                 context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
                 return false;
             }
@@ -692,23 +591,25 @@ export class Workspace implements Clonable<Workspace> {
             for (const executor of executors) try {
                 const idx = executors.indexOf(executor);
 
-                const effect = executor.execute(context);
+                const executeLogged = withLogger(logger, executor.execute.bind(executor));
+                const effect = executeLogged(context);
+
                 // Log the rule being executed
                 if (satisfied[idx]) context.addToLog(satisfied[idx], effect);
 
                 if (effect.exception) {
-                    WorkLogger.warn('Executor threw an exception:', effect.exception);
+                    logger.warn('Executor threw an exception:', effect.exception);
                     iterate = false;
                     break;
                 }
                 if (effect.changed) {
                     changes.push(effect.changed);
-                    WorkLogger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
+                    logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
                     iterate = true;
                 }
             } catch (e) {
                 const errorMessage = `Error executing rule: ${e instanceof Error ? e.message : String(e)}`;
-                WorkLogger.warn(errorMessage, { executor: executor });
+                logger.warn(errorMessage, { executor: executor });
                 context.addException(new EngineException(errorMessage, { executor: executor }));
                 return false;
             }
@@ -717,7 +618,7 @@ export class Workspace implements Clonable<Workspace> {
             if (iterate) {
                 const nextApplicable = this.findReteRules(changes, context);
                 iterate = nextApplicable.size > 0;
-                WorkLogger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
+                logger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
 
                 if (iterate) {
                     // Clean the cache to re-evaluate nodes (recursively)
@@ -732,14 +633,16 @@ export class Workspace implements Clonable<Workspace> {
 
         // After processing, optionally log results
         if (iteration === maxIterations) {
-            console.warn(`Reached maximum iterations (${maxIterations}) while evaluating rules. There may be a cycle in the rules.`);
+            logger.warn(`Reached maximum iterations (${maxIterations}) while evaluating rules. There may be a cycle in the rules.`);
         } else if (iteration > 1) {
-            WorkLogger.info(`Evaluation completed in ${iteration} iterations.`);
+            logger.info(`Evaluation completed in ${iteration} iterations.`);
         } else {
-            WorkLogger.info(`Evaluation completed in a single iteration.`);
+            logger.info(`Evaluation completed in a single iteration.`);
         }
-        WorkLogger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
-        WorkLogger.info('Cache metrics', context.getCacheMetrics());
+        logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
+        logger.info('Cache metrics', context.getCacheMetrics());
+
+        if (logger instanceof ContextLogger) logger.flush();
 
         return context.getExceptions().length === 0;
     }

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { RulesFileReader } from '../src/reader/rules.file.reader';
-import { ConstantsFileReader } from '../src/reader/constants.file.reader';
-import { TypesFileReader } from '../src/reader/types.file.reader';
-import { FunctionsFileReader } from '../src/reader/functions.file.reader';
-import { GeneralFileReader } from '../src/reader/general.file.reader';
-import { MarkdownFileReader } from '../src/reader/markdown.file.reader';
-import { WorkspaceFilesReader } from '../src/reader/workspace.files.reader';
+import { RulesFileReader } from '../src/readers/rules.file.reader';
+import { ConstantsFileReader } from '../src/readers/constants.file.reader';
+import { TypesFileReader } from '../src/readers/types.file.reader';
+import { FunctionsFileReader } from '../src/readers/functions.file.reader';
+import { GeneralFileReader } from '../src/readers/general.file.reader';
+import { MarkdownFileReader } from '../src/readers/markdown.file.reader';
+import { WorkspaceFilesReader } from '../src/readers/workspace.files.reader';
 import { RulesEngine } from '../src';
 
 describe('Readers Tests', () => {
@@ -158,7 +158,7 @@ describe('Readers Tests', () => {
     expect(space.checkTypes().valid).toBe(true);
 
     const ctx = space.loadContext({ n: 4, fp: 3.2, name: 'world!', invoice: { total: 50 } });
-    console.debug(space.applicableRules(ctx), ctx);
+    // console.debug(space.applicableRules(ctx), ctx);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();

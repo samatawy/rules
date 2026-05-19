@@ -19,12 +19,12 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
     public expectsParameters(): TypedParameter[] {
         switch (this.name) {
             case 'equal':
+            case 'closeTo':
             case 'greaterThan':
             case 'lessThan':
             case 'greaterThanOrEqual':
             case 'lessThanOrEqual':
                 return [{ type: 'number' }, { type: 'number' }];
-            case 'close':
             case 'between':
                 return [{ type: 'number' }, { type: 'number' }, { type: 'number' }];
             default:

@@ -9,6 +9,7 @@ import { FunctionParser } from "../parser/function.parser";
 import { RuleParser } from "../parser/rule.parser";
 import { WorkspaceTransaction } from "./workspace.transaction";
 import { parseTypeJson } from "../common.utils";
+import { WorkLogger } from "../log/work.logger";
 
 export interface ComponentResult {
     read: number;
@@ -428,16 +429,15 @@ export class WorkspaceFilesReader extends AbstractFileReader {
 
     protected logError(e: unknown, context: string): void {
         if (!e) {
-            console.error(`Unknown error occurred ${context}.`);
-            return;
+            WorkLogger.error(`Unknown error occurred ${context}.`);
         } else if (e instanceof ParserError) {
-            console.error(`Parser Error ${context}: ${e.message}`);
+            WorkLogger.error(`Parser Error ${context}: ${e.message}`);
         } else if (e instanceof EngineError) {
-            console.error(`Engine Error ${context}: ${e.message}`);
+            WorkLogger.error(`Engine Error ${context}: ${e.message}`);
         } else if (e instanceof Error) {
-            console.error(`Error ${context}: ${e.message}`);
+            WorkLogger.error(`Error ${context}: ${e.message}`);
         } else {
-            console.error(`Unexpected error ${context}: ${String(e)}`);
+            WorkLogger.error(`Unexpected error ${context}: ${String(e)}`);
         }
     }
 

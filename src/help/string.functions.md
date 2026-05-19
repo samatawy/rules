@@ -20,14 +20,14 @@ Returns `true` when two strings are the same, ignoring upper/lower case differen
 if equalsIgnoreCase(country, "US") then isAmerican = true
 ```
 
-### `contains(text, part)`
+### `includes(text, part)` or `contains(text, part)`
 Returns `true` when the left string contains the right string.
 
 ```
 if contains(email, "@") then validShape = true
 ```
 
-### `containsIgnoreCase(text, part)`
+### `includesIgnoreCase(text, part)` or `containsIgnoreCase(text, part)`
 Returns `true` when the left string contains the right string, ignoring upper/lower case differences.
 
 ### `startsWith(text, prefix)`
@@ -151,6 +151,20 @@ Converts text to lowercase.
 
 ```
 set emailKey = lowerCase(email)
+```
+
+### `capitalize(text)`
+Turns the first letter only to capital (upperCase), and the rest to small (lowerCase).
+
+```
+set title = capitalize(Person.job_title);
+```
+
+### `capitalizeWords(text)`
+Turns the first letter of every word to capital (upperCase), and the rest of every word to small (lowerCase).
+
+```
+set display_name = capitalizeWords(Person.full_name);
 ```
 
 ## Array Collection

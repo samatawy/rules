@@ -79,6 +79,11 @@ describe('Autocomplete Test', () => {
         suggested = autocomplete.getSuggestionsAt(7, 'count(');
         // console.debug('In function argument "count("', suggested);
         expect(suggested.every(s => s.returns === 'array')).toBe(true);
+
+        suggested = autocomplete.getSuggestionsAt(11, 'Person.age.');
+        // console.debug('After typing "Person.age."', suggested);
+        // console.debug('After typing "Person.age."', suggested.filter(s => s.kind === 'function' && s.comes_after));
+        expect(suggested.some(s => s.value === 'closeTo' && s.kind === 'function' && s.comes_after?.includes('number'))).toBe(true);
     });
 
 });

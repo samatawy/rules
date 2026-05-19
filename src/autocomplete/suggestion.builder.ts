@@ -106,6 +106,33 @@ export class SuggestionBuilder {
             suggestions.push({ value: name, kind: 'function', returns: returnType + '', comes_before: ['('] });
         }
 
+        // Support function chaining
+        for (const [key, func] of Object.entries(functionRegistry.getFunctions())) {
+            const returnType = func.expression ? getReturnType(func.expression) || 'any' : 'any';
+            const firstArg = func.parameters[0];
+            if (firstArg) {
+                const firstType = firstArg.type;
+                if (isAtomicType(firstType) || isArrayType(firstType)) {
+                    suggestions.push({ value: func.name, kind: 'function', returns: returnType + '', comes_after: [firstType + ''] });
+                } else if (typeof firstType === 'object' && firstType !== null) {
+                    suggestions.push({ value: func.name, kind: 'function', returns: returnType + '', comes_after: ['any'] });
+                }
+            }
+        }
+        for (const name of builtin) {
+            const func = this.functionFactory.create(name, []);
+            const returnType = func?.returnsType();
+            const firstArg = func?.expectsParameters()[0];
+            if (firstArg) {
+                const firstType = firstArg.type;
+                if (isAtomicType(firstType) || isArrayType(firstType)) {
+                    suggestions.push({ value: name, kind: 'function', returns: returnType + '', comes_after: [firstType + ''] });
+                } else if (typeof firstType === 'object' && firstType !== null) {
+                    suggestions.push({ value: name, kind: 'function', returns: returnType + '', comes_after: ['any'] });
+                }
+            }
+        }
+
         return suggestions;
     }
 

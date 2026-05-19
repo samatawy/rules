@@ -2,6 +2,8 @@ import { EvaluationError, type AbstractException } from "../rules/exception";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getPathValue, pathExists, setPathValue } from "../common.utils";
+import type { ILogger } from "../log/interfaces";
+import { WorkLogger } from "../log/work.logger";
 
 /**
  * A context implementation internally used by functions (including lambda functions).
@@ -17,10 +19,14 @@ export class ScopeContext implements WorkingContext {
 
     private exceptions: AbstractException[];
 
+    private logImpl?: ILogger;
+
     constructor(parent: WorkingContext | null = null) {
         this.parent = parent;
         this.variables = {};
         this.exceptions = [];
+
+        this.logImpl = parent ? parent.logger() : undefined;
     }
 
     public setData(key: string, value: any): void {
@@ -107,6 +113,13 @@ export class ScopeContext implements WorkingContext {
         } else {
             return { ...this.variables };
         }
+    }
+
+    public logger(): ILogger {
+        if (!this.logImpl) {
+            this.logImpl = WorkLogger.forContext(this);
+        }
+        return this.logImpl;
     }
 }
 

@@ -5,6 +5,7 @@ import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
+import { withLogger } from "../log/work.logger";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.
@@ -104,7 +105,7 @@ export class OutputAction extends ExecutableAction {
         const oldValue = context.getOutput(this.key);
         const newValue = this.value.evaluate(context);
 
-        if (equalsDeep(oldValue, newValue)) {
+        if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return {};
         } else {
             context.setOutput(this.key, newValue);

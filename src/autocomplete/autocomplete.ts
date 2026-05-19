@@ -71,6 +71,7 @@ export class Autocomplete {
         const prior_tokens = this.tokenize(text.substring(0, cursor));
         const prefix = prior_tokens.pop() || '';
         const prefixSuggestion = this.suggestions.find(s => s.value === prefix);
+        const mustChainPrefix = prefix.endsWith('.') ? prefix.slice(0, -1) : undefined;
 
         const post_tokens = this.tokenize(text.substring(cursor));
         const suffix = post_tokens[0] || '';
@@ -78,9 +79,17 @@ export class Autocomplete {
 
         const functionArgumentType = this.isFunctionArgument([...prior_tokens, prefix]);
 
-        const suggested: AutocompleteSuggestion[] = [];
+        if (mustChainPrefix) {
+            // If after a dot, only suggest variables and functions that can be chained.
+            const vars = this.getSuggestionsToComplete(mustChainPrefix + '.');
+            const firstArg = this.suggestions.find(s => s.value === mustChainPrefix);
+            if (firstArg && firstArg.returns) {
+                const funcs = this.suggestions.filter(s => (s.kind === 'function') && s.comes_after?.includes(firstArg.returns!));
+                return [...vars, ...funcs];
+            }
+            return vars;
 
-        if (this.isMidToken(prefix)) {
+        } else if (this.isMidToken(prefix)) {
             // If the cursor is in the middle of a token, we should only suggest based on the prefix of that token
             return this.getSuggestionsToComplete(prefix);
         } else if (functionArgumentType.type) {

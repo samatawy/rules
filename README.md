@@ -25,6 +25,12 @@ This package is intended to work in both Node.js and browser applications.
 
 The published package exposes an ESM browser-safe entry and does not depend on Node builtins in its runtime source.
 
+Optional features are exposed as subpath imports so consumers do not need to pull them into the main entry by default.
+
+- Node runtime including core, string readers, and file-system readers: `@samatawy/rules`
+- Browser core engine, syntax, rules, and parsers: `@samatawy/rules/browser`
+- Autocomplete helpers: `@samatawy/rules/autocomplete`
+
 ## Quick Example
 
 ```ts

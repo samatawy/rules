@@ -56,7 +56,7 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
 
         const targetValue = this.target_arg.evaluate(context);
         if (!Array.isArray(targetValue)) {
-            WorkLogger.warn('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
+            context.logger().warn('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to an array`);
         }
 

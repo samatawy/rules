@@ -8,7 +8,7 @@ import { FunctionExpression } from "../function.expression";
 import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { isArrayType, TypeParser } from "../../parser/type.parser";
+import { isArrayType } from "../../parser/type.parser";
 import { WorkLogger } from "../../log/work.logger";
 
 export class ArrayLambdaFunction extends FunctionExpression {
@@ -104,6 +104,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
         }
 
         this.localChecker = this.getLocalChecker(checker);
+        // const logger = checker.logger();
 
         const checks: ValidationResult[] = [];
         checks.push(this.target_arg.checkTypes(checker));

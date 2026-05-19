@@ -1,4 +1,5 @@
-import type { LogLevel, WorkLogger } from "./work.logger";
+import type { LogLevel } from "./interfaces";
+import type { WorkLogger } from "./work.logger";
 
 /**
  * A simple implementation of WorkLogger that outputs to the console.
@@ -39,5 +40,9 @@ export class ConsoleLogger implements WorkLogger {
             case 'error': this.error(msg, args); break;
             case 'fatal': this.fatal(msg, args); break;
         }
+    }
+
+    public flush(): void {
+        // No buffering, so nothing to flush
     }
 }

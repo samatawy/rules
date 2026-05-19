@@ -5,9 +5,9 @@ import { makeAtomic, makeItemType } from "../type.utils";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
-import { WorkLogger } from "../log/work.logger";
 import { cloneDeep } from "../common.utils";
 import { isArrayType, isAtomicType } from "../parser/type.parser";
+import { WorkLogger } from "../log/work.logger";
 
 /**
  * An implementation of TypeChecker that provides top-level type checks for a workspace.
@@ -30,6 +30,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
             ...options
         };
     }
+
     /**
      * Set or update the options for the type checker. This allows you to configure the behavior of the type checker, 
      * such as debugging and validation strictness.
@@ -318,4 +319,5 @@ export class WorkspaceTypeChecker implements TypeChecker {
             return cloneDeep(value);
         }
     }
+
 }

@@ -1,7 +1,7 @@
 import type { AbstractRule } from "../rules/abstract.rule";
 import { EngineError } from "../rules/exception";
-import { WorkLogger } from "../log/work.logger";
 import type { WorkspaceOptions } from "./workspace";
+import type { ILogger } from "../log/interfaces";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
@@ -78,8 +78,9 @@ export class RuleRegistry {
         this.rules = [];
     }
 
-    protected preventConflicts(rules: AbstractRule[]): AbstractRule[] {
-        WorkLogger.debug(`Checking for potential conflicts among ${rules.length} applicable rules...`);
+    protected preventConflicts(rules: AbstractRule[], logger: ILogger): AbstractRule[] {
+
+        logger.debug(`Checking for potential conflicts among ${rules.length} applicable rules...`);
 
         // Detect potential conflicts where multiple rules change the same output key
         const effects: any = {};
@@ -96,13 +97,13 @@ export class RuleRegistry {
                 effects[key]['' + salience].push(rule);
             }
         }
-        WorkLogger.debug('Effects grouped by changed output key and salience:', effects);
+        logger.debug('Effects grouped by changed output key and salience:', effects);
 
         for (const change in effects) {
             const saliences = Object.keys(effects[change]).map(s => parseInt(s));
             const maxSalience = Math.max(...saliences);
             const effectiveRules = effects[change]['' + maxSalience];
-            WorkLogger.debug(`For output key "${change}", found ${effectiveRules.length} rules with saliences: ${saliences.join(', ')}. Max salience: ${maxSalience}`);
+            logger.debug(`For output key "${change}", found ${effectiveRules.length} rules with saliences: ${saliences.join(', ')}. Max salience: ${maxSalience}`);
             // If more than one rule has the highest salience, throw an error to prevent non-deterministic behavior
             if (effectiveRules.length > 1) {
                 const conflictingRules = effectiveRules.map((r: AbstractRule) => r.toString()).join(', ');
@@ -111,7 +112,7 @@ export class RuleRegistry {
                 distinctRules.push(...effectiveRules);
             }
         }
-        WorkLogger.debug(`Conflict check completed. ${distinctRules.length} distinct rules after resolving conflicts.`);
+        logger.debug(`Conflict check completed. ${distinctRules.length} distinct rules after resolving conflicts.`);
         return distinctRules;
     }
 
@@ -122,9 +123,9 @@ export class RuleRegistry {
      * @param rules an array of rules to be sorted.
      * @returns a sorted array of rules, with higher salience rules appearing first.
      */
-    public sortRules(rules: AbstractRule[]): AbstractRule[] {
+    public sortRules(rules: AbstractRule[], logger: ILogger): AbstractRule[] {
         if (this.options.strict_conflicts) {
-            return this.preventConflicts(rules);
+            return this.preventConflicts(rules, logger);
         } else {
             return rules.sort((a, b) => b.getSalience() - a.getSalience());
         }

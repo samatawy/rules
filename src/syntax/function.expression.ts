@@ -71,6 +71,8 @@ export abstract class FunctionExpression extends Expression {
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
+        // const logger = checker?.logger() || WorkLogger;
+
         for (const arg of this.args) {
             checks.push(arg.checkTypes(checker));
         }

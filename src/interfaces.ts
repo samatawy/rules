@@ -1,3 +1,4 @@
+import type { ILogger } from "./log/interfaces";
 import type { AbstractException } from "./rules/exception";
 import type { ArrayType, AtomicType, ObjectType, PropertyType } from "./types";
 
@@ -31,7 +32,7 @@ export interface Cache {
     getCacheMetrics(): { sets: number, hits: number, misses: number };
 }
 
-export interface WorkingContext extends Cache {
+export interface WorkingContext extends Cache, HasLogger {
 
     /**
      * Read data from the context using the given key or path. 
@@ -223,6 +224,15 @@ export interface HasValidity {
      * @returns the result of the type check, indicating whether the target is valid and any errors if it is not.
      */
     checkTypes(checker?: TypeChecker): ValidationResult;
+}
+
+export interface HasLogger {
+
+    /**
+     * Get the logger implementation used in this object. This can be used to log messages related to this object, such as during type checking or execution.
+     * @returns the logger associated with this object.
+     */
+    logger(): ILogger;
 }
 
 export interface Clonable<T> {

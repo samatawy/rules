@@ -28,6 +28,8 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 return [{ type: 'string' }, { type: 'string' }];
             case 'upperCase':
             case 'lowerCase':
+            case 'capitalize':
+            case 'capitalizeWords':
                 return [{ type: 'string' }];
             default:
                 throw new TypeCheckError(`Unknown string manipulation function: ${this.name}`);
@@ -60,10 +62,15 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 return targetValue.toUpperCase();
             case 'lowerCase':
                 return targetValue.toLowerCase();
+            case 'capitalize':
+                return targetValue.charAt(0).toUpperCase() + targetValue.slice(1).toLowerCase();
+            case 'capitalizeWords':
+                const words = targetValue.split(' ');
+                return words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
             default:
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
     }
 
-    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase'];
+    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase', 'capitalize', 'capitalizeWords'];
 }

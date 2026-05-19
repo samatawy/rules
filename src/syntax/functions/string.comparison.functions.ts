@@ -34,6 +34,7 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
         switch (this.name) {
             case 'equals':
                 return leftValue === rightValue;
+            case 'includes':
             case 'contains':
                 return leftValue.includes(rightValue);
             case 'startsWith':
@@ -54,6 +55,7 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
 
             case 'equalsIgnoreCase':
                 return leftValue.toLowerCase() === rightValue.toLowerCase();
+            case 'includesIgnoreCase':
             case 'containsIgnoreCase':
                 return leftValue.toLowerCase().includes(rightValue.toLowerCase());
             case 'startsWithIgnoreCase':
@@ -77,5 +79,5 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             .replace(/\%/g, '.*');
     }
 
-    static names = ['equals', 'equalsIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
+    static names = ['equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
 }

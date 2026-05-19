@@ -35,6 +35,7 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
 
             case 'roundTo':
 
+            case 'pow':
             case 'power':
             case 'root':
                 return [{ type: 'number' }, { type: 'number' }];
@@ -81,6 +82,7 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'roundTo':
                 const factor = Math.pow(10, evaluatedArgs[0]);
                 return Math.round(targetValue * factor) / factor;
+            case 'pow':
             case 'power':
                 return Math.pow(targetValue, evaluatedArgs[0]);
             case 'root':
@@ -91,5 +93,5 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
+    static names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'pow', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
 }

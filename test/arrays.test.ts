@@ -157,13 +157,13 @@ describe('Engine tests', () => {
         family: [{ name: 'Bob', age: 15 }, { name: 'Charlie', age: 25 }, { name: 'David', age: 20 }]
       }
     });
-    console.debug(space.typeChecker().checkData(ctx.getOutput()));
+    // console.debug(space.typeChecker().checkData(ctx.getOutput()));
 
     expect(space.applicableRules(ctx).length).toBe(2);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();
-    console.debug('Output with lambda expression:', output);
+    // console.debug('Output with lambda expression:', output);
     expect(output.Person.ages[0]).toBe(25);
     expect(output.Person.ages[2]).toBe(15);
     expect(output.Person.family[0].age).toBe(15);

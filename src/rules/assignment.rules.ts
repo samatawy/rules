@@ -9,6 +9,7 @@ import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
+import { withLogger } from "../log/work.logger";
 
 /**
  * A rule that assigns a value to a key whenever the requirements are provided.
@@ -95,6 +96,7 @@ export class OutputRule extends AbstractRule {
         const newValue = this.expression.evaluate(context);
 
         if (equalsDeep(oldValue, newValue)) {
+            // if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return null;
         } else {
             return new OutputAction(this.outputKey, this.expression);
@@ -110,6 +112,7 @@ export class OutputRule extends AbstractRule {
         }
 
         if (equalsDeep(oldValue, newValue)) {
+            // if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return {};
         } else {
             context.setOutput(this.outputKey, newValue);
