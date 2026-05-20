@@ -4,7 +4,7 @@ title: Engine Components
 
 # Engine Components
 
-This Rule Engine implementation is composed of basic classes that manage rules and process inputs. This is an overview of the system design so you can use these classes in your own application.
+This Rule Engine implementation is composed of basic classes that manage rules and process inputs. This is an overview of the system design.
 
 ## RulesEngine
 
@@ -28,7 +28,7 @@ const ctx = space.loadContext({ ...inputData });
 space.process(ctx);
 ```
 
-To develop or test rules, you can clone an existing Workspace so your changes do not affect requests being served by the system. 
+To develop or test rules, you can clone an existing workspace so your changes do not affect requests being served by the system. 
 
 ```
 const space = RulesEngine.getWorkspace('SALES');
@@ -36,26 +36,23 @@ const volatile = space.clone();
 // You can modify the cloned instance freely.
 ...
 
-// If you want to keep the cloned Workspace available to others, you should name it:
+// If you want to keep the cloned workspace available to others, you should name it:
 const duplicate = RulesEngine.cloneWorkspace(space, 'TESTING SALES');
 ```
 
 ## Workspace
 
-A Workspace holds a set of rules and any types, constants, and functions they may need.
+A workspace holds a set of rules and any types, constants, and functions they may need.
 
-- You can have one global Workspace `RulesEngine.defaultSpace()` or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
+- You can have one global workspace `RulesEngine.defaultSpace()` or multiple, dividing your business logic into manageable domains (e.g. Sales, HR, etc.).
 
-- Normally the lifetime of a Workspace in production is the entire uptime of the application. However, a testing Workspace can be created and then closed without ill-effect.
+- Normally the lifetime of a workspace in production is the entire uptime of the application. However, a testing workspace can be created and then closed without ill-effect.
 
-- A Workspace can create a context to hold input data, then processes that context. After processing, the contact contains its inputs, outputs, any errors encountered, and an audit trail of the rules used. (See Working Memory below for an example.)
-
-- A Workspace internally handles forward chaining (running rules in iterations until no more changes are possible), checks declarations for type-safety, resolves conflicts in priorities (salient rules override less salient ones), and tracks executed actions and exceptions.
+- A workspace internally handles forward chaining (running rules in iterations until no more changes are possible), checks declarations for type-safety, resolves conflicts in priorities (salient rules override less salient ones), and tracks executed actions and exceptions.
 
 - Workspace behaviour can be tuned for specific use cases using options passed to the constructor:
 ```
 const newSpace = new Workspace({
-    debugging: true,            // whether to report steps to the console (development only)
     strict_syntax: true,        // type check all expressions, operands, and function arguments
     strict_inputs: false,       // type check all inputs against declared types
     strict_outputs: false,      // type check all outputs against declared types
@@ -64,49 +61,25 @@ const newSpace = new Workspace({
 })
 ```
 
-- A Workspace provides methods to manage and invokes its rules, but uses other classes to manage other components.
-
-#### Type Registry
-
-This class holds type defintions to support validation.
-
-- This is where we register declared types for type-checking. If no types are to be registered we can configure a Workspace to skip `strict_inputs` and `strict_outputs` so types will be largely unnecessary (highly discouraged).
-
-#### Type Checker
-
-This class uses the Type Registry to identify the type of variables used in input or output (supporting validation). 
-
-- This is what we use to validate rules for type-safety and validate input data.
-
-- This class must be passed to every method that requires type checking, e.g. in expressions, functions, etc.
-
-#### Function Registry
-
-This class holds function declarations and helps with the creation and validation of function calls.
-
-- This is where we register declared custom functions. It will guarantee name uniqueness.
-
-#### Rule Registry
-
-This class holds rules for use by a Workspace.
-
-- We register rules through the Workspace directly. You should not need to use this class directly.
-
-#### Rule Graph
-
-This class builds a graph of rules to enable faster selection of rules applicable to a given context. 
-
-- You should not normally have to deal with this class.
+- A workspace can create a context to hold input data, then processes that context. After processing, the context contains its inputs, outputs, any errors encountered, and an audit trail of the rules used.
 
 ## Working Context
 
-A Context is a holder of data used in evaluating conditions and executing actions.
+A context is a holder of data used in evaluating conditions and executing actions. The main implementation of context is the WorkingMemory.
 
 #### Working Memory
 
-A Working Memory is a Context holds inputs for an engine run, and the outputs that result. It also holds any executed actions and any errors encountered.
+A Working Memory is a context that holds inputs for an engine run, and the outputs that result.
 
-- On receiving data, use a Workspace to wrap that data in a Working Memory. When you ask the Workspace to process that object, you can then query that object to inspect output, errors, and an audit trail of the last run.
+- Each context knows: 
+    - its initial inputs, 
+    - its current outputs, 
+    - a log of rules invoked and their effects, 
+    - any exceptions raised,
+    - cached expression values (internal optimization),
+    - and the classes it has access to: the workspace, command handler, logging implemention, etc.
+
+- On receiving data, use a workspace to wrap that data in a Working Memory. When you ask the workspace to process that object, you can then query that object to inspect output, errors, and an audit trail of the last run.
 
 ```
 const space = RulesEngine.defaultSpace();
@@ -124,9 +97,57 @@ if (ctx.getExceptions().length) {
 
 A Scope Context is created by a function or a closure (from a lambda function) to isolate local data from the Working Memory. This object is discarded after the function returns.
 
+## Utility classes
+
+- Every workspace uses these classes to manage components.
+
+#### Type Registry
+
+- This class holds type defintions to support validation.
+
+- This is where we register declared types for type-checking. If no types are to be registered we can configure a workspace to skip `strict_inputs` and `strict_outputs` so types will be largely unnecessary (highly discouraged).
+
+#### Type Checker
+
+- This class uses the Type Registry to identify the type of variables used in input or output (supporting validation). 
+
+- This is what we use to validate rules for type-safety and validate input data.
+
+- This class must be passed to every method that requires type checking, e.g. in expressions, functions, etc.
+
+#### Function Registry
+
+- This class holds function declarations and helps with the creation and validation of function calls.
+
+- This is where we register declared custom functions. It will guarantee name uniqueness.
+
+#### Command Registry
+
+- This class holds custom commands and helps with the creation and validation of command actions.
+
+- This is where we register declared custom commands. It will guarantee name uniqueness.
+
+#### Rule Registry
+
+- This class holds rules for use by a workspace.
+
+- We register rules through the workspace directly. You should not need to use this class directly.
+
+#### Requirement Graph
+
+- This class builds a graph of rules to enable faster selection of rules applicable to a given context. 
+
+- You should not normally have to deal with this class.
+
+#### Rete Graph
+
+- This class builds a graph of conditional expressions to enable faster evaluation of rules on a given context. 
+
+- You should not normally have to deal with this class.
+
 ## File Readers
 
-There are multiple ways to provide declarations to a Workspace. You can parse declarative syntax through code or from loaded files.
+There are multiple ways to provide declarations to a workspace. You can parse declarative syntax through code or from loaded files.
 
 - File readers read specific flavours of files, each supporting a possible use case. Select the one you decide to use:
 
@@ -142,18 +163,11 @@ Read about [Declaration Files](declaration.files.md)
 
 If you decide to declare components directly in code instead of loading files, the engine provides parser classes that translate syntax strings into in-memory objects.
 
-In practice, parsers are the bridge between the declarative DSL and the executable classes used by a Workspace.
+In practice, parsers are the bridge between the declarative DSL and the executable classes used by a workspace.
 
 #### Rule Parser
 
-The Rule Parser reads full rule syntax and creates concrete rule objects such as:
-
-- `IF ... THEN ...`
-- `IF ... THEN ... ELSE ...`
-- `IF ... THROW ...`
-- `SET x = ...`
-
-It also reads rule annotations such as `@name(...)`, `@description(...)`, and `@salience(...)`.
+The Rule Parser reads full rule syntax and creates concrete rule objects in memory. It also reads rule annotations such as `@name(...)`, `@description(...)`, and `@salience(...)`.
 
 Example:
 
@@ -269,7 +283,7 @@ This parser validates that the provided structure is a legal root type before re
 Use parser classes directly when:
 
 - building editor tooling or testing syntax fragments
-- validating declarations before loading them into a Workspace
+- validating declarations before loading them into a workspace
 - creating custom loading flows outside the provided file readers
 
-If you are simply loading declarations into a Workspace, the higher-level APIs and file readers are usually the better entry point.
+If you are simply loading declarations into a workspace, the higher-level APIs and file readers are usually the better entry point.

@@ -1,18 +1,18 @@
 import type { AbstractRule } from "../../rules/abstract.rule";
-import { AbstractNode, CombinationNode, InputNode, RuleOutputNode } from "./nodes";
+import { AbstractNode, CombinationNode, InputNode, RuleOutputNode } from "./requirement.nodes";
 
 /**
- * The RuleGraph class is responsible for organizing rules based on their required inputs and outputs, 
+ * The RequirementGraph class is responsible for organizing rules based on their required inputs and outputs, 
  * allowing for efficient evaluation and execution of rules in the correct order. 
  * It builds a graph structure where nodes represent data keys or rules, and edges represent dependencies between them.
  */
-export class RuleGraph {
+export class RequirementGraph {
 
     roots: AbstractNode[];
 
     /**
-     * Create a new RuleGraph instance.
-     * You should normally not need to create a RuleGraph directly, as it is managed by the Workspace. 
+     * Create a new RequirementGraph instance.
+     * You should normally not need to create a RequirementGraph directly, as it is managed by the Workspace. 
      */
     constructor() {
         this.roots = [];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RuleGraph } from '../src/engine/graph/rule.graph';
+import { RequirementGraph } from '../src/engine/graph/requirement.graph';
 import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
 import { Workspace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
@@ -11,7 +11,7 @@ describe('Engine tests', () => {
 
   it('add rules to graph', async () => {
 
-    const graph = new RuleGraph();
+    const graph = new RequirementGraph();
     const r1 = IfThenRule.parse('if x then y = true');
     expect(r1.required().size).toBe(1);
     const r2 = IfThenRule.parse('if a then b = true');
@@ -27,7 +27,7 @@ describe('Engine tests', () => {
   it('add rules to workspace and find applicable rules to context', async () => {
 
     const space = new Workspace();
-    const graph = space.getRuleGraph();
+    const graph = space.getRequirementGraph();
     const r1 = IfThenRule.parse('if x then y = true');
     expect(r1.required().size).toBe(1);
     const r2 = IfThenRule.parse('if a then b = true');
@@ -48,7 +48,7 @@ describe('Engine tests', () => {
 
   it('add rules to workspace and find applicable rules to context with nested keys', async () => {
     const space = new Workspace();
-    const graph = space.getRuleGraph();
+    const graph = space.getRequirementGraph();
 
     space.addRule('if x.y then z = true');
     space.addRule('if a.b then c = true');

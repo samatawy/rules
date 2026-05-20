@@ -18,6 +18,8 @@ and in assignments:
 set person.label = "adult"
 ```
 
+_N.B. Please note that all identifiers (constants, variable names, functions, command keywords, etc.) and operators are case-sensitive._
+
 This page starts from the simplest forms and builds toward more complex expressions.
 
 ## Literals

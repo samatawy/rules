@@ -23,6 +23,8 @@ You are encouraged to wrap complex calculations into functions, especially if yo
 
 - Functions operate in their own scope, using only the values passed to them. They should not directly access inputs beyond the parameters passed to them although they can use constants and other functions. 
 
+- Functions can set temporary variables in their local scope but can NOT invoke custom commands. Attempting to do so will throw an error.
+
 - In some cases, you might need to set a state/variable to be used by a function. This is supported although it violates scope isolation and can make functions harder to maintain. Just remember that variables named in the local scope will always have precedence (when names clash) and this should not be used unless necessary.
 
 - They also cannot directly change of affect output.

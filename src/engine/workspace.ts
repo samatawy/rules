@@ -2,9 +2,9 @@ import { AbstractRule } from "../rules/abstract.rule";
 import { cloneDeep, mergeValidationResults, pathExists } from "../common.utils";
 import type { Clonable, Executor, TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { WorkingMemory } from "./working.memory";
-import { RuleGraph } from "./graph/rule.graph";
+import { RequirementGraph } from "./graph/requirement.graph";
 import { ReteGraph } from "./graph/rete.graph";
-import { CombinationNode, RuleOutputNode, type AbstractNode } from "./graph/nodes";
+import { CombinationNode, RuleOutputNode, type AbstractNode } from "./graph/requirement.nodes";
 import { RuleParser } from "../parser/rule.parser";
 import { RuleRegistry } from "./rule.registry";
 import { WorkspaceTypeChecker } from "./workspace.type.checker";
@@ -68,7 +68,7 @@ export class Workspace implements Clonable<Workspace> {
 
     protected rules: RuleRegistry;
 
-    protected graph: RuleGraph;
+    protected requirementGraph: RequirementGraph;
 
     public reteGraph: ReteGraph;
 
@@ -98,7 +98,7 @@ export class Workspace implements Clonable<Workspace> {
         this.types = new TypeRegistry(options);
         this.type_checker = new WorkspaceTypeChecker(this.types, options);
         this.rules = new RuleRegistry(options);
-        this.graph = new RuleGraph();
+        this.requirementGraph = new RequirementGraph();
         this.reteGraph = new ReteGraph();
         this.commands = new CommandRegistry({ workspace: this });
 
@@ -288,7 +288,7 @@ export class Workspace implements Clonable<Workspace> {
             rule.setSalience(salience);
         }
         this.rules.addRule(rule);
-        this.graph.addRule(rule);
+        this.requirementGraph.addRule(rule);
         this.reteGraph.addRule(rule);
     }
 
@@ -311,19 +311,20 @@ export class Workspace implements Clonable<Workspace> {
 
     /**
      * Clear all rules from the workspace.
-     * This will effectively create a new rule graph and remove all existing rules.
+     * This will effectively create new graphs and remove all existing rules.
      */
     public clearRules(): void {
         this.rules.clear();
-        this.graph = new RuleGraph();
+        this.requirementGraph = new RequirementGraph();
+        this.reteGraph = new ReteGraph();
     }
 
     /**
-     * Debugging method to get the current rule graph.
-     * @returns the current RuleGraph instance representing rules and their dependencies in the workspace.
+     * Debugging method to get the current requirement graph.
+     * @returns the current RequirementGraph instance representing rules and their dependencies in the workspace.
      */
-    public getRuleGraph(): RuleGraph {
-        return this.graph;
+    public getRequirementGraph(): RequirementGraph {
+        return this.requirementGraph;
     }
 
     /**
@@ -402,7 +403,7 @@ export class Workspace implements Clonable<Workspace> {
     /**
      * Get all rules that are applicable to the given context.
      * This is primarily an explanatory feature, and does NOT return the rules that will be executed. 
-     * This is done by traversing the rule graph starting from the root nodes that match the keys in the context, 
+     * This is done by traversing the requirement graph starting from the root nodes that match the keys in the context, 
      * and collecting all rules that are reachable and applicable based on their requirements.
      * @param context the working memory context that contains the current state of data.
      * @returns an array of applicable rules that can be evaluated against the given context.
@@ -413,7 +414,7 @@ export class Workspace implements Clonable<Workspace> {
         const logger = context.logger();
 
         for (const key of context.rootKeys()) {
-            const root = this.graph.findRoot(key);
+            const root = this.requirementGraph.findRoot(key);
             if (!root) {
                 logger.warn('No root found for key:', key);
                 continue;

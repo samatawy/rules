@@ -42,23 +42,31 @@ export class CommandExecutable extends ExecutableAction {
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
-        const results: ValidationResult[] = [];
+        if (!checker || !checker?.strictSyntax() && !checker?.strictInputs()) {
+            return { valid: true };
+        }
+
+        const checks: ValidationResult[] = [];
+        checks.push(...Object.values(this.arguments).map(arg => arg.checkTypes(checker)));
+
         if (checker) {
             for (const [expectedKey, expectedType] of Object.entries(this.command.arguments)) {
                 if (!(expectedKey in this.arguments)) {
-                    results.push({
+                    checks.push({
                         valid: false,
                         errors: [`Missing required argument '${expectedKey}' for command '${this.command.keyword}'`]
                     });
                 }
                 const argType = getReturnType(this.arguments[expectedKey]!, checker);
                 if (!argType) {
-                    results.push({
-                        valid: false,
-                        errors: [`Unable to determine type for argument '${expectedKey}' in command '${this.command.keyword}'`]
-                    });
+                    if (checker.strictInputs()) {
+                        checks.push({
+                            valid: false,
+                            errors: [`Unable to determine type for argument '${expectedKey}' in command '${this.command.keyword}'`]
+                        });
+                    }
                 } else if (!assignableTo(argType, expectedType)) {
-                    results.push({
+                    checks.push({
                         valid: false,
                         errors: [`Type mismatch for argument '${expectedKey}' in command '${this.command.keyword}': expected ${stringifyTypeJson(expectedType)}, got ${stringifyTypeJson(argType)}`]
                     });
@@ -66,9 +74,12 @@ export class CommandExecutable extends ExecutableAction {
             }
 
         } else {
+            // TODO: This is never thrown due the check above, 
+            // but we should consider if we want to allow type checking of commands without a TypeChecker, 
+            // or if we should require it for any command type checks
             throw new TypeCheckError(`Cannot check command: ${this.command.name} without a TypeChecker`);
         }
-        return mergeValidationResults(...results);
+        return mergeValidationResults(...checks);
     }
 
     public execute(context: WorkingContext): RuleEffect {

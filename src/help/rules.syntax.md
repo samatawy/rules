@@ -12,6 +12,10 @@ At the simplest level, a rule looks like this:
 if <condition> then <action>
 ```
 
+_N.B. Please note that all identifiers (constants, variable names, functions, command keywords, etc.) and operators are case-sensitive._
+
+_Positional keywords however (CONST, IF, THEN, SET, THROW, and RUN) are case-insensitive for convenience._
+
 This page shows the main rule forms, how comments and annotations work, and a few practical writing tips.
 
 ## Rule Shapes

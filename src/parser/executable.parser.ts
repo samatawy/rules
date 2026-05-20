@@ -116,19 +116,27 @@ export class ExecutableParser {
 
             // Validate command key and argument types if workspace context is available
             if (this.options.workspace) {
-                const command = this.options.workspace.commandRegistry().getCommand(commandKey);
                 const checker = this.options.workspace.typeChecker();
+                const command = this.options.workspace.commandRegistry().getCommand(commandKey);
                 if (!command) {
                     throw new ParserError(`No command registered with keyword: ${commandKey}`);
                 }
 
-                for (const [expectedKey, expectedType] of Object.entries(command.arguments)) {
-                    if (!(expectedKey in args)) {
-                        throw new ParserError(`Missing required argument '${expectedKey}' for command '${commandKey}'`);
-                    }
-                    const argType = getReturnType(args[expectedKey]!, checker);
-                    if (!argType || !assignableTo(argType, expectedType)) {
-                        throw new ParserError(`Type mismatch for argument '${expectedKey}' in command '${commandKey}': expected ${stringifyTypeJson(expectedType)}, got ${stringifyTypeJson(argType)}`);
+                if (checker.strictSyntax() || checker.strictInputs()) {
+
+                    for (const [expectedKey, expectedType] of Object.entries(command.arguments)) {
+                        if (!(expectedKey in args)) {
+                            throw new ParserError(`Missing required argument '${expectedKey}' for command '${commandKey}'`);
+                        }
+                        const argType = getReturnType(args[expectedKey]!, checker);
+                        if (!argType) {
+                            if (checker.strictInputs()) {
+                                throw new ParserError(`Unable to determine type for argument '${expectedKey}' in command '${commandKey}'`);
+                            }
+                        }
+                        else if (!assignableTo(argType, expectedType)) {
+                            throw new ParserError(`Type mismatch for argument '${expectedKey}' in command '${commandKey}': expected ${stringifyTypeJson(expectedType)}, got ${stringifyTypeJson(argType)}`);
+                        }
                     }
                 }
                 return new CommandExecutable(command, args);

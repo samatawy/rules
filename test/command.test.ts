@@ -130,6 +130,61 @@ describe('Command tests', () => {
   });
 
 
+  it('rejects command actions inside functions', async () => {
+    const space = new Workspace({ strict_inputs: true, strict_outputs: false });
+
+    space.commandRegistry().register({
+      keyword: 'test_cmd',
+      immediate: true,
+      name: 'Test Command',
+      arguments: {
+        first: 'number',
+      },
+      execute: (params) => {
+        console.log('Executing test command with params:', params);
+        return params.first * 2;
+      },
+    });
+
+    space.typeRegistry().addRootType({
+      key: 'Person',
+      properties: {
+        name: 'string',
+        age: 'number',
+        children: 'string[]',
+        ages: 'number[]',
+        family: {
+          type: 'array',
+          items: {
+            name: 'string',
+            age: 'number',
+          }
+        }
+      }
+    });
+
+    expect(() => {
+      space.addFunction(`test_func(x: { age: number }) { RUN test_cmd { first: x.age }; return test_cmd }`)
+    }).toThrow();
+
+    // space.addRule('IF Person.name THEN test_func_result = test_func(Person.age)');
+
+    // const ctx = space.loadContext({
+    //   Person: {
+    //     name: 'Alice', age: 30,
+    //     children: ['Bob', 'Charlie', 'David'], ages: [5, 10, 15],
+    //     family: []
+    //   }
+    // });
+    // const ok = space.process(ctx);
+    // expect(ok).toBe(true);
+    // const output = ctx.getOutput();
+    // console.debug('Output after processing function with command:', output);
+    // expect(output['test_func_result']).toBe(60);
+
+  });
+
+
   it('rejects invalid commands', async () => {
     const space = new Workspace({ strict_inputs: false, strict_outputs: false });
 
