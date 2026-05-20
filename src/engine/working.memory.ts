@@ -3,8 +3,9 @@ import { getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
-import type { ILogger } from "../log/interfaces";
-import { withLogger, WorkLogger } from "../log/work.logger";
+import type { ILogger } from "../logging/interfaces";
+import { withLogger, WorkLogger } from "../logging/work.logger";
+import { CommandHandler } from "../commands/command.handler";
 
 /**
  * An invoked rule and its effect on the context.
@@ -29,6 +30,8 @@ export class WorkingMemory implements WorkingContext {
 
     private output: any;
 
+    private command_handler: CommandHandler;
+
     private auditLog: LoggedRule[];
 
     private logImpl?: ILogger;
@@ -36,6 +39,7 @@ export class WorkingMemory implements WorkingContext {
     constructor(data: any, workspace: Workspace, logger?: ILogger) {
         this.input = data === undefined ? {} : data;
         this.workspace = workspace;
+        this.command_handler = new CommandHandler({ context: this, commands: workspace.commandRegistry().getCommands() });
         this.logImpl = logger || this.logger();
 
         // TODO: maybe we should check if strict_inputs are enforced
@@ -160,4 +164,9 @@ export class WorkingMemory implements WorkingContext {
         }
         return this.logImpl;
     }
+
+    public commandHandler(): CommandHandler {
+        return this.command_handler;
+    }
+
 }

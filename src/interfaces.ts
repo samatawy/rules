@@ -1,8 +1,9 @@
-import type { ILogger } from "./log/interfaces";
+import type { ILogger } from "./logging/interfaces";
+import type { CommandHandler } from "./commands/command.handler";
 import type { AbstractException } from "./rules/exception";
 import type { ArrayType, AtomicType, ObjectType, PropertyType } from "./types";
 
-export interface Cache {
+export interface ICache {
 
     /**
      * Keep a value under a given identifier.
@@ -32,7 +33,7 @@ export interface Cache {
     getCacheMetrics(): { sets: number, hits: number, misses: number };
 }
 
-export interface WorkingContext extends Cache, HasLogger {
+export interface WorkingContext extends ICache, HasLogger {
 
     /**
      * Read data from the context using the given key or path. 
@@ -92,6 +93,8 @@ export interface WorkingContext extends Cache, HasLogger {
      * @returns the output value associated with the key, or undefined if the key is not found.
      */
     getOutput(key?: string): any;
+
+    commandHandler(): CommandHandler | undefined;
 }
 
 export interface RuleEffect {

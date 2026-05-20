@@ -62,9 +62,15 @@ export * from './syntax/functions/string.comparison.functions';
 export * from './syntax/functions/string.manipulation.functions';
 export * from './syntax/functions/string.inspection.functions';
 
+// Command components
+export * from './commands/types';
+export * from './commands/command.registry';
+export * from './commands/command.handler';
+export * from './commands/command.executable';
+
 // Logger components
-export * from './log/interfaces';
-export * from './log/work.logger';
-export * from './log/abstract.logger';
-export * from './log/context.logger';
-export * from './log/console.logger';
+export * from './logging/interfaces';
+export * from './logging/work.logger';
+export * from './logging/abstract.logger';
+export * from './logging/context.logger';
+export * from './logging/console.logger';

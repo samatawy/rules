@@ -7,7 +7,7 @@ import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
 import { cloneDeep } from "../common.utils";
 import { isArrayType, isAtomicType } from "../parser/type.parser";
-import { WorkLogger } from "../log/work.logger";
+import { WorkLogger } from "../logging/work.logger";
 
 /**
  * An implementation of TypeChecker that provides top-level type checks for a workspace.

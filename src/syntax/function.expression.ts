@@ -3,7 +3,7 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { assignableTo, getArrayType, getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
-import { WorkLogger } from "../log/work.logger";
+import { WorkLogger } from "../logging/work.logger";
 import { isArrayType } from "../parser/type.parser";
 
 export abstract class FunctionExpression extends Expression {

@@ -9,7 +9,7 @@ import { LambdaExpression } from "../lambda.expression";
 import type { VariableExpression } from "../variable.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
 import { isArrayType } from "../../parser/type.parser";
-import { WorkLogger } from "../../log/work.logger";
+import { WorkLogger } from "../../logging/work.logger";
 
 export class ArrayLambdaFunction extends FunctionExpression {
 

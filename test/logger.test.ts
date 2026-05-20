@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { WorkLogger } from "../src/log/work.logger";
+import { WorkLogger } from "../src/logging/work.logger";
 
 describe('Logger tests', () => {
 

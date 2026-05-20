@@ -1,7 +1,7 @@
 import type { AbstractRule } from "../rules/abstract.rule";
 import { EngineError } from "../rules/exception";
 import type { WorkspaceOptions } from "./workspace";
-import type { ILogger } from "../log/interfaces";
+import type { ILogger } from "../logging/interfaces";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 

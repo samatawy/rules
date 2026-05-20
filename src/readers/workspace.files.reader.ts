@@ -9,7 +9,7 @@ import { FunctionParser } from "../parser/function.parser";
 import { RuleParser } from "../parser/rule.parser";
 import { WorkspaceTransaction } from "./workspace.transaction";
 import { parseTypeJson } from "../common.utils";
-import { WorkLogger } from "../log/work.logger";
+import { WorkLogger } from "../logging/work.logger";
 
 export interface ComponentResult {
     read: number;

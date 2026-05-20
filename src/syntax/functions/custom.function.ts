@@ -6,7 +6,7 @@ import { assignableTo, getLiteralType, getReturnType } from "../../type.utils";
 import { mergeValidationResults } from "../../common.utils";
 import type { Expression } from "../expression";
 import { FunctionExpression } from "../function.expression";
-import { WorkLogger } from "../../log/work.logger";
+import { WorkLogger } from "../../logging/work.logger";
 import { isArrayType, isAtomicType, isTypedObjectType } from "../../parser/type.parser";
 
 export class CustomFunctionExpression extends FunctionExpression {

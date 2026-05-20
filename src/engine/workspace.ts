@@ -14,8 +14,10 @@ import { TypeRegistry } from "./type.registry";
 import { EngineError, EngineException, ParserError, TypeException } from "../rules/exception";
 import { RulesEngine } from "./rules.engine";
 import * as commonConstants from "./common.constants";
-import { withLogger } from "../log/work.logger";
-import { ContextLogger } from "../log/context.logger";
+import { withLogger } from "../logging/work.logger";
+import { ContextLogger } from "../logging/context.logger";
+import { CommandRegistry } from "../commands/command.registry";
+import type { FunctionDefinition } from "../types";
 
 /**
  * Options for configuring the behavior of the Workspace, including debugging, conflict resolution, and iteration limits.
@@ -78,6 +80,8 @@ export class Workspace implements Clonable<Workspace> {
 
     protected functions: FunctionRegistry;
 
+    protected commands: CommandRegistry;
+
     protected options: WorkspaceOptions;
 
     public static default(): Workspace {
@@ -96,6 +100,8 @@ export class Workspace implements Clonable<Workspace> {
         this.rules = new RuleRegistry(options);
         this.graph = new RuleGraph();
         this.reteGraph = new ReteGraph();
+        this.commands = new CommandRegistry({ workspace: this });
+
 
         this.options = {
             strict_conflicts: false,
@@ -321,6 +327,21 @@ export class Workspace implements Clonable<Workspace> {
     }
 
     /**
+     * Add a function to the workspace. 
+     * The function can be provided as a string containing the function syntax, or as an already created FunctionDefinition instance.
+     * If a string is provided, it will be parsed into a FunctionDefinition using the FunctionParser.
+     * @param func a created function, or function syntax containing annotations
+     */
+    public addFunction(func: string | FunctionDefinition): void {
+        if (typeof func === 'string') try {
+            func = new FunctionParser({ workspace: this }).parse(func) as FunctionDefinition;
+        } catch (e) {
+            throw new ParserError(`Failed to parse function: ${func}. Error: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        this.functions.addFunction(func);
+    }
+
+    /**
      * Debugging method to get the type checker of the workspace, responsible for managing type definitions 
      * and performing type checks during rule evaluation.
      * @returns the TypeChecker instance used by the workspace.
@@ -337,11 +358,16 @@ export class Workspace implements Clonable<Workspace> {
         return this.functions;
     }
 
+    public commandRegistry(): CommandRegistry {
+        return this.commands;
+    }
+
     public clearSpace(): void {
         this.clearRules();
         this.clearConstants();
         this.typeRegistry().clear();
         this.functionRegistry().clear();
+        this.commandRegistry().clear();
     }
 
     public checkTypes(): ValidationResult {
@@ -630,6 +656,10 @@ export class Workspace implements Clonable<Workspace> {
                 }
             }
         }
+
+        // Maybe we should call this here?
+        // context.commandHandler().executeDeferred();
+        // or return it to the caller to execute after processing?
 
         // After processing, optionally log results
         if (iteration === maxIterations) {

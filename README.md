@@ -2,13 +2,31 @@
 
 TypeScript utilities for parsing, validating, and executing declarative business rules.
 
+This package provides an embedded rule engine for applications that need business logic to stay explicit, testable, and auditable instead of being scattered across service code.
+
+## What It Does
+
+It lets you define rules, constants, functions, and types in a compact DSL, load them into a workspace, and run them against application data.
+
+The engine is designed for cases where the decision logic changes more often than the application model, or where you need better visibility into why a particular outcome was produced.
+
 ## Features
 
-- declarative `IF ... THEN ...` style rules
-- constants, types, and custom functions
-- expression parsing with arithmetic, logical, comparison, and ternary operators
-- rule graphs for selecting relevant rules from the current input context
-- runtime workspaces for loading context, processing rules, and capturing outputs and exceptions
+### Highlights
+
+- declarative `IF ... THEN ...`, `ELSE`, `THROW`, and `SET` style rules
+- typed workspaces with input validation, type coercion, and rule checking
+- custom functions, constants, and commands for extending the DSL safely
+- built-in audit trails showing invoked rules, effects, and exceptions
+- forward-chaining execution so derived values can trigger follow-up rules
+
+### Advanced
+
+- expression parsing with arithmetic, comparison, logical, and ternary operators
+- array and lambda-oriented expression support for more complex matching logic
+- requirement graphs and Rete graphs for highly scalable rule selection and evaluation
+- rule salience and conflict handling for overlapping or competing rules
+- flexible declaration loading through parsers and file readers, including markdown-backed rule documentation
 
 ## Installation
 
@@ -38,9 +56,11 @@ import { Workspace } from '@samatawy/rules';
 
 const space = new Workspace();
 
-space.addRule("IF invoice.total > 1000 THEN invoice.tax_rate = 0.10");
-space.addRule("IF invoice.total <= 1000 THEN invoice.tax_rate = 0.14");
-space.addRule("invoice.tax = invoice.total * invoice.tax_rate");
+space.addFunction('tiered_rate(total: number) = (total > 1000)? 0.10 : 0.14');
+
+space.addRule('SET invoice.tax_rate = tiered_rate(invoice.total)');
+space.addRule('SET invoice.tax = invoice.total * invoice.tax_rate');
+space.addRule('IF invoice.tax > 100 THEN invoice.review = true ELSE invoice.review = false');
 
 const context = space.loadContext({
   invoice: {
@@ -52,6 +72,7 @@ space.process(context);
 
 console.log(context.getOutput('invoice.tax_rate'));
 console.log(context.getOutput('invoice.tax'));
+console.log(context.getOutput('invoice.review'));
 ```
 
 ## Documentation

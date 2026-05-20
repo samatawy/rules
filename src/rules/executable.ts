@@ -5,7 +5,7 @@ import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { withLogger } from "../log/work.logger";
+import { withLogger } from "../logging/work.logger";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.

@@ -20,7 +20,7 @@ import { DateTimeInspectionFunction } from "../syntax/functions/datetime.inspect
 import type { Expression } from "../syntax/expression";
 import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 import { ParserError } from "../rules/exception";
-import { WorkLogger } from "../log/work.logger";
+import { WorkLogger } from "../logging/work.logger";
 import { parseTypeJson } from "../common.utils";
 
 /**

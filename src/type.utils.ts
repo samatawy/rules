@@ -8,7 +8,7 @@ import { VariableExpression } from "./syntax/variable.expression";
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "./types";
 import type { TypeChecker } from "./interfaces";
 import { TypeCheckError } from "./rules/exception";
-import { WorkLogger } from "./log/work.logger";
+import { WorkLogger } from "./logging/work.logger";
 
 function hasReturnsType(expression: Expression): expression is Expression & {
     returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectType | ObjectArrayType;

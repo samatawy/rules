@@ -9,7 +9,7 @@ import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { withLogger } from "../log/work.logger";
+import { withLogger } from "../logging/work.logger";
 
 /**
  * A rule that assigns a value to a key whenever the requirements are provided.

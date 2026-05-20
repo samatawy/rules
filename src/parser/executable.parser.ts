@@ -1,7 +1,11 @@
+import { Expression } from "../syntax/expression";
+import { CommandExecutable } from "../commands/command.executable";
 import { ParserError } from "../rules/exception";
 import { CompositeAction, OutputAction, type ExecutableAction } from "../rules/executable";
 import { ExpressionParser } from "./expression.parser";
 import type { ParserOptions } from "./rule.parser";
+import { parseTypeJson, stringifyTypeJson } from "../common.utils";
+import { assignableTo, getReturnType } from "../type.utils";
 
 /**
  * Parser class for parsing executable actions from rule syntax. 
@@ -46,10 +50,15 @@ export class ExecutableParser {
         }
 
         let action: ExecutableAction | null = null;
-        // If this is an assignment with SET, parse it as such
-        // This allows for syntax like "SET x.y = 10"
+
         if (syntax.match(/^SET\s+/i)) {
+            // If this is an assignment with SET, parse it as such
+            // This allows for syntax like "SET x.y = 10"
             action = this.parseStateAssignment(syntax);
+        }
+        else if (syntax.match(/^RUN\s+(\w+)\s*({.*})$/i)) {
+            // This allows for syntax like "RUN cmd { arg1: 10, arg2: x }" for executing a command action
+            action = this.parseCommandAction(syntax);
         }
         else if (syntax.match(/^\w+(\.\w+)*\s*=\s*.+$/i)) {
             // otherwise handle a simple assignment without SET, like "x.y = 10"
@@ -84,6 +93,49 @@ export class ExecutableParser {
             const valueExpr = this.expressionParser.parse(valueSyntax);
 
             return new OutputAction(variableName, valueExpr);
+        }
+        return null;
+    }
+
+    protected parseCommandAction(syntax: string): ExecutableAction | null {
+        const match = syntax.match(/^RUN\s+(\w+)\s*({.*})$/i);
+        if (match) {
+            const commandKey = match[1]!;
+            const argsSyntax = match[2]!;
+
+            // Parse the argsSyntax as JSON to get the argument expressions
+            let args: Record<string, Expression> = {};
+            try {
+                const argsObj = parseTypeJson(argsSyntax);
+                for (const [key, valueSyntax] of Object.entries(argsObj)) {
+                    args[key] = this.expressionParser.parse(valueSyntax + '');
+                }
+            } catch (e) {
+                throw new ParserError(`Failed to parse command arguments as JSON: ${argsSyntax}`, { originalError: e });
+            }
+
+            // Validate command key and argument types if workspace context is available
+            if (this.options.workspace) {
+                const command = this.options.workspace.commandRegistry().getCommand(commandKey);
+                const checker = this.options.workspace.typeChecker();
+                if (!command) {
+                    throw new ParserError(`No command registered with keyword: ${commandKey}`);
+                }
+
+                for (const [expectedKey, expectedType] of Object.entries(command.arguments)) {
+                    if (!(expectedKey in args)) {
+                        throw new ParserError(`Missing required argument '${expectedKey}' for command '${commandKey}'`);
+                    }
+                    const argType = getReturnType(args[expectedKey]!, checker);
+                    if (!argType || !assignableTo(argType, expectedType)) {
+                        throw new ParserError(`Type mismatch for argument '${expectedKey}' in command '${commandKey}': expected ${stringifyTypeJson(expectedType)}, got ${stringifyTypeJson(argType)}`);
+                    }
+                }
+                return new CommandExecutable(command, args);
+
+            } else {
+                throw new ParserError(`Cannot parse command action without a workspace to validate command key: ${commandKey}`);
+            }
         }
         return null;
     }

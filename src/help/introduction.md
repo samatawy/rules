@@ -95,6 +95,8 @@ Rule engines deliver compounding value. They _ADD UP_. This acronym lets you rem
 
 Rule engines vary widely in style. Some are lightweight libraries embedded in application code, while others are larger platforms with authoring tools, decision tables, and workflow or event-processing features.
 
+For a full comparison, see [Engine Comparisons](./comparisons.md).
+
 #### TypeScript and JavaScript
 
 - `json-rules-engine` is one of the better-known JavaScript rule engines. It uses a JSON-based rule format with conditions and events, which makes it relatively easy to store and exchange rules, though it is less natural for business users than a purpose-built DSL.

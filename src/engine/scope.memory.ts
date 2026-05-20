@@ -2,8 +2,9 @@ import { EvaluationError, type AbstractException } from "../rules/exception";
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getPathValue, pathExists, setPathValue } from "../common.utils";
-import type { ILogger } from "../log/interfaces";
-import { WorkLogger } from "../log/work.logger";
+import type { ILogger } from "../logging/interfaces";
+import { WorkLogger } from "../logging/work.logger";
+import type { CommandHandler } from "../commands/command.handler";
 
 /**
  * A context implementation internally used by functions (including lambda functions).
@@ -120,6 +121,10 @@ export class ScopeContext implements WorkingContext {
             this.logImpl = WorkLogger.forContext(this);
         }
         return this.logImpl;
+    }
+
+    public commandHandler(): CommandHandler | undefined {
+        return undefined;
     }
 }
 

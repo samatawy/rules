@@ -50,16 +50,16 @@
         "prepublishOnly": "npm run lint && npm run test && npm run build"
     },
     "keywords": [
-        "typescript",
-        "npm",
-        "library",
-        "json",
-        "rules",
-        "rule-engine",
-        "declarative",
+        "rules-engine",
         "business-rules",
-        "parser",
-        "typescript"
+        "decision-engine",
+        "declarative",
+        "dsl",
+        "rete",
+        "inference",
+        "business-logic",
+        "type-safe",
+        "forward-chaining"
     ],
     "author": "Sam Atawy <sam.atawy@gmail.com>",
     "license": "MIT",

@@ -4,7 +4,7 @@ import type { WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
 import { StringFunctionExpression } from "../function.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { WorkLogger } from "../../log/work.logger";
+import { WorkLogger } from "../../logging/work.logger";
 
 export class ArrayCollectionFunction extends StringFunctionExpression {
 

@@ -1,5 +1,5 @@
 import type { ValidationResult } from "./interfaces";
-import { WorkLogger } from "./log/work.logger";
+import { WorkLogger } from "./logging/work.logger";
 import { ExecutionError } from "./rules/exception";
 import JSON5 from "json5";
 
@@ -157,6 +157,10 @@ export function mergeValidationResults(...results: ValidationResult[]): Validati
     return merged;
 }
 
+export function stringifyTypeJson(input: any): string {
+    return JSON5.stringify(input);
+}
+
 export function parseTypeJson(input: string): any {
     input = quoteUnquotedTypes(input);
     return JSON5.parse(input);
@@ -166,7 +170,21 @@ export function quoteUnquotedTypes(input: string): string {
     // Matches identifiers (optionally followed by []) in value positions
     // After `:`, `,`, or `[` and before `,`, `}`, or `]`
     return input.replace(
-        /([:,\[])\s*([a-zA-Z_$][\w$]*(?:\[\])?)(?=\s*[,}\]])/g,
+        /([:,\[])\s*([a-zA-Z_$][\w\.$]*(?:\[\])?)(?=\s*[,}\]])/g,
+        '$1 "$2"'
+    );
+}
+
+export function parseExpressionJson(input: string): any {
+    input = quoteUnquotedExpressions(input);
+    return JSON5.parse(input);
+}
+
+export function quoteUnquotedExpressions(input: string): string {
+    // Matches identifiers (optionally followed by []) in value positions
+    // After `:`, `,`, or `[` and before `,`, `}`, or `]`
+    return input.replace(
+        /([:,\[])\s*([a-zA-Z_.$][\w$]*(?:\[\])?)(?=\s*[,}\]])/g,
         '$1 "$2"'
     );
 }
