@@ -1,7 +1,7 @@
 {
     "name": "@samatawy/rules",
     "version": "0.1.0",
-    "description": "TypeScript declarative rule engine utilities for parsing, validating, and executing business rules.",
+    "description": "TypeScript declarative rule engine and DSL utilities for parsing, validating, and executing business rules.",
     "type": "module",
     "main": "./dist/node/index.cjs",
     "module": "./dist/node/index.js",

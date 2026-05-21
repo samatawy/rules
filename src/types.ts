@@ -94,6 +94,18 @@ export interface FunctionDefinition {
     name: string;
 
     /**
+     * An optional hint or description for the function, which can provide additional information about its purpose or usage. 
+     * This is primarily for documentation and user guidance when working with the function in rules and expressions.
+     */
+    hint?: string;
+
+    /**
+     * Indicates whether the function is disabled. Disabled functions are not executable and cannot be called in rules or expressions.
+     * This allows users to define functions that are still being developed or debugged without causing execution failures in the workspace.
+     */
+    disabled?: boolean;
+
+    /**
      * The expected parameters for the function, defined as an array of named parameters. Each parameter includes its expected type and whether it is optional.
      * This is used for type checking and validation of function arguments when the function is called in rules and expressions.
      * Functions that expect a parameter array (e.g., sum, avg, concat) can indicate this in their definition and will have their parameters validated accordingly.

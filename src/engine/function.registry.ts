@@ -103,8 +103,19 @@ export class FunctionRegistry {
         return result;
     }
 
+    /**
+     * Perform type checking on all function definitions in the registry using the provided type checker.
+     * This method iterates through each function definition, checks its types against the type checker, and returns an array of validation results.
+     * 
+     * N.B. Disabled functions are skipped during type checking, as they are not intended to be used in rule evaluation and may contain incomplete or invalid definitions.
+     * 
+     * @param checker The type checker to use for validating function definitions.
+     * @returns An array of validation results for each function definition.
+     */
     public checkTypes(checker: TypeChecker): ValidationResult[] {
-        return Array.from(this.functions.values()).map(func => this.checkDefinitionTypes(func, checker));
+        return Array.from(this.functions.values())
+            .filter(func => !func.disabled)
+            .map(func => this.checkDefinitionTypes(func, checker));
     }
 
     protected checkDefinitionTypes(definition: FunctionDefinition, checker: TypeChecker): ValidationResult {

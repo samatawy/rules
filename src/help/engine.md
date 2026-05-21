@@ -167,7 +167,7 @@ In practice, parsers are the bridge between the declarative DSL and the executab
 
 #### Rule Parser
 
-The Rule Parser reads full rule syntax and creates concrete rule objects in memory. It also reads rule annotations such as `@name(...)`, `@description(...)`, and `@salience(...)`.
+The Rule Parser reads full rule syntax and creates concrete rule objects in memory. It also reads rule annotations such as `@name(...)`, `@hint(...)`, `@disabled()`, and `@salience(...)`.
 
 Example:
 

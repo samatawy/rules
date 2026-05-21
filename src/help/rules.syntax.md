@@ -163,7 +163,8 @@ Rules can be prefixed with annotations for metadata.
 Supported annotations are:
 
 - `@name(...)`
-- `@description(...)`
+- `@hint(...)`
+- `@disabled()`
 - `@salience(...)`
 
 ### `@name(...)`
@@ -175,14 +176,29 @@ Use a short readable name for logs, debugging, and audits.
 if person.age >= 18 then person.is_adult = true
 ```
 
-### `@description(...)`
+### `@hint(...)`
 
 Use a longer explanation when the rule intent is not obvious from the syntax alone.
 
 ```
-@description(Flag invoices that qualify for free shipping)
+@hint(Flag invoices that qualify for free shipping)
 if order.total > 100 then order.free_shipping = true
 ```
+
+### `@disabled()`
+
+A rule can be disabled, preventing its evaluation and execution. This can be useful while developing or testing rules.
+
+```
+@disabled()
+if order.total > 100 then order.free_shipping = true
+```
+
+- A workspace does not type-check disabled rules, since they will not be executed and may be in an invalid state. 
+This allows users to disable rules that are still being developed or debugged without causing type check failures for the entire workspace.
+
+- A rule can be type-checked explicitly if `rule.checkTypes()` is called directly on it, even if it is disabled. 
+This allows users to check the types of a rule that is still being developed or debugged without enabling it in the workspace.
 
 ### `@salience(...)`
 
@@ -208,7 +224,7 @@ They can also be split over lines:
 
 ```
 @name(Split over lines)
-@description(A named rule with separate metadata lines)
+@hint(A named rule with separate metadata lines)
 if x > 10 then result = 10 + 5 / 2
 ```
 

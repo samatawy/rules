@@ -57,6 +57,14 @@ export class WorkspaceFilesReader extends AbstractFileReader {
 
     private fs?: typeof import('fs') | undefined;
 
+    /**
+     * Create a new reader instance for loading rules, functions, types, and constants into the provided workspace.
+     * 
+     * N.B. After creation you must either call `withFS()` or `loadFileSystem()` to provide access to the file system before attempting to read files in a Node environment.
+     * 
+     * @param workspace The workspace into which the components will be loaded.
+     * @param accept Determines whether to accept all valid components while logging errors for invalid ones ('partial') or to reject the entire file if any component is invalid ('all').
+     */
     constructor(workspace: Workspace, accept: 'all' | 'partial' = 'all') {
         super();
         this.workspace = workspace;
@@ -179,6 +187,25 @@ export class WorkspaceFilesReader extends AbstractFileReader {
             : parseResult.passed > 0;
     }
 
+    /**
+     * Provide a node file system module to be used for reading files.
+     * This method or the equivalent `loadFileSystem()` must be called before attempting to read files in a Node environment.
+     * 
+     * @param fs the node fs module to use.
+     * @returns the current instance for chaining.
+     */
+    public withFS(fs: typeof import('fs')): this {
+        this.fs = fs;
+        return this;
+    }
+
+    /**
+     * Dynamically import the Node.js file system module in a Node environment.
+     * This method or the equivalent `withFS()` must be called before attempting to read files in a Node environment. 
+     * In a browser environment, this method will log an error since file system access is not supported.
+     * 
+     * @returns the imported fs module if successful, otherwise undefined.
+     */
     public async loadFileSystem(): Promise<any> {
         if (typeof process !== 'undefined' && process.versions && process.versions.node) {
             try {

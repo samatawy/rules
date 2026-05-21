@@ -175,16 +175,16 @@ export function quoteUnquotedTypes(input: string): string {
     );
 }
 
-export function parseExpressionJson(input: string): any {
-    input = quoteUnquotedExpressions(input);
-    return JSON5.parse(input);
-}
+// export function parseExpressionJson(input: string): any {
+//     input = quoteUnquotedExpressions(input);
+//     return JSON5.parse(input);
+// }
 
-export function quoteUnquotedExpressions(input: string): string {
-    // Matches identifiers (optionally followed by []) in value positions
-    // After `:`, `,`, or `[` and before `,`, `}`, or `]`
-    return input.replace(
-        /([:,\[])\s*([a-zA-Z_.$][\w$]*(?:\[\])?)(?=\s*[,}\]])/g,
-        '$1 "$2"'
-    );
-}
+// export function quoteUnquotedExpressions(input: string): string {
+//     // Matches identifiers (optionally followed by []) in value positions
+//     // After `:`, `,`, or `[` and before `,`, `}`, or `]`
+//     return input.replace(
+//         /([:,\[])\s*([a-zA-Z_.$][\w$]*(?:\[\])?)(?=\s*[,}\]])/g,
+//         '$1 "$2"'
+//     );
+// }

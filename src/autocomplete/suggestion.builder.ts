@@ -93,6 +93,9 @@ export class SuggestionBuilder {
 
         // Add custom functions
         for (const [key, func] of Object.entries(functionRegistry.getFunctions())) {
+            if (func.disabled) {
+                continue;
+            }
             const returnType = func.expression ? getReturnType(func.expression) || 'any' : 'any';
             suggestions.push({ value: func.name, kind: 'function', returns: returnType + '', comes_before: ['('] });
         }
@@ -108,6 +111,9 @@ export class SuggestionBuilder {
 
         // Support function chaining
         for (const [key, func] of Object.entries(functionRegistry.getFunctions())) {
+            if (func.disabled) {
+                continue;
+            }
             const returnType = func.expression ? getReturnType(func.expression) || 'any' : 'any';
             const firstArg = func.parameters[0];
             if (firstArg) {

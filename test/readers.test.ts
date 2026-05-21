@@ -203,6 +203,7 @@ describe('Readers Tests', () => {
       // This is a comment
       CONST PI = 3.14159
 
+      @hint(This function triples a number)
       triple(n: number) = n * 3
 
       if x > 10 then result = triple(x) //if x >= 10 then result = x * 3
@@ -226,6 +227,7 @@ describe('Readers Tests', () => {
     expect(result.types.Person).toBeDefined();
     expect(result.rules.length).toBe(1);
     expect(result.errors.length).toBe(1);
+    expect(result.functions.triple?.hint).toBe('This function triples a number');
   });
 
 

@@ -17,7 +17,7 @@ In a node environment with known paths, the easiest way to load files (or folder
 
 ```
 const sales_space = new Workspace();
-const reader = new WorkspaceFilesReader(sales_space);
+const reader = new WorkspaceFilesReader(sales_space).withFS( fs );
 
 let success = reader.readFromFiles([
     '<path>/sales.rule.text',
@@ -32,7 +32,7 @@ The above will not fail if declarations are not properly ordered, e.g. if a func
 However, although the above will work with any order of files, each call must leave the workspace in a valid state, so load all relevant files in one call.
 If your files depend on external declarations, these must have been already loaded.
 
-N.B. Keeping proper order will help keep your declaration/documentation file(s) readable and maintainable. 
+N.B. Keeping proper order will help keep your declaration/documentation file(s) readable and maintainable.
 
 Alternatively, in a browser or when you need more control (e.g. if building your own editor) you can use reader classes (e.g. `GeneralFileReader`) directly. Using these readers, the order of declarations DOES matter, even within a single file.
 
@@ -41,8 +41,9 @@ const fileContents = <load file as string>;
 const reader = new GeneralFileReader();
 const result = reader.parse(fileContents);
 
-const mySpace = new Workspace();
 if (result.getExceptions().length === 0) {
+    const mySpace = new Workspace();
+
     mySpace.addConstants(result.constants);
     mySpace.typeChecker().addRootTypes(result.types);
     mySpace.functionRegistry().addFunctions(result.functions);
@@ -72,6 +73,55 @@ const reader = new GeneralFileReader({ workplace: myWorkplace });
 ```
 
 - File readers are transactional. If you decide to accept `'partial'` declarations (e.g. in development / testing), errors will not cause the entire read method top fail. If you decide to accept `'all'` (e.g. in staging / production) then any error will prevent all components from being parsed. In that case, your workspace will not be affected unless all components are accepted.
+
+## Config Files
+
+If you prefer to keep workspaces and their files configured externally instead of hard-coding paths or folders, you can do this in a node environment by using a higher-level helper class `ConfigFileReader`. This loads workspaces and file paths from a configuration file and builds your workspaces in one go.
+
+```
+const reader = new ConfigFileReader().withFS( fs );
+try {
+    const config = reader.readFromFile( '/etc/rules/config.json' );
+    const options = {
+        workspaceMode: 'create',    // can also be 'overwrite' or 'append'
+    };
+    const ok = reader.loadAllWorkspaces(config, options);
+
+    if (ok) {
+        // engine fully loaded
+    }
+
+} catch(e) {
+    // engine loading failed
+}
+```
+
+The format of the config file is the following (note usage of JSON5 syntax):
+```
+{
+    workspaces: [
+        {
+            name: 'Sales',
+            options: { strict_syntax: true, strict_inputs: true },
+            readerMode: 'partial',
+            files: [ '/etc/rules/sales/sales.md' ]
+        }, {
+            name: 'HR',
+            options: { 
+                strict_syntax: true, 
+                strict_inputs: false
+            },
+            readerMode: 'all',
+            files: [ 
+                '/etc/rules/hr/constants.txt', 
+                '/etc/rules/hr/functions.md', 
+                '/etc/rules/hr/rules.md' 
+            ]
+        }
+    ]
+}
+```
+
 
 ## General Files
 
@@ -188,7 +238,7 @@ Constants -> Functions -> Types -> Rules
 
 - Order is not important, however, if a rule uses a constant or a custom function, those must be known to have already been declared.
 
-- Rules can have annotations before their syntax. These can be on the same line or split over lines. Supported annotations are `@name()`, `@description()`, and `@salience()`
+- Rules can have annotations before their syntax. These can be on the same line or split over lines. Supported annotations are `@name()`, `@hint()`, `@disabled()`, and `@salience()`
 
 - Rules are separated by empty lines. Inside a single rule, empty lines will lead to an error.
 

@@ -133,6 +133,8 @@ Preogrammatically you should run checkTypes() on the workspace once loaded and i
 
 - If you need to fix issues you can temporarily make readers more tolerant (using `partial` instead of `all`) or turn off `strict_syntax`, `strict_inputs`, or `strict_outputs` on the testing workspace until you can find and fix issues.
 
+- You can also selectively disable one or more rules or functions using `@disabled()` annotations (or programmatically). This can help you test while still developing and can help pinpoint a problematic rule or function causing issues.
+
 - After an error you can inspect the context. It will contain an audit trail of all rules invoked, any errors encountered, and even a cache of expressions with their last values.
 
 - For even more in-depth troubleshooting of an issue, set your `WorkLogger.logLevel` to 'warn', then 'info', then 'debug' - each time going through the lines until you find the culprit. Do not start with 'debug' as this can be quite verbose and overhelming.

@@ -13,3 +13,4 @@ export * from '../readers/workspace.transaction';
 
 // Node-specific classes
 export * from '../readers/workspace.files.reader';
+export * from '../readers/config.file.reader';

@@ -107,7 +107,7 @@ export class FunctionFactory {
 
         if (this.options.workspace) {
             const customFunction = this.options.workspace.functionRegistry().getFunction(name);
-            if (customFunction) {
+            if (customFunction && !customFunction.disabled) {
                 return CustomFunctionExpression.from(customFunction, args);
             }
         }

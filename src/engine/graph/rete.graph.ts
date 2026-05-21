@@ -110,7 +110,7 @@ export class ReteGraph {
     /**
      * Add a rule to the graph based on its expression. 
      * The rule is represented as a RuleNode, and it is connected to the nodes representing its required decisions
-     * and eventuall to top-level data nodes. 
+     * and eventually to top-level data nodes. 
      * @param rule the rule to be added to the graph.
      */
     public addRule(rule: AbstractRule): void {
@@ -130,6 +130,8 @@ export class ReteGraph {
      * Find rules relevant to any given node.
      * Data nodes only return relevant rules if they are defined.
      * Decision rules only return relevant rules if they evaluate to a truthy value.
+     * Disabled rules are not returned as relevant.
+     * 
      * @param start the node to start from.
      * @param context the working context to use when evaluating.
      * @returns a set of rules relevant to the given start node.
@@ -143,7 +145,9 @@ export class ReteGraph {
         if (!node) return foundRules;
 
         if (node instanceof RuleNode) {
-            foundRules.add(node.rule);
+            if (!node.rule.isDisabled()) {
+                foundRules.add(node.rule);
+            }
 
         } else if (node instanceof DataNode) {
             let value = context.getCached(node.id);

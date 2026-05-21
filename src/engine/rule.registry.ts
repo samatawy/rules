@@ -2,6 +2,7 @@ import type { AbstractRule } from "../rules/abstract.rule";
 import { EngineError } from "../rules/exception";
 import type { WorkspaceOptions } from "./workspace";
 import type { ILogger } from "../logging/interfaces";
+import type { TypeChecker, ValidationResult } from "../interfaces";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
@@ -76,6 +77,21 @@ export class RuleRegistry {
      */
     public clear(): void {
         this.rules = [];
+    }
+
+    /**
+     * Perform type checking on all rules in the registry using the provided type checker.
+     * This method iterates through each rule, checks its types against the type checker, and returns an array of validation results.
+     * 
+     * N.B. Disabled rules are skipped during type checking, as they are not intended to be used in rule evaluation and may contain incomplete or invalid definitions.
+     * 
+     * @param checker The type checker to use for validating rules.
+     * @returns An array of validation results for each rule.
+     */
+    public checkTypes(checker: TypeChecker): ValidationResult[] {
+        return this.rules
+            .filter(rule => !rule.isDisabled())
+            .map(rule => rule.checkTypes(checker));
     }
 
     protected preventConflicts(rules: AbstractRule[], logger: ILogger): AbstractRule[] {

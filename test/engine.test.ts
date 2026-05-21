@@ -99,8 +99,11 @@ describe('Engine tests', () => {
     const r1 = IfThenRule.parse('if x > 10 then result = 10 + 5 / 2');
     const r2 = IfThenRule.parse('if a == 5 then result = (10 + 5) / 2');
 
+    // const r_disabled = IfThenRule.parse('@disabled() if x < 0 then result = 0');
+
     space.addRule(r1);
     space.addRule(r2);
+    // space.addRule(r_disabled);
 
     expect(space.checkTypes().valid).toBe(true);
 

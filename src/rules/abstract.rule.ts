@@ -15,11 +15,14 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
     public name?: string;
 
     /**
-     * Optional description for the rule, providing additional context or information about the rule's purpose and behavior.
+     * An optional hint or description for the rule, which can provide additional information about its purpose or usage. 
+     * This is primarily for documentation and user guidance when working with the rule.
      */
-    public description?: string;
+    public hint?: string;
 
     private syntax: string;
+
+    private disabled?: boolean;
 
     private salience?: number;
 
@@ -56,6 +59,35 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
      */
     public setSalience(salience: number): void {
         this.salience = salience;
+    }
+
+    /**
+     * Check whether the rule is currently disabled. A disabled rule will not be evaluated or executed by the engine.
+     * @returns true if the rule is disabled, false otherwise.
+     */
+    public isDisabled(): boolean {
+        return this.disabled ?? false;
+    }
+
+    /**
+     * Disable the rule, preventing it from being evaluated or executed by the engine. 
+     * This can be useful for temporarily turning off rules without removing them from the system, such as during testing.
+     * Optionally, a reason can be provided for why the rule is being disabled, which will be included in the hint if no hint is already set for the rule.
+     * @param reason a hint or reason for why the rule is being disabled.
+     */
+    public disable(reason?: string): void {
+        this.disabled = true;
+        if (reason && !this.hint) {
+            this.hint = `Disabled: ${reason}`;
+        }
+    }
+
+    /**
+     * Enable the rule, allowing it to be evaluated and executed by the engine if it is applicable. 
+     * This can be used to re-enable a rule that was previously disabled.
+     */
+    public enable(): void {
+        this.disabled = false;
     }
 
     /**

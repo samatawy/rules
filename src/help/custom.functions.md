@@ -27,7 +27,9 @@ You are encouraged to wrap complex calculations into functions, especially if yo
 
 - In some cases, you might need to set a state/variable to be used by a function. This is supported although it violates scope isolation and can make functions harder to maintain. Just remember that variables named in the local scope will always have precedence (when names clash) and this should not be used unless necessary.
 
-- They also cannot directly change of affect output.
+- They also cannot directly change or affect output on their own.
+
+- Functions can be disabled (e.g. while being developed or in testing) and will not be usable until enabled.
 
 - The engine already provides many built-in functions for common tasks. A custom function cannot override a built-in function to avoid unexpected behaviour from arising.
 
@@ -57,6 +59,14 @@ sales_tax(total: number) {
 - Note that comments can be used, starting with # or //.
 
 - Note that any empty lines inside a function declaration will lead to parsing errors. Empty lines must be used to separate declared components.
+
+- Functions can have annotations. Supported annotations are `@hint(...)` and `@disabled()` which are primarily of value while developing or testing.
+
+```
+@hint(Currently disabled by John Smith)
+@disabled()
+is_percentage( value: number ) = value >= 0 AND value <= 100
+```
 
 Although most functions should only accept and return atomic values to keep everything readable and concise, functions can also accept objects and return objects.
 

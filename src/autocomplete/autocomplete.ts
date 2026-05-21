@@ -186,7 +186,7 @@ export class Autocomplete {
                         }
                     }
                     const custom = this.workspace.functionRegistry().getFunction(funcToken);
-                    if (custom) {
+                    if (custom && !custom.disabled) {
                         const argument = custom.parameters[argument_index || 0];
                         const type = argument ? argument.type : undefined;
                         return { type: type ? type : undefined };

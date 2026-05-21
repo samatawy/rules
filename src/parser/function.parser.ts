@@ -23,6 +23,12 @@ import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../logging/work.logger";
 import { parseTypeJson } from "../common.utils";
 
+export interface FunctionMetadata {
+    hint?: string;
+    disabled?: boolean;
+    syntax?: string;
+}
+
 /**
  * Parser class for parsing function syntax into CustomFunctionExpression objects.
  * You should normally not need to use this parser directly, as it is primarily used internally when creating functions from syntax.
@@ -86,9 +92,11 @@ export class FunctionParser {
      */
     public parse(syntax: string): FunctionDefinition | null {
 
+        const metadata = this.parseMetadata({ syntax });
         let defined: FunctionDefinition | null = null;
+        syntax = metadata.syntax || '';
         if (syntax.length === 0) {
-            throw new ParserError('Function syntax cannot be empty');
+            throw new ParserError('Rule syntax cannot be empty');
         }
 
         // If this is in the form name(arg1, arg2) { expr } attempt parsing
@@ -99,6 +107,8 @@ export class FunctionParser {
         }
 
         if (defined) {
+            defined.hint = metadata.hint;
+            defined.disabled = metadata.disabled;
             return defined;
         } else {
             throw new ParserError(`Unrecognized function syntax: ${syntax}`);
@@ -115,6 +125,8 @@ export class FunctionParser {
     public clone(original: FunctionDefinition): FunctionDefinition {
         const cloned: FunctionDefinition = {
             name: original.name,
+            hint: original.hint,
+            disabled: original.disabled,
             parameters: original.parameters.map(param => ({ ...param })),
             expression: this.expressionParser.parse(original.expression.toString()),
             lines: original.lines ? original.lines.map(line => this.executableParser.parse(line.toString()) as any) : undefined
@@ -188,6 +200,30 @@ export class FunctionParser {
             WorkLogger.debug('Syntax does not match function pattern, cannot parse as function expression');
         }
         throw new ParserError(`Syntax does not match CustomFunction pattern: ${syntax}`);
+    }
+
+    protected parseMetadata(given: FunctionMetadata): FunctionMetadata {
+        given.syntax = given.syntax?.trim() || '';
+        if (given.syntax.length === 0 || !(given.syntax.startsWith('@'))) {
+            return given;
+        }
+
+        if (given.syntax.startsWith('@hint(')) {
+            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/);
+            if (match) {
+                given.hint = match[1]!;
+                given.syntax = match[2]!;
+            }
+        } else if (given.syntax.startsWith('@disabled(')) {
+            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/);
+            if (match) {
+                given.disabled = true;
+                given.syntax = match[2]!;
+            }
+        }
+
+        // loop to allow multiple metadata annotations in any order, like "@name(...) @salience(...) @hint(...)"
+        return this.parseMetadata(given);
     }
 
     protected readParameters(syntax: string): NamedParameter[] {

@@ -376,17 +376,8 @@ export class Workspace implements Clonable<Workspace> {
 
         checks.push(...this.functions.checkTypes(this.type_checker));
 
-        for (const rule of this.rules.getRules()) {
-            const check = rule.checkTypes(this.type_checker);
-            if (!check.valid) {
-                // TODO: Should add each error separately to get more detailed error messages 
-                // or merge them into one message per rule?
-                // checks.push({ valid: false, errors: [`Type check failed for rule ${rule.toString()}: ${check.errors?.join('; ')}`] });
-                for (const error of check.errors || []) {
-                    checks.push({ valid: false, errors: [`Type check failed for rule ${rule.toString()}: ${error}`] });
-                }
-            }
-        }
+        checks.push(...this.rules.checkTypes(this.type_checker));
+
         return mergeValidationResults(...checks);
     }
 
@@ -405,6 +396,10 @@ export class Workspace implements Clonable<Workspace> {
      * This is primarily an explanatory feature, and does NOT return the rules that will be executed. 
      * This is done by traversing the requirement graph starting from the root nodes that match the keys in the context, 
      * and collecting all rules that are reachable and applicable based on their requirements.
+     * 
+     * N.B. Applicable rules are not necessarily executable, since they may require certain conditions to be met that are not currently satisfied in the context.
+     * Disabled rules are returned as applicable if their requirements are met, but they will not be executed when processing the context.
+     * 
      * @param context the working memory context that contains the current state of data.
      * @returns an array of applicable rules that can be evaluated against the given context.
      */
@@ -515,6 +510,9 @@ export class Workspace implements Clonable<Workspace> {
 
     /**
      * Use the rete graph to find rules relevant to a given array of input keys.
+     * 
+     * N.B. Disabled rules are not returned as relevant, even if their requirements are met, since they will not be executed when processing the context.
+     * 
      * @param data_ids an array of flattened data keys from a context.
      * @param context the context to use while traversing the graph.
      * @returns a set of rules relevant to the given data keys.

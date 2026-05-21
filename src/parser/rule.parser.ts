@@ -9,7 +9,8 @@ import { ParserError } from "../rules/exception";
 
 export interface RuleMetadata {
     name?: string;
-    description?: string;
+    hint?: string;
+    disabled?: boolean;
     salience?: number;
     syntax?: string;
 }
@@ -77,7 +78,8 @@ export class RuleParser {
 
         if (parsed) {
             parsed.name = metadata.name;
-            parsed.description = metadata.description;
+            parsed.hint = metadata.hint;
+            metadata.disabled ? parsed.disable() : parsed.enable();
             parsed.setSalience(metadata.salience ?? 0);
             return parsed;
         } else {
@@ -98,7 +100,7 @@ export class RuleParser {
             throw new ParserError(`Failed to clone rule: ${original.getSyntax()}`);
         }
         cloned.name = original.name;
-        cloned.description = original.description;
+        cloned.hint = original.hint;
         cloned.setSalience(original.getSalience());
         return cloned;
     }
@@ -115,10 +117,16 @@ export class RuleParser {
                 given.name = match[1]!;
                 given.syntax = match[2]!;
             }
-        } else if (given.syntax.startsWith('@description(')) {
-            const match = given.syntax.match(/^@description\((.+?)\)\s*(.*)$/);
+        } else if (given.syntax.startsWith('@hint(')) {
+            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/);
             if (match) {
-                given.description = match[1]!;
+                given.hint = match[1]!;
+                given.syntax = match[2]!;
+            }
+        } else if (given.syntax.startsWith('@disabled(')) {
+            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/);
+            if (match) {
+                given.disabled = true;
                 given.syntax = match[2]!;
             }
         } else if (given.syntax.startsWith('@salience(')) {
@@ -129,6 +137,7 @@ export class RuleParser {
             }
         }
 
+        // loop to allow multiple metadata annotations in any order, like "@name(...) @salience(...) @hint(...)"
         return this.parseMetadata(given);
     }
 
