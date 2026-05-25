@@ -31,6 +31,12 @@ export abstract class Expression implements Evaluator, HasValidity {
     public abstract required(): Set<string>;
 
     /**
+     * What functions are invoked by this expression? This information can be used for optimization, caching, or to determine which function nodes in the graph are relevant for this expression.
+     * @returns a set of function names invoked by this expression.
+     */
+    public abstract invokes(): Set<string>;
+
+    /**
      * What expressions comprise the expression for use in caching/memoization.
      * @returns an array of expressions that can be cached/memoized.
      */

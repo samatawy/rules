@@ -2,7 +2,7 @@ import { ArrayExpression } from "../array.expression";
 import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
+import { FunctionExpression, NumericFunctionExpression } from "../function.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
 import { WorkLogger } from "../../logging/work.logger";
 
@@ -92,5 +92,26 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'];
+    private static _names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        // if (args.length < 1) {
+        //     throw new TypeCheckError(`Function ${name} expects at least 1 argument`);
+        // }
+        return new this(name, args[0]!, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0]!, args.slice(1));
+    }
 }

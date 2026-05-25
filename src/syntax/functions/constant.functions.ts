@@ -1,7 +1,8 @@
 import type { TypedParameter } from "../../types";
+import type { Expression } from "../expression";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
 import { DateFunctionExpression, NumericFunctionExpression } from "../function.expression";
-import { EvaluationError } from "../../rules/exception";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class ConstantNumbers extends NumericFunctionExpression {
 
@@ -64,7 +65,28 @@ export class ConstantNumbers extends NumericFunctionExpression {
         }
     }
 
-    static names = ['pi', 'e', 'phi', 'tau', 'c', 'speedOfLight', 'g', 'goldenRatio', 'avogadro', 'planck', 'electronMass', 'protonMass', 'neutronMass', 'boltzmann', 'gasConstant', 'faraday', 'gravitationalConstant'];
+    private static _names = ['pi', 'e', 'phi', 'tau', 'c', 'speedOfLight', 'g', 'goldenRatio', 'avogadro', 'planck', 'electronMass', 'protonMass', 'neutronMass', 'boltzmann', 'gasConstant', 'faraday', 'gravitationalConstant'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): ConstantNumbers | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length !== 0) {
+            throw new TypeCheckError(`Function ${name} expects no arguments, but got ${args.length}`);
+        }
+        return new ConstantNumbers(name);
+    }
+
+    public static mock(name: string, args: Expression[]): ConstantNumbers | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new ConstantNumbers(name);
+    }
 }
 
 export class ConstantDates extends DateFunctionExpression {
@@ -111,6 +133,26 @@ export class ConstantDates extends DateFunctionExpression {
         }
     }
 
-    static names = ['now', 'today', 'yearStart', 'yearEnd', 'monthStart', 'monthEnd'];
+    private static _names = ['now', 'today', 'yearStart', 'yearEnd', 'monthStart', 'monthEnd'];
 
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): ConstantDates | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length !== 0) {
+            throw new TypeCheckError(`Function ${name} expects no arguments, but got ${args.length}`);
+        }
+        return new ConstantDates(name);
+    }
+
+    public static mock(name: string, args: Expression[]): ConstantDates | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new ConstantDates(name);
+    }
 }

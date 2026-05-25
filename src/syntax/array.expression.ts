@@ -32,6 +32,11 @@ export class ArrayExpression extends Expression {
         return requirements;
     }
 
+    public invokes(): Set<string> {
+        const all = this.elements.flatMap(e => Array.from(e.invokes()));
+        return new Set(all);
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         return mergeValidationResults(...this.elements.map(e => e.checkTypes(checker)));
     }

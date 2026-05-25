@@ -49,5 +49,23 @@ export class RandomFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['random', 'randomBetween', 'randomInteger'];
+    private static _names = ['random', 'randomBetween', 'randomInteger'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: NumericExpression[]): RandomFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args as NumericExpression[]);
+    }
+
+    public static mock(name: string, args: NumericExpression[]): RandomFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args as NumericExpression[]);
+    }
 }

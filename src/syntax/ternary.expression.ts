@@ -33,6 +33,13 @@ export class TernaryExpression extends Expression {
         return new Set([...conditionRequirements, ...trueRequirements, ...falseRequirements]);
     }
 
+    public invokes(): Set<string> {
+        const conditionInvokes = this.condition.invokes();
+        const trueInvokes = this.trueExpression.invokes();
+        const falseInvokes = this.falseExpression.invokes();
+        return new Set([...conditionInvokes, ...trueInvokes, ...falseInvokes]);
+    }
+
     public returnsType(checker?: TypeChecker): AtomicType | ArrayType {
         const trueType = getReturnType(this.trueExpression, checker);
         const falseType = getReturnType(this.falseExpression, checker);

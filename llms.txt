@@ -31,6 +31,7 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 ## Core topics
 
 - Forward-chaining `modus ponens` inference engine
+- Backward-chaining (goal-oriented) inference capability
 - Workspaces, rule registries, type registries, and function registries
 - A documented and concise TypeScript-like DSL for rules and expressions
 - Rule syntax: `IF ... THEN ...`, `IF ... THEN ... ELSE ...`, `THROW`, and `SET`
@@ -43,6 +44,7 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - Built-in functions for numeric, string, date/time, boolean, array, lambda, constant, and random operations
 - Rete algorithm implementation for highly scalable performance
 - Rule salience and conflict detection/resolution
+- Detection of cyclic dependencies
 - Working memory, scope context, and function-local execution scope
 - Autocompletion support for editors
 - File readers for rules, functions, constants, types, markdown, mixed/general files, and multi-file workspace loading

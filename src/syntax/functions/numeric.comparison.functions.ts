@@ -76,5 +76,26 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['equal', 'closeTo', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
+    private static _names = ['equal', 'closeTo', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): NumericComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length < 2) {
+            throw new TypeCheckError(`Function ${name} expects at least 2 arguments, but got ${args.length}`);
+        }
+        return new this(name, args[0] as NumericExpression, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): NumericComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0] as NumericExpression, args.slice(1));
+    }
 }

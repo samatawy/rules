@@ -20,6 +20,10 @@ export class LiteralExpression extends Expression {
         return new Set();
     }
 
+    public invokes(): Set<string> {
+        return new Set();
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         return { valid: true };
     }

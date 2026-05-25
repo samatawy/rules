@@ -310,7 +310,7 @@ export class WorkspaceFilesReader extends AbstractFileReader {
                         result.passed += 1;
                     }
                     else if (this.isFunctionDefnition(parsed)) {
-                        this.workspace.functionRegistry().addFunction(parsed);
+                        this.workspace.addFunction(parsed);
                         result.functions[parsed.name] = parsed;
                         result.passed += 1;
                     }

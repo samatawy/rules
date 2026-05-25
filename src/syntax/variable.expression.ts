@@ -24,6 +24,10 @@ export class VariableExpression extends Expression {
         return new Set([this.variableName]);
     }
 
+    public invokes(): Set<string> {
+        return new Set();
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         if (!checker || !checker.strictInputs()) {
             return { valid: true };

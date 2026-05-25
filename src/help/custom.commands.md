@@ -123,10 +123,61 @@ console.log(sentMessages); // ["Welcome Alice"]
 
 This pattern keeps rule evaluation separate from side effects.
 
-## Practical Notes
+### Practical Notes
 
 - Command keywords must be unique within the workspace.
 - A command must define exactly one of `execute` or `executeAsync`.
 - Immediate commands cannot use `executeAsync`.
 - Rules are type-checked against the declared command arguments, so mismatched argument names or types are reported early.
 - Keep business decision logic in rules and use commands for integration work or side effects.
+
+### Command Classes
+
+- You can create commands as published classes. But remember that commands must be instantiated before registration.
+- Parameters may need to be passed to your command constructor (e.g. credentials or settings).
+
+- A command class must provide the following:
+
+```
+/**
+* A unique name for the command, used for identification and debugging purposes. 
+* This is not necessarily the same as the keyword used to invoke the command in rules, but it should be descriptive of the command's purpose.
+*/
+name: string;
+
+/**
+* Indicates whether the command should be executed immediately when invoked.
+* Immediate commands are executed synchronously and cannot have an asynchronous executeAsync function.
+*/
+immediate: boolean;
+
+/**
+* The keyword used to invoke the command in rules. 
+* This must be unique across all registered commands, and should ideally be expressive but short.
+* No spaces or special characters are allowed in the keyword - only letters, numbers, and underscores.
+*/
+keyword: string;
+
+/**
+* A record of argument names and their expected types for this command. 
+* This is used for validating command invocations and providing better error messages when arguments are missing or of the wrong type.
+* The types should be defined using the AtomicType interface from the rules engine's type system.
+*/
+arguments: Record<string, AtomicType>;
+
+/**
+* The function to execute when the command is invoked. 
+* This function is called with the arguments specified in the command's arguments property.
+* @param args The arguments passed to the command when it is invoked.
+* @returns The result of the command execution.
+*/
+execute?(...args: any[]): any;
+
+/**
+* The asynchronous function to execute when the command is invoked. 
+* This function is called with the arguments specified in the command's arguments property.
+* @param args The arguments passed to the command when it is invoked.
+* @returns A promise that resolves with the result of the command execution.
+*/
+executeAsync?(...args: any[]): Promise<any>;
+```

@@ -129,13 +129,15 @@ A Scope Context is created by a function or a closure (from a lambda function) t
 
 #### Rule Registry
 
-- This class holds rules for use by a workspace.
+- This class holds rules for use by a workspace, and provides dependency based sorting and conflict resolution during engine processing.
 
 - We register rules through the workspace directly. You should not need to use this class directly.
 
-#### Requirement Graph
+#### Dependency Graph
 
 - This class builds a graph of rules to enable faster selection of rules applicable to a given context. 
+
+- It also detects cyclic dependencies on demand (recommended after rules are loaded or changed).
 
 - You should not normally have to deal with this class.
 

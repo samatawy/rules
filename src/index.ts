@@ -16,8 +16,8 @@ export * from './engine/working.memory';
 
 export * from './engine/graph/rete.graph';
 export * from './engine/graph/rete.nodes';
-export * from './engine/graph/requirement.graph';
-export * from './engine/graph/requirement.nodes';
+export * from './engine/graph/dependency.graph';
+export * from './engine/graph/dependency.nodes';
 
 // Parser components
 export * from './parser/expression.parser';

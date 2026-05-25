@@ -5,6 +5,8 @@ describe('Engine tests', () => {
 
   it('handles arrays in rules and types', async () => {
     const space = new Workspace({ strict_inputs: true, strict_outputs: false });
+    const graph = space.dependencyGraph();
+
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
@@ -34,7 +36,7 @@ describe('Engine tests', () => {
         family: []
       }
     });
-    expect(space.applicableRules(ctx).length).toBe(1);
+    expect(graph.applicableRules(ctx).length).toBe(1);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();
@@ -48,7 +50,7 @@ describe('Engine tests', () => {
         family: [{ name: 'Bob', age: 5 }, { name: 'Charlie', age: 10 }, { name: 'David', age: 15 }]
       }
     });
-    expect(space.applicableRules(ctx2).length).toBe(1);
+    expect(graph.applicableRules(ctx2).length).toBe(1);
     const ok2 = space.process(ctx2);
     expect(ok2).toBe(true);
     const output2 = ctx2.getOutput();
@@ -66,6 +68,8 @@ describe('Engine tests', () => {
 
   it('handles lambda expressions', async () => {
     const space = new Workspace({ strict_inputs: true, strict_outputs: false });
+    const graph = space.dependencyGraph();
+
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
@@ -93,7 +97,7 @@ describe('Engine tests', () => {
         family: [{ name: 'Bob', age: 15 }, { name: 'Charlie', age: 25 }, { name: 'David', age: 20 }]
       }
     });
-    expect(space.applicableRules(ctx).length).toBe(1);
+    expect(graph.applicableRules(ctx).length).toBe(1);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();
@@ -127,6 +131,8 @@ describe('Engine tests', () => {
 
   it('sorts arrays by lamda', async () => {
     const space = new Workspace({ strict_inputs: false });
+    const graph = space.dependencyGraph();
+
     space.typeRegistry().addRootType({
       key: 'Person',
       properties: {
@@ -159,7 +165,7 @@ describe('Engine tests', () => {
     });
     // console.debug(space.typeChecker().checkData(ctx.getOutput()));
 
-    expect(space.applicableRules(ctx).length).toBe(2);
+    expect(graph.applicableRules(ctx).length).toBe(2);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();

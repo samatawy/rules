@@ -1,10 +1,10 @@
 import { mergeValidationResults } from "../common.utils";
-import { FunctionParser } from "../parser/function.parser";
 import type { ArrayType, AtomicType, FunctionDefinition } from "../types";
 import type { TypeChecker, ValidationResult } from "../interfaces";
 import { ScopeTypeChecker } from "./scope.memory";
 import type { WorkspaceOptions } from "./workspace";
 import { ParserError } from "../rules/exception";
+import { FunctionFactory } from "../parser/function.factory";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
@@ -61,7 +61,7 @@ export class FunctionRegistry {
      * @throws Error if the function name is reserved or already exists in the registry.
      */
     public addFunction(func: FunctionDefinition): void {
-        if (FunctionParser.isReservedName(func.name)) {
+        if (FunctionFactory.isReservedName(func.name)) {
             throw new ParserError(`Cannot add function with reserved name: ${func.name}`);
         }
         if (this.functions.has(func.name)) {

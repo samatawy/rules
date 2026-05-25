@@ -9,6 +9,7 @@ import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, P
 import type { TypeChecker } from "./interfaces";
 import { TypeCheckError } from "./rules/exception";
 import { WorkLogger } from "./logging/work.logger";
+import { toDateSafe } from "./common.utils";
 
 function hasReturnsType(expression: Expression): expression is Expression & {
     returnsType(checker?: TypeChecker): AtomicType | ArrayType | ObjectType | ObjectArrayType;
@@ -293,7 +294,9 @@ export function makeDate(value: unknown): Date | undefined {
         case 'undefined': return undefined;
         case 'number': return new Date(value);
         case 'string': return new Date(value);
-        case 'object': return (value instanceof Date) ? new Date(value) : undefined;
+        case 'object': return toDateSafe(value);
+        // return (value instanceof Date) ? new Date(value) : toDateSafe(value);
+
         default: throw new TypeCheckError(`Cannot accept [${value}] as a date.`);
     }
 }

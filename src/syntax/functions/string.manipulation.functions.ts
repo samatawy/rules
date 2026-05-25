@@ -31,6 +31,8 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'capitalize':
             case 'capitalizeWords':
                 return [{ type: 'string' }];
+            case 'extract':
+                return [{ type: 'string' }, { type: 'string' }];
             default:
                 throw new TypeCheckError(`Unknown string manipulation function: ${this.name}`);
         }
@@ -67,10 +69,36 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'capitalizeWords':
                 const words = targetValue.split(' ');
                 return words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+
+            case 'extract':
+                const regex = new RegExp(evaluatedArgs[0]);
+                const match = targetValue.match(regex);
+                return match && match.length > 0 ? match[1] || '' : '';
             default:
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
     }
 
-    static names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase', 'capitalize', 'capitalizeWords'];
+    private static _names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase', 'capitalize', 'capitalizeWords', 'extract'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): StringManipulationFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length < 1) {
+            throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
+        }
+        return new this(name, args[0] as StringExpression, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): StringManipulationFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0] as StringExpression, args.slice(1));
+    }
 }

@@ -36,6 +36,11 @@ export interface AutocompleteSuggestion {
      * Optionally whether the token must come before certain types
      */
     comes_before?: string[];
+
+    /**
+     * To be set only at the final suggestion phase
+     */
+    mode?: 'insert' | 'replace';
 }
 
 /**
@@ -87,14 +92,19 @@ export class Autocomplete {
                 const funcs = this.suggestions.filter(s => (s.kind === 'function') && s.comes_after?.includes(firstArg.returns!));
                 return [...vars, ...funcs];
             }
-            return vars;
+            return vars
+                .map(v => ({ ...v, mode: 'insert' }));
 
         } else if (this.isMidToken(prefix)) {
             // If the cursor is in the middle of a token, we should only suggest based on the prefix of that token
-            return this.getSuggestionsToComplete(prefix);
+            return this.getSuggestionsToComplete(prefix)
+                .map(s => ({ ...s, mode: 'replace' }));
+
         } else if (functionArgumentType.type) {
             // If we are inside a function argument, we should suggest based on the expected type of that argument
-            return this.suggestions.filter(s => s.returns == functionArgumentType.type && s.comes_after === undefined);
+            return this.suggestions
+                .filter(s => s.returns == functionArgumentType.type && s.comes_after === undefined)
+                .map(s => ({ ...s, mode: 'insert' }));
 
         } else {
             let subset = this.suggestions;
@@ -109,7 +119,7 @@ export class Autocomplete {
                 subset = subset.filter(s => this.canComeBefore(s, suffixSuggestion));
             }
 
-            return subset;
+            return subset.map(s => ({ ...s, mode: 'insert' }));
         }
     }
 

@@ -9,9 +9,9 @@ children:
   - ./expression.syntax.md
   - ./rules.syntax.md
   - ./functions.md
-  - ./custom.commands.md
   - ./logging.md
   - ./howto.design.rules.md
+  - ./contributing.md
 ---
 
 # Rule Engine
@@ -28,7 +28,6 @@ Pages in this section:
 - [Expression Syntax](expression.syntax.md) for the language used inside conditions, assignments, and function calls.
 - [Rules Syntax](rules.syntax.md) for full rule shapes, annotations, comments, and authoring tips.
 - [Functions](functions.md) for how to use built-in and custom functions.
-- [Custom Commands](custom.commands.md) for registering application code behind `RUN` actions.
 - [Logging and Audit Trails](logging.md) for built-in context auditing, log levels, and custom logger integration.
 - [How to Design Rules](howto.design.rules.md) for advice and best practices.
-
+- [Contributing (Extending Functionality)](contributing.md) to publish your own enhancements and libraries.

@@ -27,9 +27,6 @@ export class BooleanFunction extends BooleanFunctionExpression {
 
     public evaluate(context: WorkingContext): boolean {
         const targetValue = this.target.evaluate(context);
-        if (typeof targetValue !== 'boolean') {
-            throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a boolean`);
-        }
 
         switch (this.name.toLowerCase()) {
             case 'if':
@@ -42,5 +39,26 @@ export class BooleanFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['if', 'is', 'not'];
+    private static _names = ['if', 'is', 'not'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: BooleanExpression[]): BooleanFunction | undefined {
+        if (!this._names.includes(name.toLowerCase())) {
+            return undefined;
+        }
+        if (args.length !== 1) {
+            throw new TypeCheckError(`Function ${name} expects exactly 1 argument, but got ${args.length}`);
+        }
+        return new BooleanFunction(name, args[0]!);
+    }
+
+    public static mock(name: string, args: BooleanExpression[]): BooleanFunction | undefined {
+        if (!this._names.includes(name.toLowerCase())) {
+            return undefined;
+        }
+        return new BooleanFunction(name, args[0]!);
+    }
 }

@@ -188,3 +188,38 @@ export function quoteUnquotedTypes(input: string): string {
 //         '$1 "$2"'
 //     );
 // }
+
+export function toDateSafe(value: unknown): Date | undefined {
+    if (!value) return undefined;
+
+    // 1. Already a native Date (handles cross-realm via toString check)
+    if (value instanceof Date || Object.prototype.toString.call(value) === '[object Date]') {
+        return Number.isNaN((value as Date).getTime()) ? undefined : (value as Date);
+    }
+
+    // 2. dayjs / moment-like
+    if (typeof (value as any).toDate === 'function') {
+        return (value as any).toDate();
+    }
+
+    // 3. luxon-like
+    if (typeof (value as any).toJSDate === 'function') {
+        return (value as any).toJSDate();
+    }
+
+    // 4. js-joda / TemporalAccessor-like
+    if (typeof (value as any).toInstant === 'function') {
+        return new Date((value as any).toInstant().toEpochMilli());
+    }
+
+    // 5. Temporal-like with toTemporalInstant
+    if (typeof (value as any).toTemporalInstant === 'function') {
+        const instant = (value as any).toTemporalInstant(); // JS-Joda Instant object
+        const jsDate = new Date(instant.toEpochMilli());    // Native JavaScript Date
+        return Number.isNaN(jsDate.getTime()) ? undefined : jsDate;
+    }
+
+    // 6. Fallback: try native constructor
+    const fallback = new Date(value as any);
+    return Number.isNaN(fallback.getTime()) ? undefined : fallback;
+}

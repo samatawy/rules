@@ -118,7 +118,7 @@ describe('Speed tests', () => {
     console.log(`Time taken to process ${iterations} times with ${rules} rules: ${ended - started} ms`);
     console.log(`Average time per process(): ${(ended - started) / iterations} ms`);
 
-    const ruleCount = space.applicableRules(ctx).length;
+    const ruleCount = space.dependencyGraph().applicableRules(ctx).length;
     console.log(`Average time per rule per process(): ${(ended - started) / (iterations * ruleCount)} ms`);
 
   });

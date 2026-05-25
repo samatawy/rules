@@ -1,6 +1,6 @@
 import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
-import type { DateExpression } from "../expression";
+import type { DateExpression, Expression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
@@ -80,5 +80,26 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
         }
     }
 
-    static names = ['before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant'];
+    private static _names = ['before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): DateTimeComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length !== 2) {
+            throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
+        }
+        return new DateTimeComparisonFunction(name, args[0] as DateExpression, args[1] as DateExpression);
+    }
+
+    public static mock(name: string, args: Expression[]): DateTimeComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new DateTimeComparisonFunction(name, args[0] as DateExpression, args[1] as DateExpression);
+    }
 }

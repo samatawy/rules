@@ -211,5 +211,26 @@ export class ArrayLambdaFunction extends FunctionExpression {
         return a < b ? -1 : a > b ? 1 : 0;
     }
 
-    static names = ['every', 'any', 'sort', 'filter', 'map'];
+    private static _names = ['every', 'any', 'sort', 'filter', 'map'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        // if (args.length !== 2) {
+        //     throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
+        // }
+        return new this(name, args);
+    }
+
+    public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args);
+    }
 }

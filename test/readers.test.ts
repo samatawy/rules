@@ -158,7 +158,7 @@ describe('Readers Tests', () => {
     expect(space.checkTypes().valid).toBe(true);
 
     const ctx = space.loadContext({ n: 4, fp: 3.2, name: 'world!', invoice: { total: 50 } });
-    // console.debug(space.applicableRules(ctx), ctx);
+    // console.debug(space.dependencyGraph().applicableRules(ctx), ctx);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();

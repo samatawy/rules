@@ -19,14 +19,23 @@ The engine is designed for cases where the decision logic changes more often tha
 - custom functions, constants, and commands for extending the DSL safely
 - built-in audit trails showing invoked rules, effects, and exceptions
 - forward-chaining execution so derived values can trigger follow-up rules
+- backward-chaining on demand for goal-oriented tasks
 
 ### Advanced
 
 - expression parsing with arithmetic, comparison, logical, and ternary operators
 - array and lambda-oriented expression support for more complex matching logic
-- requirement graphs and Rete graphs for highly scalable rule selection and evaluation
+- dependency graphs and Rete graphs for highly scalable rule selection and evaluation
 - rule salience and conflict handling for overlapping or competing rules
+- detection/prevention of invalid syntax, invalid data types, cyclic dependencies, etc.
 - flexible declaration loading through parsers and file readers, including markdown-backed rule documentation
+
+### Changes in this version:
+
+- Backward-chaining goal-oriented tasks are now supported.
+- Detection of cyclic dependencies added.
+- New method of contributing/extending functionality: coded function providers.
+- Additional functions.
 
 ## Installation
 
@@ -85,10 +94,6 @@ Generate local documentation with:
 npm run docs
 ```
 
-## Development
+## Contributing
 
-```bash
-npm run lint
-npm test
-npm run build
-```
+You can extend the functionality of the rules engine and publish your own libraries to work with it. Read [Contributing (Extending Functionality)](src/help/contributing.md)

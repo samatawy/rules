@@ -1,8 +1,8 @@
 import type { TypedParameter } from "../../types";
 import type { WorkingContext } from "../../interfaces";
-import type { StringExpression } from "../expression";
+import type { Expression, StringExpression } from "../expression";
 import { BooleanFunctionExpression } from "../function.expression";
-import { EvaluationError } from "../../rules/exception";
+import { EvaluationError, TypeCheckError } from "../../rules/exception";
 
 export class StringComparisonFunction extends BooleanFunctionExpression {
 
@@ -79,5 +79,26 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             .replace(/\%/g, '.*');
     }
 
-    static names = ['equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
+    private static _names = ['equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): StringComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length !== 2) {
+            throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
+        }
+        return new StringComparisonFunction(name, args[0] as StringExpression, args[1] as StringExpression);
+    }
+
+    public static mock(name: string, args: Expression[]): StringComparisonFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new StringComparisonFunction(name, args[0] as StringExpression, args[1] as StringExpression);
+    }
 }

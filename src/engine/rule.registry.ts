@@ -3,6 +3,7 @@ import { EngineError } from "../rules/exception";
 import type { WorkspaceOptions } from "./workspace";
 import type { ILogger } from "../logging/interfaces";
 import type { TypeChecker, ValidationResult } from "../interfaces";
+import type { DependencyChain } from "./graph/dependency.chain";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 
@@ -140,6 +141,25 @@ export class RuleRegistry {
      * @returns a sorted array of rules, with higher salience rules appearing first.
      */
     public sortRules(rules: AbstractRule[], logger: ILogger): AbstractRule[] {
+
+        rules = rules.sort((a, b) => {
+            let required = a.required();
+            let changes = b.typedChanges();
+            for (const change of Object.keys(changes)) {
+                if (required.has(change)) {
+                    return 1; // a should come after b
+                }
+            }
+            required = b.required();
+            changes = a.typedChanges();
+            for (const change of Object.keys(changes)) {
+                if (required.has(change)) {
+                    return -1; // b should come after a
+                }
+            }
+            return 0; // maintain original order if no dependency is detected
+        });
+
         if (this.options.strict_conflicts) {
             return this.preventConflicts(rules, logger);
         } else {

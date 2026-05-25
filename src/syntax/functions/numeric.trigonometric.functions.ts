@@ -63,5 +63,28 @@ export class TrigonomicFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2'];
+    private static _names = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): TrigonomicFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (name === 'atan2' && args.length !== 2) {
+            throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
+        } else if (name !== 'atan2' && args.length !== 1) {
+            throw new TypeCheckError(`Function ${name} expects exactly 1 argument, but got ${args.length}`);
+        }
+        return new this(name, args[0] as NumericExpression, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): TrigonomicFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0] as NumericExpression, args.slice(1));
+    }
 }

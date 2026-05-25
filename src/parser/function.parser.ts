@@ -3,25 +3,11 @@ import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.par
 import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
-import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
-import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
-import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
-import { BooleanFunction } from "../syntax/functions/boolean.functions";
-import { ConstantDates, ConstantNumbers } from "../syntax/functions/constant.functions";
-import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
-import { StringComparisonFunction } from "../syntax/functions/string.comparison.functions";
-import { StringInspectionFunction } from "../syntax/functions/string.inspection.functions";
-import { NumericManipulationFunction } from "../syntax/functions/numeric.manipulation.functions";
-import { NumericComparisonFunction } from "../syntax/functions/numeric.comparison.functions";
-import { TrigonomicFunction } from "../syntax/functions/numeric.trigonometric.functions";
-import { DateTimeManipulationFunction } from "../syntax/functions/datetime.manipulation.functions";
-import { DateTimeComparisonFunction } from "../syntax/functions/datetime.comparison.functions";
-import { DateTimeInspectionFunction } from "../syntax/functions/datetime.inspection.functions";
 import type { Expression } from "../syntax/expression";
-import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 import { ParserError } from "../rules/exception";
 import { WorkLogger } from "../logging/work.logger";
 import { parseTypeJson } from "../common.utils";
+import { FunctionFactory } from "./function.factory";
 
 export interface FunctionMetadata {
     hint?: string;
@@ -44,38 +30,6 @@ export class FunctionParser {
     private expressionParser: ExpressionParser;
 
     private executableParser: ExecutableParser;
-
-    private static reserved_names: Set<string>;
-
-    static {
-        FunctionParser.reserved_names = new Set<string>([
-            ...ConstantNumbers.names,
-            ...ConstantDates.names,
-            ...ArrayInspectionFunction.names,
-            ...ArrayCollectionFunction.names,
-            ...ArrayLambdaFunction.names,
-            ...BooleanFunction.names,
-            ...StringManipulationFunction.names,
-            ...StringComparisonFunction.names,
-            ...StringInspectionFunction.names,
-            ...NumericManipulationFunction.names,
-            ...NumericComparisonFunction.names,
-            ...RandomFunction.names,
-            ...TrigonomicFunction.names,
-            ...DateTimeManipulationFunction.names,
-            ...DateTimeComparisonFunction.names,
-            ...DateTimeInspectionFunction.names,
-            // Add more built-in function names here as needed
-        ]);
-    }
-
-    static isReservedName(name: string): boolean {
-        return FunctionParser.reserved_names.has(name);
-    }
-
-    static getReservedNames(): Set<string> {
-        return new Set(FunctionParser.reserved_names);
-    }
 
     constructor(options: ParserOptions) {
         this.options = options;
@@ -142,7 +96,7 @@ export class FunctionParser {
         const simple_match = syntax.match(/(\w+)\s*\((.*)\)\s*=\s*(.*)$/);
         if (simple_match) {
             const name = simple_match[1]!;
-            if (FunctionParser.isReservedName(name)) {
+            if (FunctionFactory.isReservedName(name)) {
                 throw new ParserError(`Cannot define function with reserved name: ${name}`);
             }
             const paramsSyntax = simple_match[2]!;
@@ -155,7 +109,7 @@ export class FunctionParser {
         const match = syntax.match(/(\w+)\s*\((.*)\)\s*{(.*)}$/);
         if (match) {
             const name = match[1]!;
-            if (FunctionParser.isReservedName(name)) {
+            if (FunctionFactory.isReservedName(name)) {
                 throw new ParserError(`Cannot define function with reserved name: ${name}`);
             }
             const paramsSyntax = match[2]!;

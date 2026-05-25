@@ -70,5 +70,26 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'instant', 'timestamp'];
+    private static _names = ['year', 'month', 'week', 'day', 'weekday', 'hour', 'minute', 'second', 'instant', 'timestamp'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): DateTimeInspectionFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length < 1) {
+            throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
+        }
+        return new DateTimeInspectionFunction(name, args[0] as DateExpression, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): DateTimeInspectionFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new DateTimeInspectionFunction(name, args[0] as DateExpression, args.slice(1));
+    }
 }

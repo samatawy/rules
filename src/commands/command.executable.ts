@@ -33,6 +33,11 @@ export class CommandExecutable extends ExecutableAction {
         return requirements;
     }
 
+    public invokes(): Set<string> {
+        const all = Object.values(this.arguments).flatMap(arg => Array.from(arg.invokes()));
+        return new Set(all);
+    }
+
     public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
         return {};
     }

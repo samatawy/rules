@@ -39,6 +39,12 @@ export abstract class FunctionExpression extends Expression {
         return requirements;
     }
 
+    public invokes(): Set<string> {
+        const all = this.args.flatMap(arg => Array.from(arg.invokes()));
+        all.push(this.name);    // This function itself is also an invocation that needs to be resolved in the dependency graph
+        return new Set(all);
+    }
+
     /**
      * Returns an array of expected parameters for this function, in order. 
      * Each parameter includes its expected type and whether it is optional.

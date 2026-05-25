@@ -53,5 +53,26 @@ export class StringInspectionFunction extends NumericFunctionExpression {
         }
     }
 
-    static names = ['length', 'countOf', 'indexOf', 'lastIndexOf'];
+    private static _names = ['length', 'countOf', 'indexOf', 'lastIndexOf'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): StringInspectionFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        if (args.length < 1) {
+            throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
+        }
+        return new this(name, args[0] as StringExpression, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): StringInspectionFunction | undefined {
+        if (!this._names.includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0] as StringExpression, args.slice(1));
+    }
 }

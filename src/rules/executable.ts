@@ -26,6 +26,12 @@ export abstract class ExecutableAction implements Executor, HasValidity {
     public abstract required(): Set<string>;
 
     /**
+     * What functions are invoked by this action? This information can be used for optimization, caching, or to determine which function nodes in the graph are relevant for this action.
+     * @returns a set of function names invoked by this action.
+     */
+    public abstract invokes(): Set<string>;
+
+    /**
      * What data keys will be changed when this action is executed, along with their expected types?
      * @returns a record mapping data keys to their expected types.
      */
@@ -62,6 +68,10 @@ export class OutputAction extends ExecutableAction {
 
     public required(): Set<string> {
         return this.value.required();
+    }
+
+    public invokes(): Set<string> {
+        return this.value.invokes();
     }
 
     public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
@@ -138,6 +148,11 @@ export class CompositeAction extends ExecutableAction {
         return requirements;
     }
 
+    public invokes(): Set<string> {
+        const all = this.actions.flatMap(action => Array.from(action.invokes()));
+        return new Set(all);
+    }
+
     public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
         let changes: Record<string, AtomicType | ArrayType | ObjectType> = {};
         for (const action of this.actions) {
@@ -197,6 +212,10 @@ export class ExceptionThrower extends ExecutableAction {
     }
 
     public required(): Set<string> {
+        return new Set();
+    }
+
+    public invokes(): Set<string> {
         return new Set();
     }
 

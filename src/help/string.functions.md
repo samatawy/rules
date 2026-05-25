@@ -57,7 +57,7 @@ Returns `true` when the string matches the wildcard pattern.
 if like(mobile_number, "010*") then mobile_operator = "Vodafone"
 ```
 
-- Wildcards include `_` representing a single character, and `%` representing zero or more characters. Regex patterns using `match()` offer more powerful control.
+- Wildcards include `_` representing a single character, and `%` representing zero or more characters. Regex patterns using `matches()` offer more powerful control.
 
 ### `likeIgnoreCase(text, pattern)`
 Returns `true` when the string matches the wildcard pattern, ignoring upper/lower case differences.
@@ -68,6 +68,8 @@ Returns `true` when the string matches the regular expression pattern.
 ```
 if matches(zipCode, "^[0-9]{5}$") then zipValid = true
 ```
+
+- See `extract()` for more regex functionality.
 
 ### `matchesIgnoreCase(text, pattern)`
 Returns `true` when the string matches the regular expression pattern, ignoring upper/lower case differences.
@@ -165,6 +167,20 @@ Turns the first letter of every word to capital (upperCase), and the rest of eve
 
 ```
 set display_name = capitalizeWords(Person.full_name);
+```
+
+### `extract(text, pattern)`
+Extract a required part of a string matching a regex capture group.
+
+```
+// assuming this rule
+if Formula.includes("C") then carbon_atoms = extract(Formula, ".*C(\\d+).*")
+
+// We can do this:
+const ctx = space.loadContext({ Formula: "C6H12O6"});
+
+space.process(ctx);
+ctx.getOutput('carbon_atoms');      // This should be 6, extracted from the formula.
 ```
 
 ## Array Collection

@@ -31,6 +31,12 @@ export class ArithmeticExpression extends NumericExpression {
         return new Set([...leftRequirements, ...rightRequirements]);
     }
 
+    public invokes(): Set<string> {
+        const leftInvokes = this.left?.invokes() || [];
+        const rightInvokes = this.right.invokes();
+        return new Set([...leftInvokes, ...rightInvokes]);
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
 

@@ -1,4 +1,4 @@
-import { EngineError } from "../browser";
+import { EngineError } from "../rules/exception";
 import type { ICommand, CommandRegistryOptions } from "./types";
 
 /**

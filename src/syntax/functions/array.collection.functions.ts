@@ -1,10 +1,9 @@
 import { ArrayExpression } from "../array.expression";
 import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
+import type { FunctionProvider, WorkingContext } from "../../interfaces";
 import type { Expression } from "../expression";
-import { StringFunctionExpression } from "../function.expression";
+import { FunctionExpression, StringFunctionExpression } from "../function.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { WorkLogger } from "../../logging/work.logger";
 
 export class ArrayCollectionFunction extends StringFunctionExpression {
 
@@ -63,5 +62,26 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
         }
     }
 
-    static names = ['concat', 'join'];
+    private static _names = ['concat', 'join'];
+
+    public static names(): string[] {
+        return this._names;
+    }
+
+    public static create(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this.names().includes(name)) {
+            return undefined;
+        }
+        if (args.length < 1) {
+            throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
+        }
+        return new this(name, args[0]!, args.slice(1));
+    }
+
+    public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
+        if (!this.names().includes(name)) {
+            return undefined;
+        }
+        return new this(name, args[0]!, args.slice(1));
+    }
 }

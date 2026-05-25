@@ -1,6 +1,5 @@
 import type { Workspace } from "../engine/workspace";
 import { FunctionFactory } from "../parser/function.factory";
-import { FunctionParser } from "../parser/function.parser";
 import type { ObjectArrayType, ObjectType, PropertyType } from "../types";
 import { getReturnType, makeItemType } from "../type.utils";
 import type { AutocompleteSuggestion } from "./autocomplete";
@@ -71,7 +70,14 @@ export class SuggestionBuilder {
         for (const variable of Object.keys(this.workspace.typeRegistry().getRootTypes())) {
             const rootType = typeRegistry.getRootType(variable);
             if (rootType) {
-                suggestions.push({ value: variable, kind: 'variable' });
+                if (isAtomicType(rootType.type)) {
+                    suggestions.push({ value: variable, kind: 'variable', returns: `${rootType.type}` });
+                } else if (isArrayType(rootType.type) && isAtomicType(makeItemType(rootType.type))) {
+                    suggestions.push({ value: variable, kind: 'variable', returns: `${rootType.type}` });
+                } else {
+                    suggestions.push({ value: variable, kind: 'variable', returns: 'object' });
+                }
+                // suggestions.push({ value: variable, kind: 'variable' });
                 if (rootType.properties) {
                     for (const prop of Object.keys(rootType.properties)) {
                         const propType = rootType.properties[prop];
@@ -101,9 +107,9 @@ export class SuggestionBuilder {
         }
 
         // Add built-in functions
-        const builtin = FunctionParser.getReservedNames();
+        const builtin = FunctionFactory.getReservedNames();
         for (const name of builtin) {
-            const func = this.functionFactory.create(name, []);
+            const func = this.functionFactory.mock(name, []);
             const returnType = func?.returnsType();
 
             suggestions.push({ value: name, kind: 'function', returns: returnType + '', comes_before: ['('] });
@@ -126,7 +132,7 @@ export class SuggestionBuilder {
             }
         }
         for (const name of builtin) {
-            const func = this.functionFactory.create(name, []);
+            const func = this.functionFactory.mock(name, []);
             const returnType = func?.returnsType();
             const firstArg = func?.expectsParameters()[0];
             if (firstArg) {

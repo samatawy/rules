@@ -113,7 +113,7 @@ The context logger is buffered. That means log events are collected during proce
 
 ## Registering a Custom Logger
 
-To send engine logs to your application's logging system (e.g. Pino, Winston, Slack, etc.), implement `ILogger` and register it with `WorkLogger.register()`. 
+To send engine logs to your application's logging system (e.g. Pino, Winston, Sentry, etc.), implement `ILogger` and register it with `WorkLogger.register()`. 
 
 You can implement `ILogger` directly or extend `AbstractLogger` to reuse log-level handling. You can handle logging immediately or buffer them until `flush()` is called (which is generally recommended for log readability).
 

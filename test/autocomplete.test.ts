@@ -26,7 +26,7 @@ describe('Autocomplete Test', () => {
 
         workspace.addConstant('PI', 3.14);
         workspace.addConstant('E', 2.71);
-        workspace.functionRegistry().addFunction({
+        workspace.addFunction({
             name: 'greet',
             parameters: [{ name: 'name', type: 'string' }],
             expression: new ExpressionParser({}).parse('concat(Hello, ", name, "!")')

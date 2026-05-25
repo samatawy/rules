@@ -1,4 +1,5 @@
 import type { AbstractRule } from "../../rules/abstract.rule";
+import type { FunctionDefinition } from "../../types";
 
 /**
  * AbstractNode represents a node in the requirement graph. It can be a DataNode, a CombinationNode, or a RuleNode.
@@ -40,8 +41,23 @@ export class InputNode extends AbstractNode {
 }
 
 /**
+ * FunctionNode represents a node that corresponds to a specific function in the requirement graph.
+ * It holds a reference to a FunctionDefinition and can have child nodes 
+ * that represent rules, functions, or combinations that depend on the output of this function.
+ */
+export class FunctionNode extends AbstractNode {
+
+    public function: FunctionDefinition;
+
+    constructor(function_def: FunctionDefinition) {
+        super();
+        this.function = function_def;
+    }
+}
+
+/**
  * CombinationNode represents a logical combination of parents into one branch, using AND. 
- * It does not have a key but can hold child rules that have multiple requirements.
+ * It does not have a key but can hold child rules or functions that have multiple requirements.
  */
 export class CombinationNode extends AbstractNode {
 
@@ -61,5 +77,15 @@ export class RuleOutputNode extends AbstractNode {
     constructor(rule: AbstractRule) {
         super();
         this.rule = rule;
+    }
+}
+
+export class DependencyNode extends AbstractNode {
+
+    public variable: string;
+
+    constructor(variable: string) {
+        super();
+        this.variable = variable;
     }
 }

@@ -50,6 +50,8 @@ describe('Parsers Tests', () => {
 
   it('parse functions', async () => {
     const space = new Workspace();
+    const graph = space.dependencyGraph();
+
     space.addRule('if x < avogadro() then approx = floor(pi())');
     space.addRule('if x > max(1, 2, 3) then year = year(now())');
     space.addRule('if x >= 10 then calc = max(5, 10, 15) else result = min(5, 10)');
@@ -57,7 +59,7 @@ describe('Parsers Tests', () => {
     expect(space.checkTypes().valid).toBe(true);
 
     const ctx = space.loadContext({ x: 10 });
-    expect(space.applicableRules(ctx).length).toBe(3);
+    expect(graph.applicableRules(ctx).length).toBe(3);
     space.process(ctx);
     expect(ctx.getOutput('approx')).toBe(3);
     expect(ctx.getOutput('year')).toEqual(new Date().getFullYear());
@@ -65,7 +67,7 @@ describe('Parsers Tests', () => {
 
     space.addRule('if count(person.children) > 2 then person.child_count = count(person.children); person.age_range = range(person.children)');
     const ctx2 = space.loadContext({ person: { children: [1, 8, 16] } });
-    expect(space.applicableRules(ctx2).length).toBe(1);
+    expect(graph.applicableRules(ctx2).length).toBe(1);
     space.process(ctx2);
     expect(ctx2.getOutput('person.child_count')).toBe(3);
     expect(ctx2.getOutput('person.age_range')).toBe(15);
@@ -75,19 +77,21 @@ describe('Parsers Tests', () => {
 
   it('parse switch expressions', async () => {
     const space = new Workspace();
+    const graph = space.dependencyGraph();
+
     space.addRule('if status == "A" or status == "B" or status == "C" then result = SWITCH(status) CASE "A": "one", CASE "B": "two", DEFAULT: "other" ELSE result = "unknown"');
     const ctx1 = space.loadContext({ status: "A" });
-    expect(space.applicableRules(ctx1).length).toBe(1);
+    expect(graph.applicableRules(ctx1).length).toBe(1);
     space.process(ctx1);
     expect(ctx1.getOutput('result')).toBe('one');
 
     const ctx2 = space.loadContext({ status: "B" });
-    expect(space.applicableRules(ctx2).length).toBe(1);
+    expect(graph.applicableRules(ctx2).length).toBe(1);
     space.process(ctx2);
     expect(ctx2.getOutput('result')).toBe('two');
 
     const ctx3 = space.loadContext({ status: "C" });
-    expect(space.applicableRules(ctx3).length).toBe(1);
+    expect(graph.applicableRules(ctx3).length).toBe(1);
     space.process(ctx3);
     expect(ctx3.getOutput('result')).toBe('other');
   });
@@ -123,6 +127,8 @@ describe('Parsers Tests', () => {
 
   it('parse rules with variable conditions', async () => {
     const space = new Workspace();
+    const graph = space.dependencyGraph();
+
     space.addRule('if isActive then status = "active"');
     space.addRule('if not(isActive) then status = "inactive"');
 
@@ -131,22 +137,22 @@ describe('Parsers Tests', () => {
     // console.debug(space.reteGraph);
 
     const ctx1 = space.loadContext({ isActive: true });
-    expect(space.applicableRules(ctx1).length).toBe(2);
+    expect(graph.applicableRules(ctx1).length).toBe(2);
     space.process(ctx1);
     expect(ctx1.getOutput('status')).toBe('active');
 
     const ctx2 = space.loadContext({ isActive: false });
-    expect(space.applicableRules(ctx2).length).toBe(2);
+    expect(graph.applicableRules(ctx2).length).toBe(2);
     space.process(ctx2);
     expect(ctx2.getOutput('status')).toBe('inactive');
 
     const ctx3 = space.loadContext({ person: { age: 30 } });
-    expect(space.applicableRules(ctx3).length).toBe(1);
+    expect(graph.applicableRules(ctx3).length).toBe(1);
     space.process(ctx3);
     expect(ctx3.getOutput('status')).toBe('age_known');
 
     const ctx4 = space.loadContext({ person: { age: null } });
-    expect(space.applicableRules(ctx4).length).toBe(1);
+    expect(graph.applicableRules(ctx4).length).toBe(1);
     space.process(ctx4);
     expect(ctx4.getOutput('status')).toBe('age_unknown');
   });
@@ -156,14 +162,16 @@ describe('Parsers Tests', () => {
     const expr = parser.parse('x > 10 ? y : z');
     expect(expr).toBeInstanceOf(TernaryExpression);
 
-    const expr2 = parser.parse('IF(x > 10)? y : z');
+    const expr2 = parser.parse('if(x > 10)? y : z');
     expect(expr2).toBeInstanceOf(TernaryExpression);
 
     const space = new Workspace();
+    const graph = space.dependencyGraph();
+
     space.addRule('if x then result = x? "greater" : "lesser"');
     space.addRule('if x then result = not(x < 10)? "greater" : "lesser"');
     const ctx1 = space.loadContext({ x: 15 });
-    expect(space.applicableRules(ctx1).length).toBe(2);
+    expect(graph.applicableRules(ctx1).length).toBe(2);
     space.process(ctx1);
     expect(ctx1.getOutput('result')).toBe('greater');
 

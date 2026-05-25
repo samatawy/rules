@@ -35,7 +35,7 @@ describe('Function Chaining tests', () => {
         family: [{ name: 'Bob', age: 10 }, { name: 'Charlie', age: 15 }, { name: 'David', age: 25 }]
       }
     });
-    expect(space.applicableRules(ctx).length).toBe(2);
+    expect(space.dependencyGraph().applicableRules(ctx).length).toBe(2);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();
@@ -72,6 +72,51 @@ describe('Function Chaining tests', () => {
     const output4 = ctx.getOutput();
     // console.debug('Output with function chaining and filter:', output4);
     expect(output4.stated).toBe('ALICE IS A WORD');
+  });
+
+  it('handles dependencies between functions', async () => {
+    const space = new Workspace({ strict_inputs: false, strict_outputs: false });
+
+    const funcParser = new FunctionParser({ workspace: space });
+    // These are in order of dependency - shout_greet depends on greet, 
+    // so greet must be added first. The dependency graph should handle this correctly.
+    const funcDef1 = funcParser.parse('greet(name: string) = "Hello, ".concat(name, "!")');
+    space.addFunction(funcDef1!);
+    const funcDef2 = funcParser.parse('shout_greet(name: string) = greet(name).upperCase()');
+    space.addFunction(funcDef2!);
+
+    // These are out of order, so parsing will fail
+    expect(() => {
+      const funcDef3 = funcParser.parse('shout_hello(name: string) = hello(name).upperCase()');
+      space.addFunction(funcDef3!);
+      const funcDef4 = funcParser.parse('hello(name: string) = "Hello, ".concat(name, "!")');
+      space.addFunction(funcDef4!);
+    }).toThrow();
+
+    // This is a circular dependency, so parsing will fail
+    expect(() => {
+      const funcDef5 = funcParser.parse('circular1(name: string) = circular2(name).upperCase()');
+      space.addFunction(funcDef5!);
+      const funcDef6 = funcParser.parse('circular2(name: string) = circular1(name).upperCase()');
+      space.addFunction(funcDef6!);
+    }).toThrow();
+
+    // expect(funcDef1).not.toBeNull();
+    // expect(funcDef2).not.toBeNull();
+
+    space.addRule('IF Person.name THEN shout = Person.name.shout_greet()');
+
+    const ctx = space.loadContext({
+      Person: {
+        name: 'Bob'
+      }
+    });
+
+    const ok = space.process(ctx);
+    expect(ok).toBe(true);
+    const output = ctx.getOutput();
+    // console.debug('Output with function chaining and dependencies:', output);
+    expect(output.shout).toBe('HELLO, BOB!');
   });
 
 });

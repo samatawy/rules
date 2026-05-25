@@ -32,7 +32,7 @@ describe('Command tests', () => {
         second: 'number'
       },
       execute: (params) => {
-        console.log('Executing test command with params:', params);
+        // console.log('Executing test command with params:', params);
         return params.second * 2;
       },
       // executeAsync: (params) => {
@@ -52,15 +52,15 @@ describe('Command tests', () => {
         family: []
       }
     });
-    expect(space.applicableRules(ctx).length).toBe(1);
+    expect(space.dependencyGraph().applicableRules(ctx).length).toBe(1);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();
-    console.debug('Output before. deferred execution:', output);
+    // console.debug('Output before. deferred execution:', output);
 
     ctx.commandHandler().executeDeferred().then(() => {
       const finalOutput = ctx.getOutput();
-      console.debug('Output after deferred execution:', finalOutput);
+      // console.debug('Output after deferred execution:', finalOutput);
       expect(finalOutput['test_cmd']).toBe(60);
     }).catch(err => {
       console.error('Error executing command:', err);
@@ -119,7 +119,7 @@ describe('Command tests', () => {
         family: []
       }
     });
-    expect(space.applicableRules(ctx).length).toBe(1);
+    expect(space.dependencyGraph().applicableRules(ctx).length).toBe(1);
     const ok = space.process(ctx);
     expect(ok).toBe(true);
     const output = ctx.getOutput();

@@ -2,6 +2,8 @@ import type { ILogger } from "./logging/interfaces";
 import type { CommandHandler } from "./commands/command.handler";
 import type { AbstractException } from "./rules/exception";
 import type { ArrayType, AtomicType, ObjectType, PropertyType } from "./types";
+import type { Expression } from "./syntax/expression";
+import { FunctionExpression } from "./syntax/function.expression";
 
 export interface ICache {
 
@@ -145,10 +147,60 @@ export interface Executor {
     execute(context: WorkingContext): RuleEffect;
 }
 
+/**
+ * Implement this interface to provide custom functions that can be used in rules.
+ * Each provider can supply one or more functions, and the function factory will use these providers to create function expressions when parsing rules.
+ * This allows for extensibility and customization of the functions available in the rule engine without modifying the core codebase.
+ * 
+ * @interface
+ */
+export type FunctionProvider = {
+
+    /**
+     * Get the names of the functions provided by this provider. 
+     * This is used by the function factory to determine which provider can create 
+     * a function expression for a given function name.
+     * @return an array of function names provided by this provider.
+     */
+    names(): string[];
+
+    /**
+     * Create a valid function expression for the given function name and arguments.
+     * The function factory will call this method when it needs to create 
+     * a function expression for a function name that this provider supports.
+     * 
+     * Ideally, arguments should be checked for validity (e.g., correct number and types) 
+     * before creating the function expression, and an error should be thrown if the arguments are invalid.
+     * 
+     * @param name the name of the function to create.
+     * @param args the arguments to pass to the function.
+     * @throws an error if the arguments are invalid for the given function name.
+     */
+    create(name: string, args: Expression[]): FunctionExpression | undefined;
+
+    /**
+     * Create a mock function expression for the given function name and arguments.
+     * This is used by the autocomplete feature to provide suggestions for function names and arguments.
+     * Arguments are not checked for validity.
+     * 
+     * @param name the name of the function to create a mock for.
+     * @param args the arguments to pass to the mock function.
+     * @returns a mock function expression, or undefined if the function name is not supported.
+     */
+    mock(name: string, args: Expression[]): FunctionExpression | undefined;
+}
+
 export interface ValidationResult {
 
+    /**
+     * Indicates whether the validated target passed all checks. 
+     */
     valid: boolean;
 
+    /**
+     * If the target is not valid, this array contains error messages 
+     * detailing each validation failure.
+     */
     errors?: string[];
 }
 

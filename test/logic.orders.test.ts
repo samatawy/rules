@@ -6,6 +6,8 @@ describe('Logic Orders tests', () => {
 
     it('handles functions passed to functions', async () => {
         const space = new Workspace({});
+        const graph = space.dependencyGraph();
+
         space.typeRegistry().addRootType({
             key: 'Person',
             properties: {
@@ -25,10 +27,10 @@ describe('Logic Orders tests', () => {
 
         const funcParser = new FunctionParser({ workspace: space });
         const ageFunc = funcParser.parse('adult(age: number) = age >= 21');
-        if (ageFunc) space.functionRegistry().addFunction(ageFunc);
+        if (ageFunc) space.addFunction(ageFunc);
 
         const personAgeFunc = funcParser.parse('personChecked(person: { age: number }) { person.adult = adult(person.age); return person }');
-        if (personAgeFunc) space.functionRegistry().addFunction(personAgeFunc);
+        if (personAgeFunc) space.addFunction(personAgeFunc);
 
         space.addRule('IF count(Person.family) > 1 THEN Person.family = map(Person.family, member: personChecked(member))');
         const checkFirst = space.getRules()[0]!.checkTypes(space.typeChecker());
@@ -45,7 +47,7 @@ describe('Logic Orders tests', () => {
                 }]
             }
         });
-        expect(space.applicableRules(ctx).length).toBe(1);
+        expect(graph.applicableRules(ctx).length).toBe(1);
         const ok = space.process(ctx);
         expect(ok).toBe(true);
         const output = ctx.getOutput();
@@ -63,11 +65,11 @@ describe('Logic Orders tests', () => {
         // console.debug(checked);
 
         const invoiceTaxable = funcParser.parse('invoiceTaxable(invoice: { total: "number" }) = invoice.total > 100');
-        if (invoiceTaxable) space.functionRegistry().addFunction(invoiceTaxable);
+        if (invoiceTaxable) space.addFunction(invoiceTaxable);
 
         // const invoiceShippable = funcParser.parse('invoiceShippable(invoice: { total: "number" }) = invoice.total > 100');
         const invoiceShippable = funcParser.parse('invoiceShippable(invoice: { address: "string" }) = invoice.total > 100');
-        if (invoiceShippable) space.functionRegistry().addFunction(invoiceShippable);
+        if (invoiceShippable) space.addFunction(invoiceShippable);
 
         const badTaxableRule = new RuleParser({ workspace: space })
             .parse('IF invoiceTaxable(Person) THEN Person.taxable = true');
@@ -94,6 +96,7 @@ describe('Logic Orders tests', () => {
 
     it('handles arrays passed to functions', async () => {
         const space = new Workspace({});
+        const graph = space.dependencyGraph();
         space.typeRegistry().addRootType({
             key: 'Person',
             properties: {
@@ -113,7 +116,7 @@ describe('Logic Orders tests', () => {
 
         const funcParser = new FunctionParser({ workspace: space });
         const ageFunc = funcParser.parse('oldest(ages: number[]) = max(ages)');
-        if (ageFunc) space.functionRegistry().addFunction(ageFunc);
+        if (ageFunc) space.addFunction(ageFunc);
 
         space.addRule('IF count(Person.family) > 1 THEN oldest_age = oldest(Person.family.age)');
         space.addRule('IF count(Person.family) > 1 AND oldest_age THEN Person.eldest = filter(Person.family, member: member.age == oldest_age)');
@@ -131,7 +134,7 @@ describe('Logic Orders tests', () => {
                 }]
             }
         });
-        expect(space.applicableRules(ctx).length).toBe(2);
+        expect(graph.applicableRules(ctx).length).toBe(2);
         const ok = space.process(ctx);
         expect(ok).toBe(true);
         const output = ctx.getOutput();

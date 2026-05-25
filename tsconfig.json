@@ -25,6 +25,5 @@
         "src",
         "test",
         "vitest.config.ts",
-        "../deprecated/rules/reader/workspace.old.files.reader.ts"
     ]
 }

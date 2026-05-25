@@ -38,6 +38,13 @@ export class SwitchExpression extends Expression {
         return new Set([...conditionRequirements, ...caseRequirements, ...defaultRequirements]);
     }
 
+    public invokes(): Set<string> {
+        const conditionInvokes = this.condition.invokes();
+        const caseInvokes = Object.values(this.caseExpressions).flatMap(expr => Array.from(expr.invokes()));
+        const defaultInvokes = this.defaultExpression?.invokes() ?? [];
+        return new Set([...conditionInvokes, ...caseInvokes, ...defaultInvokes]);
+    }
+
     public returnsType(checker?: TypeChecker): AtomicType | ArrayType {
         const caseReturns = Object.values(this.caseExpressions).map(expr => getReturnType(expr, checker));
         const uniqueReturns = new Set(caseReturns);

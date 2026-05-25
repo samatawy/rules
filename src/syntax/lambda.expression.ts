@@ -49,6 +49,10 @@ export class LambdaExpression extends Expression {
         return new Set([this.variableName, ...this.expression.required()]);
     }
 
+    public invokes(): Set<string> {
+        return this.expression.invokes();
+    }
+
     /**
      * Get the return type of the lambda expression. 
      * This can be an atomic type or an object type, depending on the expression body. 
