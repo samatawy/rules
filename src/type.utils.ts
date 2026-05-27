@@ -59,7 +59,6 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
         return 'date';
     }
 
-    // const logger = checker ? checker.logger() : WorkLogger;
     WorkLogger.warn(`Unable to determine return type for expression: ${expression}`);
     // For other expression types, we would need to implement logic to determine the return type based on the expression structure and the types of its components.
     return undefined;
@@ -239,10 +238,13 @@ export function makeArrayType(type: AtomicType | ObjectType | unknown): ArrayTyp
     }
 }
 
-export function makeItemType(type: ArrayType | ObjectArrayType | unknown): AtomicType | ObjectType {
+export function makeItemType(type: ArrayType | ObjectArrayType | unknown): AtomicType | ObjectType | any {
     if ((type as ObjectArrayType).items) {
         return (type as ObjectArrayType).items!;
     } else if (isArrayType(type)) {
+        if (type === 'array') {
+            return 'any';
+        }
         const itemType = type.replace('[]', '') as AtomicType;
         if (isAtomicType(itemType)) {
             return itemType;

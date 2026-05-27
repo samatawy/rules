@@ -1,10 +1,11 @@
-import { IfThenElseRule, LambdaExpression } from "../../browser";
 import type { WorkingContext } from "../../interfaces";
-import { AbstractRule } from "../../rules/abstract.rule";
-import { EngineError } from "../../rules/exception";
 import type { Expression } from "../../syntax/expression";
+import { AbstractRule } from "../../rules/abstract.rule";
+import { IfThenElseRule } from "../../rules/conditional.rules";
+import { EngineError } from "../../rules/exception";
 import { LiteralExpression } from "../../syntax/literal.expression";
 import { VariableExpression } from "../../syntax/variable.expression";
+import { LambdaExpression } from "../../syntax/lambda.expression";
 import { AbstractReteNode, DataNode, DecisionNode, RuleNode } from "./rete.nodes";
 
 /**

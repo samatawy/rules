@@ -20,6 +20,7 @@ import { StringInspectionFunctionProvider } from "../functions/string.inspection
 import { StringManipulationFunctionProvider } from "../functions/string.manipulation.functions";
 import { CustomFunctionExpression } from "../functions/custom.function";
 import { RandomFunctionProvider } from "../functions/numeric.random.functions";
+import { ArrayComparisonFunctionProvider } from "../functions/array.comparison.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -87,6 +88,7 @@ export class FunctionFactory {
     static {
         this.registerProvider(ArrayCollectionFunctionProvider);
         this.registerProvider(ArrayInspectionFunctionProvider);
+        this.registerProvider(ArrayComparisonFunctionProvider);
         this.registerProvider(ArrayLambdaFunctionProvider);
         this.registerProvider(BooleanFunctionProvider);
         this.registerProvider(ConstantDatesProvider);

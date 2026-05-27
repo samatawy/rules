@@ -7,7 +7,7 @@ import { FunctionsFileReader } from '../src/readers/functions.file.reader';
 import { GeneralFileReader } from '../src/readers/general.file.reader';
 import { MarkdownFileReader } from '../src/readers/markdown.file.reader';
 import { WorkspaceFilesReader } from '../src/readers/workspace.files.reader';
-import { RulesEngine } from '../src';
+import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Readers Tests', () => {
 

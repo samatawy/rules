@@ -96,7 +96,6 @@ export class CustomFunctionExpression extends FunctionExpression {
         }
 
         this.localChecker = this.getLocalChecker(checker);
-        // const logger = checker?.logger() || WorkLogger;
 
         const expected = this.expectsParameters();
         const checks: ValidationResult[] = [];

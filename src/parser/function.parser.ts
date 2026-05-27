@@ -52,9 +52,10 @@ export class FunctionParser {
         if (syntax.length === 0) {
             throw new ParserError('Rule syntax cannot be empty');
         }
+        syntax = syntax.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
 
         // If this is in the form name(arg1, arg2) { expr } attempt parsing
-        if (syntax.match(/\w+\(.*\)\s*{.*}/g) || syntax.match(/\w+\(.*\)\s*=\s*.*$/g)) {
+        if (syntax.match(/\w+\(.*\)\s*{.*}/) || syntax.match(/\w+\(.*\)\s*=\s*.*$/)) {
             defined = this.parseCustomFunction(syntax);
         } else {
             WorkLogger.debug('Syntax does not pass initial match');
@@ -185,7 +186,11 @@ export class FunctionParser {
         // Parameters are expected in the form "name: type, name2: type2, ..."
         // Only atomic type parameters are allowed for now
         const params: NamedParameter[] = [];
-        const paramSyntaxes = syntax.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+        // We cannot split over commas without first ensuring that we are not inside brackets or parentheses, so we will do a simple parse to split parameters while respecting nested structures
+        // const paramSyntaxes = syntax.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        const paramSyntaxes = this.expressionParser.splitArguments(syntax);
+
         for (const paramSyntax of paramSyntaxes) {
             // allow type names to include atomic, array, or object syntax (allowing []{}, )
             let ok = false;

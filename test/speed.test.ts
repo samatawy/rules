@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { WorkLogger } from '../src';
+import { WorkLogger } from '../src/logging/work.logger';
 
 describe('Speed tests', () => {
 

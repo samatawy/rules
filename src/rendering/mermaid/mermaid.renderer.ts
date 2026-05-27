@@ -258,15 +258,11 @@ export class MermaidRenderer {
     }
 
     private renderTernaryExpression(json: Renderable): string {
-        // let id = this.nodeId(json);
-        // let text = `${id}["?"]:::operator\n`;
-
         let blockId = this.nodeId(json!);
         let text = `subgraph ${blockId}[&nbsp;]\n`;
         text += this.renderExpression(json.condition!);
         text += `style ${blockId} ${this.styleToString(this.styles.get('block') || {})}\n`;
         text += '\nend\n';
-        // text += `${conditionId} --> ${id}\n`;
 
         let trueId = this.nodeId(json.trueExpression!);
         text += this.renderExpression(json.trueExpression!);
@@ -282,7 +278,6 @@ export class MermaidRenderer {
     private renderSwitchExpression(json: Renderable): string {
         let id = this.nodeId(json);
         let text = "";
-        // let text = `${id}["switch"]:::operator\n`;
 
         text += `subgraph ${id}["switch"]\n`;
         text += this.renderExpression(json.condition!);

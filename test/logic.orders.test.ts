@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { FunctionParser, RuleParser } from '../src';
+import { RuleParser } from '../src/parser/rule.parser';
+import { FunctionParser } from '../src/parser/function.parser';
 
 describe('Logic Orders tests', () => {
 

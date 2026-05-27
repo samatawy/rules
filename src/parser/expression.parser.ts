@@ -316,7 +316,12 @@ export class ExpressionParser {
     }
     */
 
-    protected splitArguments(argsSyntax: string): string[] {
+    /**
+     * Safely split function arguments or array items) by commas while respecting nested structures like parentheses, brackets, and string literals.
+     * @param argsSyntax the whole argument string, e.g. "candidate : scoreCandidate(candidate), otherArg: 5, arr: [1, 2, 3]"
+     * @returns an array of individual argument strings
+     */
+    public splitArguments(argsSyntax: string): string[] {
         argsSyntax = argsSyntax.trim();
         if (argsSyntax.length === 0) {
             return [];

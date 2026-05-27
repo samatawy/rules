@@ -58,6 +58,9 @@ export class RuleParser {
             throw new ParserError('Rule syntax cannot be empty');
         }
 
+        // Support multiline syntax by normalizing whitespace and newlines to single spaces
+        syntax = syntax.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+
         // If this is a conditional rule, like "IF condition THEN consequence [ELSE alternative]"
         // or "IF condition THROW errorMessage"
         if (syntax.match(/^IF\s+/i)) {

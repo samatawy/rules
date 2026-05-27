@@ -17,7 +17,7 @@ import { withLogger } from "../logging/work.logger";
 import { ContextLogger } from "../logging/context.logger";
 import { CommandRegistry } from "../commands/command.registry";
 import type { FunctionDefinition } from "../types";
-import { VariableExpression } from "../browser";
+import { VariableExpression } from "../syntax/variable.expression";
 
 /**
  * Options for configuring the behavior of the Workspace, including debugging, conflict resolution, and iteration limits.

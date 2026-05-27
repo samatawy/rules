@@ -21,8 +21,6 @@ export type ExpressionType = 'LiteralExpression' | 'VariableExpression' | 'Array
     | 'CompositeAction' | 'OutputAction' | 'ExceptionThrower'
     | 'CommandExecutable';
 
-// export type SyntaxElement = 'Expression' | 'Rule' | 'Function' | 'Type';
-
 /**
  * A renderable element represents any element that can be rendered by the rendering system.
  * Each component provides whatever properties are necessary for rendering, based on its type

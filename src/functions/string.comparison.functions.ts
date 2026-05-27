@@ -64,6 +64,43 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
                 return leftValue.toLowerCase().endsWith(rightValue.toLowerCase());
             case 'matchesIgnoreCase':
                 return new RegExp(rightValue, 'i').test(leftValue);
+
+            // case 'levenshtein_distance':
+            // return this.levenshteinDistance(leftValue, rightValue);
+            // case 'damerau_levenshtein_distance':
+            // return this.damerauLevenshteinDistance(leftValue, rightValue);
+            // case 'jaccard_similarity':
+            // return this.jaccardSimilarity(leftValue, rightValue);
+            // case 'jaro_winkler_distance':
+            // return this.jaroWinklerDistance(leftValue, rightValue);
+            // case 'soundex_match':
+            // return this.soundexMatch(leftValue, rightValue);
+            // case 'metaphone_match':
+            // return this.metaphoneMatch(leftValue, rightValue);
+            // case 'nysiis_match':
+            // return this.nysiisMatch(leftValue, rightValue);
+            // case 'caverphone_match':
+            // return this.caverphoneMatch(leftValue, rightValue);
+            // case 'sorensen_dice_coefficient':
+            // return this.sorensenDiceCoefficient(leftValue, rightValue);
+            // case 'overlap_coefficient':
+            // return this.overlapCoefficient(leftValue, rightValue);
+            // case 'cosine_similarity':
+            // return this.cosineSimilarity(leftValue, rightValue);
+
+            // case 'porter_stem_match':
+            // return this.porterStemMatch(leftValue, rightValue);
+            // case 'snowball_stem_match':
+            // return this.snowballStemMatch(leftValue, rightValue);
+            // case 'double_metaphone_match':
+            // return this.doubleMetaphoneMatch(leftValue, rightValue);
+            // case 'colloquial_match':
+            // return this.colloquialMatch(leftValue, rightValue);
+            // case 'abbreviation_match':
+            // return this.abbreviationMatch(leftValue, rightValue);
+            // case 'acronym_match':
+            // return this.acronymMatch(leftValue, rightValue);
+
             default:
                 throw new EvaluationError(`Unknown string comparison function: ${this.name}`);
         }
@@ -78,11 +115,18 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             .replace(/_/g, '.')
             .replace(/\%/g, '.*');
     }
+
 }
 
 export class StringComparisonFunctionProvider {
 
-    private static _names = ['equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
+    private static _names = [
+        'equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase',
+        'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase',
+        // 'levenshtein_distance', 'damerau_levenshtein_distance', 'jaccard_similarity', 'jaro_winkler_distance', 'soundex_match', 'metaphone_match', 'nysiis_match',
+        // 'caverphone_match', 'sorensen_dice_coefficient', 'overlap_coefficient', 'cosine_similarity',
+        // 'porter_stem_match', 'snowball_stem_match', 'double_metaphone_match', 'colloquial_match', 'abbreviation_match', 'acronym_match'
+    ];
 
     public static names(): string[] {
         return this._names;

@@ -258,6 +258,7 @@ export class HtmlRenderer {
             html += this.operator(':');
             html += this.renderExpression(arg.expression);
         }
+        // TODO: render arguments properly, including their expressions. For now just render the argument names.
         // const argsHtml = (json.arguments || [])
         //     .map((arg: Renderable) => this.renderExpression(arg))
         //     .join('<span class="comma">, </span>');

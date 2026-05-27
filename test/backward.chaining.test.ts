@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { FunctionParser } from '../src/parser/function.parser';
-import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Backward Chaining tests', () => {
 

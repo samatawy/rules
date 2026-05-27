@@ -104,7 +104,6 @@ export class ArrayLambdaFunction extends FunctionExpression {
         }
 
         this.localChecker = this.getLocalChecker(checker);
-        // const logger = checker.logger();
 
         const checks: ValidationResult[] = [];
         checks.push(this.target_arg.checkTypes(checker));

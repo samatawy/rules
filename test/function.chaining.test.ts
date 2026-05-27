@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { FunctionParser } from '../src';
+import { FunctionParser } from '../src/parser/function.parser';
 
 describe('Function Chaining tests', () => {
 

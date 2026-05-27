@@ -87,7 +87,10 @@ describe('Engine tests', () => {
       }
     });
 
-    space.addRule('if every(Person.family, member : member.age > 10) then Person.hasOldChildren = true else Person.hasOldChildren = false');
+    space.addRule(`if every(Person.family, member : member.age > 10)
+        then Person.hasOldChildren = true
+        else Person.hasOldChildren = false
+    `);
 
     expect(space.checkTypes().valid).toBe(true);
 
@@ -175,6 +178,99 @@ describe('Engine tests', () => {
     expect(output.Person.family[0].age).toBe(15);
     expect(output.Person.family[2].age).toBe(25);
 
+  });
+
+
+  it('handles array comparison functions', async () => {
+
+    const space = new Workspace({ strict_syntax: true, strict_inputs: true, strict_outputs: true });
+
+    space.typeRegistry().addRootType({
+      key: 'numA',
+      type: 'number[]',
+    });
+    space.typeRegistry().addRootType({
+      key: 'numB',
+      type: 'number[]',
+    });
+    space.typeRegistry().addRootType({
+      key: 'catA',
+      type: 'string[]',
+    });
+    space.typeRegistry().addRootType({
+      key: 'catB',
+      type: 'string[]',
+    });
+
+    let numA = [1, 2, 3];
+    let numB = [4, 5, 6];
+    let catA = ['S', 'M', 'L'];
+    let catB = ['M', 'L', 'XL'];
+
+    // numeric array comparison rules
+    space.addRule('if numA and numB then set EuclideanDistance = euclidean_distance(numA, numB)');
+    space.addRule('if numA and numB then set ManhattanDistance = manhattan_distance(numA, numB)');
+    space.addRule('if numA and numB then set ChebyshevDistance = chebyshev_distance(numA, numB)');
+    space.addRule('if numA and numB then set MinkowskiDistance = minkowski_distance(numA, numB)');
+    space.addRule('if numA and numB then set CosineDistance = cosine_distance(numA, numB)');
+    space.addRule('if numA and numB then set JaccardDistance = jaccard_distance(numA, numB)');
+    space.addRule('if numA and numB then set HammingDistance = hamming_distance(numA, numB)');
+    space.addRule('if numA and numB then set PearsonCorrelation = pearson_correlation(numA, numB)');
+    space.addRule('if numA and numB then set SpearmanRankCorrelation = spearman_rank_correlation(numA, numB)');
+    space.addRule('if numA and numB then set CrossCorrelation = cross_correlation(numA, numB)');
+    space.addRule('if numA and numB then set KendallTauCorrelation = kendall_tau_correlation(numA, numB)');
+    space.addRule('if numA and numB then set KolmogorovSmirnovDistance = kolmogorov_smirnov_distance(numA, numB)');
+    space.addRule('if numA and numB then set KullbackLeiblerDivergence = kullback_leibler_divergence(numA, numB)');
+    space.addRule('if numA and numB then set EarthMoversDistance = earth_movers_distance(numA, numB)');
+    space.addRule('if numA and numB then set WassersteinDistance = wasserstein_distance(numA, numB)');
+    space.addRule(`if numA and numB 
+      then set JensenShannonDivergence = jensen_shannon_divergence(numA, numB)
+      `);
+
+    // string array comparison rules
+    space.addRule('@salience(2) if catA and catB then set SpearmanRankCorrelation = spearman_rank_correlation(catA, catB)');
+    space.addRule('@salience(2) if catA and catB then set JaccardDistance = jaccard_distance(catA, catB)');
+    space.addRule('@salience(2) if catA and catB then set HammingDistance = hamming_distance(catA, catB)');
+
+    let ctx = space.loadContext({
+      numA: numA,
+      numB: numB,
+    });
+
+    space.process(ctx);
+
+    console.debug('Final output:', ctx.getOutput());
+    expect(ctx.getOutput('EuclideanDistance')).toBeCloseTo(5.196, 3);
+    expect(ctx.getOutput('ManhattanDistance')).toEqual(9);
+    expect(ctx.getOutput('ChebyshevDistance')).toEqual(3);
+    expect(ctx.getOutput('MinkowskiDistance')).toBeCloseTo(4.327, 3);
+    expect(ctx.getOutput('CosineDistance')).toBeCloseTo(0.025, 3);
+    expect(ctx.getOutput('JaccardDistance')).toEqual(1); // No shared elements
+    expect(ctx.getOutput('HammingDistance')).toEqual(3); // All positions differ
+
+    expect(ctx.getOutput('PearsonCorrelation')).toBeCloseTo(1); // Perfect positive correlation
+    expect(ctx.getOutput('SpearmanRankCorrelation')).toBeCloseTo(1); // Perfect positive rank correlation
+    expect(ctx.getOutput('CrossCorrelation')).toBeCloseTo(1); // Cross-correlation at lag 0
+    expect(ctx.getOutput('KendallTauCorrelation')).toBeCloseTo(1); // Perfect agreement in ordering
+    expect(ctx.getOutput('KolmogorovSmirnovDistance')).toBeCloseTo(1); // Completely different distributions
+    expect(ctx.getOutput('KullbackLeiblerDivergence')).toBeCloseTo(0.033); // KL divergence for normalized vectors
+    expect(ctx.getOutput('EarthMoversDistance')).toBeCloseTo(3); // Total "work" to transform A into B
+    expect(ctx.getOutput('WassersteinDistance')).toBeCloseTo(3); // Same as Earth Mover's Distance for 1D distributions
+    expect(ctx.getOutput('JensenShannonDivergence')).toBeCloseTo(0.008); // Symmetric and bounded version of KL divergence
+
+
+    let ctx2 = space.loadContext({
+      catA: catA,
+      catB: catB,
+    });
+
+    let ok = space.process(ctx2);
+    expect(ok).toBe(true);
+
+    console.debug('Final output with string arrays:', ctx2.getOutput());
+    expect(ctx2.getOutput('SpearmanRankCorrelation')).toBeCloseTo(1);
+    expect(ctx2.getOutput('JaccardDistance')).toEqual(0.5); // 2 shared elements out of 4 unique elements
+    expect(ctx2.getOutput('HammingDistance')).toEqual(3);
   });
 
 });

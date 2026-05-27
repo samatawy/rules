@@ -291,7 +291,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         }
         else if (expected.hasOwnProperty('type') && isArrayType(expected.type)) {
             // A leaf node with an array type defined in a RootType
-            const itemType = makeItemType(expectedType);
+            const itemType = makeItemType(expected.type);
             const clonedArray = value.map((item: any) => this.coerceType(item, itemType) || item);
             return clonedArray;
         }

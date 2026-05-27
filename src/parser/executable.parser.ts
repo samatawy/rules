@@ -33,6 +33,8 @@ export class ExecutableParser {
      */
     public parse(syntax: string): ExecutableAction | null {
 
+        syntax = syntax.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+
         if (syntax.includes(';')) {
             // This allows for multiple actions separated by semicolons, like "SET x = 10; y = 20"
             const actionSyntaxes = syntax.split(';').map(s => s.trim());

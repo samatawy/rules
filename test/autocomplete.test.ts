@@ -1,7 +1,8 @@
 import { describe } from "node:test";
 import { expect, it } from "vitest";
 import { Autocomplete } from "../src/autocomplete/autocomplete";
-import { ExpressionParser, Workspace } from "../src";
+import { ExpressionParser } from "../src/parser/expression.parser";
+import { Workspace } from "../src/engine/workspace";
 
 describe('Autocomplete Test', () => {
 

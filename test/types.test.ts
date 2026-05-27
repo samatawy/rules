@@ -3,7 +3,8 @@ import { IfThenRule } from '../src/rules/conditional.rules';
 import { WorkspaceTypeChecker } from '../src/engine/workspace.type.checker';
 import { getDefinedType, hasDefinedType } from '../src/type.utils';
 import { TypeRegistry } from '../src/engine/type.registry';
-import { Workspace, type ObjectArrayType, type ObjectType } from '../src';
+import type { ObjectArrayType } from '../src/types';
+import { Workspace } from '../src/engine/workspace';
 
 describe('Types Test', () => {
 
