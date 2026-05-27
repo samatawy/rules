@@ -12,6 +12,7 @@ export class DefaultMermaidTheme {
             'comparison': { fill: 'blue' },
             'dot': { color: 'darkgray' },
             'function': { color: 'darkgreen', fill: 'lightgreen', rx: '12', ry: '12' },
+            'command': { color: 'darkgreen', fill: 'lightblue', rx: '12', ry: '12' },
             'keyword': { color: 'purple', fill: 'lavender' },
             'lambda': { fill: 'darkgreen', color: 'orange', stroke: 'orange' },
             'literal': { fill: 'black', stroke: 'orange', color: 'orange' },

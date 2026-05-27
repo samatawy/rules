@@ -48,10 +48,16 @@ export class CommandExecutable extends ExecutableAction {
     }
 
     public toJson(): Renderable {
-        const args: Renderable[] = Object.entries(this.arguments)
-            .map(([key, value]) => ({ type: 'VariableExpression', name: key }));
-        const argExpressions: Renderable[] = Object.values(this.arguments)
-            .map(arg => arg.toJson());
+        // const args: Renderable[] = Object.entries(this.arguments)
+        //     .map(([key, value]) => ({ type: 'VariableExpression', name: key }));
+        // const argExpressions: Renderable[] = Object.values(this.arguments)
+        //     .map(arg => arg.toJson());
+
+        const args: Renderable[] = Object.entries(this.arguments).map(([key, value]) => ({
+            type: 'CommandArgument',
+            name: key,
+            expression: value.toJson(),
+        }));
 
         return {
             type: 'CommandExecutable',

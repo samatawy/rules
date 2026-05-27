@@ -3,10 +3,10 @@
  */
 export type ElementType = 'operator' | 'parenthesis' | 'dot' | 'comma' | 'keyword'
     | 'literal' | 'variable' | 'array'
-    | 'function'
+    | 'function' | 'command'
     | 'arithmetic' | 'comparison' | 'logical'
     | 'ternary' | 'switch' | 'lambda'
-    | 'block';
+    | 'keyword' | 'block';
 
 /**
  * Types of expressions and rules that can be rendered. 
@@ -19,7 +19,7 @@ export type ExpressionType = 'LiteralExpression' | 'VariableExpression' | 'Array
 
     | 'IfThenRule' | 'IfThenElseRule' | 'IfThrowRule' | 'OutputRule'
     | 'CompositeAction' | 'OutputAction' | 'ExceptionThrower'
-    | 'CommandExecutable';
+    | 'CommandExecutable' | 'CommandArgument';
 
 /**
  * A renderable element represents any element that can be rendered by the rendering system.

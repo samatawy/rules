@@ -2,6 +2,7 @@ import { AbstractRule } from "../../rules/abstract.rule";
 import { Expression } from "../../syntax/expression";
 import type { MermaidStyle } from "./mermaid.style";
 import type { ElementType, Renderable } from "../render.types";
+import { VariableExpression } from "../../syntax/variable.expression";
 
 export class MermaidRenderer {
 
@@ -364,7 +365,21 @@ export class MermaidRenderer {
     }
 
     private renderCommandExecutable(json: Renderable): string {
-        // TODO
-        return '';
+        let text = '';
+        let commandId = this.nodeId(json);
+        text += `${commandId}["${json.name}"]:::command\n`;
+
+        for (const arg of json.arguments || []) {
+            // let nameId = this.nodeId({ type: 'VariableExpression', name: arg.name });
+            let exprId = this.nodeId(arg.expression!);
+            text += this.renderExpression(arg.expression!);
+
+            // text += `${nameId}["${arg.name}"]:::variable\n`;
+            text += this.renderExpression(arg.expression!);
+
+            text += `${exprId} -- ${arg.name} --> ${commandId}\n`;
+        }
+
+        return text;
     }
 }

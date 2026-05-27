@@ -18,6 +18,14 @@ export class HtmlRenderer {
         this.styles.set(element, style);
     }
 
+    public setStyles(styles: Partial<Record<ElementType, RenderableCSS>>): void {
+        Object.entries(styles).forEach(([element, style]) => {
+            if (style) {
+                this.styles.set(element as ElementType, style);
+            }
+        });
+    }
+
     public render(expression: Expression | AbstractRule): string {
         if (expression instanceof AbstractRule) {
             const html = this.renderRule(expression);
@@ -236,7 +244,7 @@ export class HtmlRenderer {
     }
 
     private renderOutputAction(json: Renderable): string {
-        let html = `<span class="keword">SET </span>`;
+        let html = `<span class="keyword">SET </span>`;
         html += this.renderExpression({ type: 'VariableExpression', name: json.output });
         html += this.operator('=');
         html += this.renderExpression(json.expression);
@@ -251,18 +259,17 @@ export class HtmlRenderer {
     }
 
     private renderCommandExecutable(json: Renderable): string {
-        let html = `<span class="command">${json.name}</span>`;
+        let html = '<span class="keyword"> RUN&nbsp;</keyword>';
+        html += `<span class="command">${json.name}</span> `;
         html += this.openBrace();
+        let sep = '';
         for (const arg of json.arguments || []) {
+            html += sep;
             html += `<span class="variable">${arg.name}</span>`;
             html += this.operator(':');
             html += this.renderExpression(arg.expression);
+            sep = '<span class="comma">, </span>';
         }
-        // TODO: render arguments properly, including their expressions. For now just render the argument names.
-        // const argsHtml = (json.arguments || [])
-        //     .map((arg: Renderable) => this.renderExpression(arg))
-        //     .join('<span class="comma">, </span>');
-        // html += argsHtml;
         html += this.closeBrace();
         return `<span class="command-executable">${html}</span>`;
     }

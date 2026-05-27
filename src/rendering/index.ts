@@ -4,6 +4,7 @@ export * from './render.types';
 // HTML renderer and related types
 export * from './html/css.style';
 export * from './html/html.renderer';
+export * from './html/html.themes';
 
 // Mermaid renderer and related types
 export * from './mermaid/mermaid.renderer';

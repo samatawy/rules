@@ -4,6 +4,7 @@ import { RuleParser } from "../src/parser/rule.parser";
 import { HtmlRenderer } from "../src/rendering/html/html.renderer";
 import { MermaidRenderer } from "../src/rendering/mermaid/mermaid.renderer";
 import { DefaultMermaidTheme } from "../src/rendering/mermaid/mermaid.themes";
+import { DefaultHtmlTheme } from "../src/rendering";
 
 describe('Rendering tests', () => {
 
@@ -26,6 +27,20 @@ describe('Rendering tests', () => {
         const space = new Workspace();
         const parser = new RuleParser({ workspace: space });
 
+        space.commandRegistry().register({
+            name: 'Notify User',
+            keyword: 'NotifyUser',
+            immediate: false,
+            arguments: {
+                times: 'number',
+                username: 'string',
+            },
+            execute(context, args) {
+                // Command execution logic here
+                return {};
+            },
+        });
+
         const r1 = parser.parse('if x then y = true');
         const r2 = parser.parse('if a + b > 10 OR a - b < 0 then b = max(10, a)');
         const r3 = parser.parse('if max(x.floor(), y.ceil()) > 10 then y = true else z = false');
@@ -34,13 +49,15 @@ describe('Rendering tests', () => {
         const r6 = parser.parse('IF family.every(member: member.age > 21) > 10 THEN all_adults = true');
         const r7 = parser.parse('IF x > 10 THEN y = x > 10 ? 22 : 24');
         const r8 = parser.parse('IF x > 10 THEN y = switch(x + 5) case 11: 22, case 12: 24, default: x');
+        const r9 = parser.parse('IF (times > 0 AND username.length() > 3) then RUN NotifyUser {times: 42, username: "Sameh"}');
 
         const renderer = new HtmlRenderer('inline');
-        renderer.setStyle('operator', { color: 'blue' });
-        renderer.setStyle('function', { color: 'green' });
-        renderer.setStyle('variable', { color: 'crimson', 'font-weight': 'bold' });
-        renderer.setStyle('literal', { color: 'orange' });
-        renderer.setStyle('parenthesis', { color: 'gray' });
+        renderer.setStyles(DefaultHtmlTheme.styles());
+        // renderer.setStyle('operator', { color: 'blue' });
+        // renderer.setStyle('function', { color: 'green' });
+        // renderer.setStyle('variable', { color: 'crimson', 'font-weight': 'bold' });
+        // renderer.setStyle('literal', { color: 'orange' });
+        // renderer.setStyle('parenthesis', { color: 'gray' });
 
         console.debug('------------------------------------------------');
         console.debug('Expr 1 HTML:', renderer.render(r1!.getExpression()));
@@ -76,12 +93,28 @@ describe('Rendering tests', () => {
         console.debug('------------------------------------------------');
         console.debug('Rule 8 HTML:', renderer.render(r8!));
         console.debug('------------------------------------------------');
+        console.debug('Rule 9 HTML:', renderer.render(r9!));
+        console.debug('------------------------------------------------');
     });
 
     it('render using MermaidRenderer', async () => {
 
         const space = new Workspace();
         const parser = new RuleParser({ workspace: space });
+
+        space.commandRegistry().register({
+            name: 'Notify User',
+            keyword: 'NotifyUser',
+            immediate: false,
+            arguments: {
+                times: 'number',
+                username: 'string',
+            },
+            execute(context, args) {
+                // Command execution logic here
+                return {};
+            },
+        });
 
         const r1 = parser.parse('if x then y = true');
         const r2 = parser.parse('if a + b > 10 OR a - b < 0 then b = max(10, a)');
@@ -91,6 +124,7 @@ describe('Rendering tests', () => {
         const r6 = parser.parse('IF family.every(member: member.age > 21) > 10 THEN all_adults = true');
         const r7 = parser.parse('IF x > 10 THEN y = x > 10 ? 22 : 24');
         const r8 = parser.parse('IF x > 10 THEN y = switch(x + 5) case 11: 22, case 12: 24, default: x');
+        const r9 = parser.parse('IF (times > 0 AND username.length() > 3) then RUN NotifyUser {times: 42, username: "Sameh"}');
 
         const renderer = new MermaidRenderer();
         renderer.setStyles(DefaultMermaidTheme.styles());
@@ -135,6 +169,8 @@ describe('Rendering tests', () => {
         console.debug(renderer.render(r7!));
         console.debug('------------------------------------------------');
         console.debug(renderer.render(r8!));
+        console.debug('------------------------------------------------');
+        console.debug(renderer.render(r9!));
         console.debug('------------------------------------------------');
     });
 
