@@ -358,7 +358,7 @@ export class ExpressionParser {
         const caseValues: Expression[] = [];
         const caseExpressions: Expression[] = [];
 
-        if (tokens.length >= 4 && tokens[0] === 'SWITCH' && tokens[1] === '(') {
+        if (tokens.length >= 4 && tokens[0]!.toUpperCase() === 'SWITCH' && tokens[1] === '(') {
             const closingParenIndex = this.findFirstToken(tokens, ')', 2);
             if (closingParenIndex > 1) {
                 const conditionSyntax = tokens.slice(2, closingParenIndex).join(' ');
@@ -366,7 +366,7 @@ export class ExpressionParser {
 
                 let i = closingParenIndex + 1;
                 while (i < tokens.length) {
-                    if (tokens[i] === 'CASE') {
+                    if (tokens[i]!.toUpperCase() === 'CASE') {
                         const colonIndex = this.findFirstToken(tokens, ':', i + 1);
                         if (colonIndex === -1) {
                             throw new ParserError(`Expected ':' after case value in switch expression, but not found`);
@@ -398,7 +398,7 @@ export class ExpressionParser {
                             //
                             i = commaIndex + 1; // move index past comma to next CASE
                         }
-                    } else if (tokens[i] === 'DEFAULT' && tokens[i + 1] === ':') {
+                    } else if (tokens[i]?.toUpperCase() === 'DEFAULT' && tokens[i + 1] === ':') {
                         const defaultExprTokens = tokens.slice(i + 2);
                         const defaultExprSyntax = defaultExprTokens.join(' ');
                         const defaultExpr = this.parse(defaultExprSyntax);

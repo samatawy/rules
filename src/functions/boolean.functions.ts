@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { BooleanExpression } from "../expression";
-import { BooleanFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { BooleanExpression } from "../syntax/expression";
+import { BooleanFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class BooleanFunction extends BooleanFunctionExpression {
 
@@ -38,6 +38,9 @@ export class BooleanFunction extends BooleanFunctionExpression {
                 throw new EvaluationError(`Unknown boolean function: ${this.name}`);
         }
     }
+}
+
+export class BooleanFunctionProvider {
 
     private static _names = ['if', 'is', 'not'];
 

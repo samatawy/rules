@@ -138,12 +138,10 @@ export class Workspace implements Clonable<Workspace> {
         // Clone functions
         // Create new FunctionDefinition objects to ensure they are not the same reference 
         // as those in the original workspace, preventing unintended side effects from mutations.
-        // TODO: DELETE const clonedFunctions = cloned.functionRegistry();
         const functionParser = new FunctionParser({ workspace: this });
         for (const value of Object.values(this.functions.getFunctions())) try {
             const clonedFunction = functionParser.clone(value);
             cloned.addFunction(clonedFunction);
-            // TODO: DELETE clonedFunctions.addFunction(clonedFunction);
         } catch (e) {
             throw new EngineError(`Failed to clone function: ${value.name}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
@@ -349,8 +347,6 @@ export class Workspace implements Clonable<Workspace> {
             throw new ParserError(`Failed to parse function: ${func}. Error: ${e instanceof Error ? e.message : String(e)}`);
         }
         this.functions.addFunction(func);
-        // TODO: Not needed unless function parsing is tolerant of unknown functions
-        // this.dependency_graph.addFunction(func, this.functionRegistry());
     }
 
     /**

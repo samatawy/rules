@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { NumericExpression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { NumericExpression } from "../syntax/expression";
+import { NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class RandomFunction extends NumericFunctionExpression {
 
@@ -48,6 +48,9 @@ export class RandomFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown random function: ${this.name}`);
         }
     }
+}
+
+export class RandomFunctionProvider {
 
     private static _names = ['random', 'randomBetween', 'randomInteger'];
 
@@ -59,13 +62,13 @@ export class RandomFunction extends NumericFunctionExpression {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args as NumericExpression[]);
+        return new RandomFunction(name, args as NumericExpression[]);
     }
 
     public static mock(name: string, args: NumericExpression[]): RandomFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args as NumericExpression[]);
+        return new RandomFunction(name, args as NumericExpression[]);
     }
 }

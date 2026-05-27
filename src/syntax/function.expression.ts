@@ -5,6 +5,7 @@ import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { WorkLogger } from "../logging/work.logger";
 import { isArrayType } from "../parser/type.parser";
+import type { Renderable } from "../render/render.types";
 
 export abstract class FunctionExpression extends Expression {
 
@@ -157,6 +158,14 @@ export abstract class FunctionExpression extends Expression {
     public toString(): string {
         const argsString = this.args.map(arg => arg?.toString() || '').join(', ');
         return `${this.name}(${argsString})`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'FunctionExpression',
+            name: this.name,
+            arguments: this.args.map(arg => arg.toJson()),
+        }
     }
 
     public abstract evaluate(context: WorkingContext): any;

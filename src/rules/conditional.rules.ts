@@ -6,6 +6,7 @@ import { RuleParser } from "../parser/rule.parser";
 import { mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { EvaluationError, ExecutionError, ParserError } from "./exception";
+import type { Renderable } from "../render/render.types";
 
 /**
  * A conditional rule that is executed if a condition is satisified.
@@ -53,6 +54,14 @@ export class IfThenRule extends AbstractRule {
 
     public toString(): string {
         return `IF ${this.condition.toString()} THEN ${this.consequence.toString()}`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'IfThenRule',
+            condition: this.condition.toJson(),
+            trueExpression: this.consequence.toJson(),
+        };
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
@@ -129,6 +138,15 @@ export class IfThenElseRule extends AbstractRule {
         return `IF ${this.condition.toString()} THEN ${this.consequence.toString()} ELSE ${this.alternative.toString()}`;
     }
 
+    public toJson(): Renderable {
+        return {
+            type: 'IfThenElseRule',
+            condition: this.condition.toJson(),
+            trueExpression: this.consequence.toJson(),
+            falseExpression: this.alternative.toJson(),
+        };
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         return mergeValidationResults(
             this.condition.checkTypes(checker),
@@ -195,6 +213,14 @@ export class IfThrowRule extends AbstractRule {
 
     public toString(): string {
         return `IF ${this.condition.toString()} ${this.consequence.toString()}`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'IfThrowRule',
+            condition: this.condition.toJson(),
+            trueExpression: this.consequence.toJson(),
+        };
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {

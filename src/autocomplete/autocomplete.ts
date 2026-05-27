@@ -183,7 +183,7 @@ export class Autocomplete {
                 // Check if the token before the '(' is a function that expects arguments
                 if (i > 0) {
                     const funcToken = prior_tokens[i - 1]!;
-                    const builtin = this.functionFactory.create(funcToken, []);
+                    const builtin = this.functionFactory.mock(funcToken, []);
                     if (builtin) {
                         const expectsArray = builtin.expectsParameterArray();
                         if (expectsArray) {

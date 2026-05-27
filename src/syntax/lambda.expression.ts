@@ -2,6 +2,7 @@ import type { AtomicType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getReturnType } from "../type.utils";
 import { Expression } from "./expression";
+import type { Renderable } from "../render/render.types";
 
 /**
  * A LambdaExpression represents an anonymous function that takes a single variable as input and returns a value based on an expression.
@@ -74,5 +75,13 @@ export class LambdaExpression extends Expression {
 
     public toString(): string {
         return this.variableName + " => " + this.expression.toString();
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'LambdaExpression',
+            name: this.variableName,
+            expression: this.expression.toJson(),
+        };
     }
 }

@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, NumericExpression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, NumericExpression } from "../syntax/expression";
+import { NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class NumericManipulationFunction extends NumericFunctionExpression {
 
@@ -92,6 +92,9 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown numeric manipulation function: ${this.name}`);
         }
     }
+}
+
+export class NumericManipulationFunctionProvider {
 
     private static _names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'pow', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
 
@@ -106,13 +109,13 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         if (args.length < 1) {
             throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new NumericManipulationFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): NumericManipulationFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new NumericManipulationFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 }

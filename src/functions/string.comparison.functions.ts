@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, StringExpression } from "../expression";
-import { BooleanFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, StringExpression } from "../syntax/expression";
+import { BooleanFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class StringComparisonFunction extends BooleanFunctionExpression {
 
@@ -78,6 +78,9 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             .replace(/_/g, '.')
             .replace(/\%/g, '.*');
     }
+}
+
+export class StringComparisonFunctionProvider {
 
     private static _names = ['equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase', 'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase'];
 

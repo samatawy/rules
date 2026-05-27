@@ -55,39 +55,27 @@ export class WorkLogger {
     }
 
     public static trace(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('trace')) {
         this.performAll('trace', msg, ...args);
-        // }
     }
 
     public static debug(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('debug')) {
         this.performAll('debug', msg, ...args);
-        // }
     }
 
     public static info(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('info')) {
         this.performAll('info', msg, ...args);
-        // }
     }
 
     public static warn(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('warn')) {
         this.performAll('warn', msg, ...args);
-        // }
     }
 
     public static error(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('error')) {
         this.performAll('error', msg, ...args);
-        // }
     }
 
     public static fatal(msg: string, ...args: unknown[]): void {
-        // if (this.canLog('fatal')) {
         this.performAll('fatal', msg, ...args);
-        // }
     }
 
     public static log(level: LogLevel, msg: string, ...args: unknown[]): void {

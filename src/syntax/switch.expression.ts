@@ -4,6 +4,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import type { Renderable } from "../render/render.types";
 
 export class SwitchExpression extends Expression {
 
@@ -117,5 +118,17 @@ export class SwitchExpression extends Expression {
             str += `CASE ${caseValue}: ${caseExpr.toString()} `;
         }
         return str;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'SwitchExpression',
+            condition: this.condition.toJson(),
+            cases: this.caseExpressions.map((expr, index) => ({
+                value: this.caseValues[index]?.toJson(),
+                expression: expr.toJson(),
+            })),
+            defaultCase: this.defaultExpression?.toJson(),
+        };
     }
 }

@@ -6,6 +6,7 @@ import { mergeValidationResults, stringifyTypeJson } from "../common.utils";
 import { ExecutableAction } from "../rules/executable";
 import { TypeCheckError } from "../rules/exception";
 import type { ICommand } from "./types";
+import type { Renderable } from "../render/render.types";
 
 
 /**
@@ -44,6 +45,19 @@ export class CommandExecutable extends ExecutableAction {
 
     public toString(): string {
         return `${this.command.keyword} (${stringifyTypeJson(this.arguments)})`;
+    }
+
+    public toJson(): Renderable {
+        const args: Renderable[] = Object.entries(this.arguments)
+            .map(([key, value]) => ({ type: 'VariableExpression', name: key }));
+        const argExpressions: Renderable[] = Object.values(this.arguments)
+            .map(arg => arg.toJson());
+
+        return {
+            type: 'CommandExecutable',
+            name: this.command.keyword,
+            arguments: args,
+        };
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {

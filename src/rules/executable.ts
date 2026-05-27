@@ -6,6 +6,7 @@ import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
 import { withLogger } from "../logging/work.logger";
+import type { Renderable } from "../render/render.types";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.
@@ -44,6 +45,8 @@ export abstract class ExecutableAction implements Executor, HasValidity {
 
     public abstract toString(): string;
 
+    public abstract toJson(): Renderable;
+
     public abstract checkTypes(checker?: TypeChecker): ValidationResult;
 
     public abstract execute(context: WorkingContext): RuleEffect;
@@ -80,6 +83,14 @@ export class OutputAction extends ExecutableAction {
 
     public toString(): string {
         return `SET ${this.key} = ${this.value.toString()}`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'OutputAction',
+            output: this.key,
+            expression: this.value.toJson(),
+        };
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
@@ -165,6 +176,13 @@ export class CompositeAction extends ExecutableAction {
         return this.actions.map(action => action.toString()).join('; ');
     }
 
+    public toJson(): Renderable {
+        return {
+            type: 'CompositeAction',
+            elements: this.actions.map(action => action.toJson()),
+        };
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
         for (const action of this.actions) {
@@ -225,6 +243,13 @@ export class ExceptionThrower extends ExecutableAction {
 
     public toString(): string {
         return `THROW ${this.errorMessage}`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'ExceptionThrower',
+            value: this.errorMessage,
+        };
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {

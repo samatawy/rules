@@ -1,4 +1,5 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import type { Renderable } from "../render/render.types";
 import { Expression } from "./expression";
 
 export class LiteralExpression extends Expression {
@@ -37,5 +38,12 @@ export class LiteralExpression extends Expression {
             return `"${this.value}"`;
         }
         return String(this.value);
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'LiteralExpression',
+            value: this.value,
+        };
     }
 }

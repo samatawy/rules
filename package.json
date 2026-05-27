@@ -4,6 +4,7 @@
     "description": "TypeScript declarative rule engine and DSL utilities for parsing, validating, and executing business rules.",
     "type": "module",
     "main": "./dist/node/index.cjs",
+    "browser": "./dist/browser/index.cjs",
     "module": "./dist/node/index.js",
     "types": "./dist/node/index.d.ts",
     "llms": "./llms.txt",
@@ -23,6 +24,11 @@
             "types": "./dist/autocomplete/index.d.ts",
             "import": "./dist/autocomplete/index.js",
             "require": "./dist/autocomplete/index.cjs"
+        },
+        "./render": {
+            "types": "./dist/render/index.d.ts",
+            "import": "./dist/render/index.js",
+            "require": "./dist/render/index.cjs"
         }
     },
     "files": [

@@ -1,10 +1,10 @@
-import { ArrayExpression } from "../array.expression";
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression } from "../expression";
-import { FunctionExpression, NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { WorkLogger } from "../../logging/work.logger";
+import { ArrayExpression } from "../syntax/array.expression";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression } from "../syntax/expression";
+import { FunctionExpression, NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { WorkLogger } from "../logging/work.logger";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
 
@@ -91,6 +91,9 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown array inspection function: ${this.name}`);
         }
     }
+}
+
+export class ArrayInspectionFunctionProvider {
 
     private static _names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'];
 
@@ -102,16 +105,16 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        // if (args.length < 1) {
-        //     throw new TypeCheckError(`Function ${name} expects at least 1 argument`);
-        // }
-        return new this(name, args[0]!, args.slice(1));
+        if (args.length < 1) {
+            throw new TypeCheckError(`Function ${name} expects at least 1 argument`);
+        }
+        return new ArrayInspectionFunction(name, args[0]!, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0]!, args.slice(1));
+        return new ArrayInspectionFunction(name, args[0]!, args.slice(1));
     }
 }

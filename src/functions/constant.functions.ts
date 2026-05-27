@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { Expression } from "../expression";
-import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
-import { DateFunctionExpression, NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { Expression } from "../syntax/expression";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { DateFunctionExpression, NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class ConstantNumbers extends NumericFunctionExpression {
 
@@ -64,6 +64,9 @@ export class ConstantNumbers extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown constant function: ${this.name}`);
         }
     }
+}
+
+export class ConstantNumbersProvider {
 
     private static _names = ['pi', 'e', 'phi', 'tau', 'c', 'speedOfLight', 'g', 'goldenRatio', 'avogadro', 'planck', 'electronMass', 'protonMass', 'neutronMass', 'boltzmann', 'gasConstant', 'faraday', 'gravitationalConstant'];
 
@@ -132,6 +135,9 @@ export class ConstantDates extends DateFunctionExpression {
                 throw new EvaluationError(`Unknown constant function: ${this.name}`);
         }
     }
+}
+
+export class ConstantDatesProvider {
 
     private static _names = ['now', 'today', 'yearStart', 'yearEnd', 'monthStart', 'monthEnd'];
 

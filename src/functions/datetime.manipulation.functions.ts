@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { DateExpression, Expression } from "../expression";
-import { DateFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { DateExpression, Expression } from "../syntax/expression";
+import { DateFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class DateTimeManipulationFunction extends DateFunctionExpression {
 
@@ -83,6 +83,9 @@ export class DateTimeManipulationFunction extends DateFunctionExpression {
                 throw new EvaluationError(`Unknown date/time manipulation function: ${this.name}`);
         }
     }
+}
+
+export class DateTimeManipulationFunctionProvider {
 
     private static _names = ['addYears', 'addMonths', 'addWeeks', 'addDays', 'addHours', 'addMinutes', 'addSeconds', 'subtractYears', 'subtractMonths', 'subtractWeeks', 'subtractDays', 'subtractHours', 'subtractMinutes', 'subtractSeconds'];
 

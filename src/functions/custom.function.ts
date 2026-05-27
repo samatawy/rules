@@ -1,13 +1,13 @@
-import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import { EvaluationError, RuleException, TypeCheckError } from "../../rules/exception";
-import type { ArrayType, AtomicType, FunctionDefinition, ObjectType, TypedParameter } from "../../types";
-import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
-import { assignableTo, getLiteralType, getReturnType } from "../../type.utils";
-import { mergeValidationResults } from "../../common.utils";
-import type { Expression } from "../expression";
-import { FunctionExpression } from "../function.expression";
-import { WorkLogger } from "../../logging/work.logger";
-import { isArrayType, isAtomicType, isTypedObjectType } from "../../parser/type.parser";
+import { ScopeContext, ScopeTypeChecker } from "../engine/scope.memory";
+import { EvaluationError, RuleException, TypeCheckError } from "../rules/exception";
+import type { ArrayType, AtomicType, FunctionDefinition, ObjectType, TypedParameter } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { assignableTo, getLiteralType, getReturnType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
+import type { Expression } from "../syntax/expression";
+import { FunctionExpression } from "../syntax/function.expression";
+import { WorkLogger } from "../logging/work.logger";
+import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.parser";
 
 export class CustomFunctionExpression extends FunctionExpression {
 

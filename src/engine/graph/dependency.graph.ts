@@ -10,23 +10,24 @@ import type { DependencyChain } from "./dependency.chain";
  */
 export class DependencyGraph {
 
-    // The root nodes of the graph represent top-level data keys that rules depend on.
-    // Only the first level of the graph consists of root nodes, 
-    // and all other nodes are connected to these roots based on their dependencies.
-    roots: AbstractNode[];
+    /**
+     * The root nodes of the graph represent top-level data keys that rules depend on.
+     * Only the first level of the graph consists of root nodes, 
+     * and all other nodes are connected to these roots based on their dependencies.
+     */
+    protected roots: AbstractNode[];
 
-    // The rules of the graph represent all rules that have been added to the graph,
-    // these are linked together by their dependencies
-    dependants: RuleOutputNode[];
+    /**
+     * The rules of the graph represent all rules that have been added to the graph,
+     * these are linked together by their dependencies.
+     */
+    protected dependants: RuleOutputNode[];
 
-    dependencies: Record<string, DependencyNode>;
-
-    // TODO: Not needed unless function parsing is tolerant of unknown functions
-    //
-    // The function nodes of the graph represent custom functions defined in the workspace, 
-    // along with their dependencies. All functions are stored in this array, even dependent ones,
-    // for easy access when adding rules that depend on them.
-    // funcs: FunctionNode[];
+    /**
+     * A mapping of data keys to their corresponding DependencyNode in the graph.
+     * Used internally to efficiently build the graph and find nodes based on data keys.
+     */
+    protected dependencies: Record<string, DependencyNode>;
 
     /**
      * Create a new DependencyGraph instance.
@@ -36,17 +37,15 @@ export class DependencyGraph {
         this.roots = [];
         this.dependants = [];
         this.dependencies = {};
-        // this.funcs = [];
     }
 
     protected addRoot(node: AbstractNode): void {
         this.roots.push(node);
     }
 
-    // TODO: Not needed unless function parsing is tolerant of unknown functions
-    // protected addFunctionNode(node: FunctionNode): void {
-    //     this.funcs.push(node);
-    // }
+    public getRoots(): AbstractNode[] {
+        return [...this.roots];
+    }
 
     /**
      * Find a root node in the graph by its key. Root nodes represent top-level data keys that rules depend on.
@@ -56,10 +55,6 @@ export class DependencyGraph {
     public findRoot(key: string): InputNode | undefined {
         return this.roots.find(root => root instanceof InputNode && root.key === key) as InputNode | undefined;
     }
-
-    // protected findFunctionNode(functionName: string): FunctionNode | undefined {
-    //     return this.funcs.find(func => func.function.name === functionName);
-    // }
 
     protected findOrCreateRoot(key: string): InputNode {
         let node = this.findRoot(key);
@@ -78,59 +73,6 @@ export class DependencyGraph {
         }
         return childNode;
     }
-
-    // TODO: Not needed unless function parsing is tolerant of unknown functions
-    // public addFunction(function_def: FunctionDefinition, registry: FunctionRegistry): FunctionNode {
-    //     const invokes: string[] = [];
-    //     for (const line of function_def.lines || []) {
-    //         invokes.push(...line.invokes());
-    //     }
-    //     invokes.push(...function_def.expression.invokes());
-
-    //     const invokeSet = new Set(invokes);
-    //     const parents: AbstractNode[] = [];
-
-    //     for (const parent_func of invokeSet) {
-    //         if (FunctionParser.isReservedName(parent_func)) {
-    //             continue;
-    //         }
-    //         const found_node = this.findFunctionNode(parent_func);
-    //         if (found_node) {
-    //             parents.push(found_node);
-    //         } else {
-    //             const found_def = registry.getFunction(parent_func);
-    //             if (found_def) {
-    //                 const new_node = this.addFunction(found_def, registry);
-    //                 parents.push(new_node);
-    //             } else {
-    //                 throw new Error(`Function ${parent_func} invoked by ${function_def.name} is not defined in the function registry.`);
-    //             }
-    //         }
-    //     }
-
-    //     if (parents.length === 0) {
-    //         // Only depended on built-in functions
-    //         const funcNode = new FunctionNode(function_def);
-    //         this.addFunctionNode(funcNode);
-    //         return funcNode;
-
-    //     } else if (parents.length === 1) {
-    //         const funcNode = new FunctionNode(function_def);
-    //         parents[0]?.addChild(funcNode);
-    //         this.addFunctionNode(funcNode);
-    //         return funcNode;
-
-    //     } else {
-    //         const combinationNode = new CombinationNode();
-    //         for (const parent of parents) {
-    //             parent.addChild(combinationNode);
-    //         }
-    //         const funcNode = new FunctionNode(function_def);
-    //         combinationNode.addChild(funcNode);
-    //         this.addFunctionNode(funcNode);
-    //         return funcNode;
-    //     }
-    // }
 
     /**
      * Add a rule to the graph based on its required inputs. 

@@ -3,6 +3,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression, NumericExpression } from "./expression";
 import { EvaluationError } from "../rules/exception";
+import type { Renderable } from "../render/render.types";
 
 export class ArithmeticExpression extends NumericExpression {
 
@@ -94,5 +95,14 @@ export class ArithmeticExpression extends NumericExpression {
 
     public toString(): string {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'ArithmeticExpression',
+            operator: this.operator,
+            left: this.left.toJson(),
+            right: this.right.toJson(),
+        };
     }
 }

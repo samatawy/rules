@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, StringExpression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, StringExpression } from "../syntax/expression";
+import { NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class StringInspectionFunction extends NumericFunctionExpression {
 
@@ -52,6 +52,9 @@ export class StringInspectionFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown string inspection function: ${this.name}`);
         }
     }
+}
+
+export class StringInspectionFunctionProvider {
 
     private static _names = ['length', 'countOf', 'indexOf', 'lastIndexOf'];
 
@@ -66,13 +69,13 @@ export class StringInspectionFunction extends NumericFunctionExpression {
         if (args.length < 1) {
             throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
         }
-        return new this(name, args[0] as StringExpression, args.slice(1));
+        return new StringInspectionFunction(name, args[0] as StringExpression, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): StringInspectionFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0] as StringExpression, args.slice(1));
+        return new StringInspectionFunction(name, args[0] as StringExpression, args.slice(1));
     }
 }

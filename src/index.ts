@@ -46,21 +46,21 @@ export * from './syntax/ternary.expression';
 export * from './syntax/variable.expression';
 
 export * from './syntax/function.expression';
-export * from './syntax/functions/array.inspection.functions';
-export * from './syntax/functions/array.collection.functions';
-export * from './syntax/functions/array.lambda.functions';
-export * from './syntax/functions/constant.functions';
-export * from './syntax/functions/custom.function';
-export * from './syntax/functions/datetime.comparison.functions';
-export * from './syntax/functions/datetime.inspection.functions';
-export * from './syntax/functions/datetime.manipulation.functions';
-export * from './syntax/functions/numeric.comparison.functions';
-export * from './syntax/functions/numeric.manipulation.functions';
-export * from './syntax/functions/numeric.random.functions';
-export * from './syntax/functions/numeric.trigonometric.functions';
-export * from './syntax/functions/string.comparison.functions';
-export * from './syntax/functions/string.manipulation.functions';
-export * from './syntax/functions/string.inspection.functions';
+export * from './functions/array.inspection.functions';
+export * from './functions/array.collection.functions';
+export * from './functions/array.lambda.functions';
+export * from './functions/constant.functions';
+export * from './functions/custom.function';
+export * from './functions/datetime.comparison.functions';
+export * from './functions/datetime.inspection.functions';
+export * from './functions/datetime.manipulation.functions';
+export * from './functions/numeric.comparison.functions';
+export * from './functions/numeric.manipulation.functions';
+export * from './functions/numeric.random.functions';
+export * from './functions/numeric.trigonometric.functions';
+export * from './functions/string.comparison.functions';
+export * from './functions/string.manipulation.functions';
+export * from './functions/string.inspection.functions';
 
 // Command components
 export * from './commands/types';

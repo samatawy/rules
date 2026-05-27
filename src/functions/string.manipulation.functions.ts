@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, StringExpression } from "../expression";
-import { StringFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, StringExpression } from "../syntax/expression";
+import { StringFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class StringManipulationFunction extends StringFunctionExpression {
 
@@ -78,6 +78,9 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
     }
+}
+
+export class StringManipulationFunctionProvider {
 
     private static _names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase', 'capitalize', 'capitalizeWords', 'extract'];
 
@@ -92,13 +95,13 @@ export class StringManipulationFunction extends StringFunctionExpression {
         if (args.length < 1) {
             throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
         }
-        return new this(name, args[0] as StringExpression, args.slice(1));
+        return new StringManipulationFunction(name, args[0] as StringExpression, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): StringManipulationFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0] as StringExpression, args.slice(1));
+        return new StringManipulationFunction(name, args[0] as StringExpression, args.slice(1));
     }
 }

@@ -4,6 +4,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { TypeCheckError } from "../rules/exception";
+import type { Renderable } from "../render/render.types";
 
 export class TernaryExpression extends Expression {
 
@@ -94,5 +95,14 @@ export class TernaryExpression extends Expression {
 
     public toString(): string {
         return `(${this.condition.toString()} ? ${this.trueExpression.toString()} : ${this.falseExpression.toString()})`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'TernaryExpression',
+            condition: this.condition.toJson(),
+            trueExpression: this.trueExpression.toJson(),
+            falseExpression: this.falseExpression.toJson(),
+        };
     }
 }

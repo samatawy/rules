@@ -4,6 +4,7 @@ import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 import { EvaluationError } from "../rules/exception";
 import { isArrayType } from "../parser/type.parser";
+import type { Renderable } from "../render/render.types";
 
 export class ComparisonExpression extends BooleanExpression {
 
@@ -151,5 +152,14 @@ export class ComparisonExpression extends BooleanExpression {
 
     public toString(): string {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'ComparisonExpression',
+            operator: this.operator,
+            left: this.left.toJson(),
+            right: this.right.toJson(),
+        };
     }
 }

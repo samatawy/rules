@@ -1,6 +1,7 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
+import type { Renderable } from "../render/render.types";
 
 export class ArrayExpression extends Expression {
 
@@ -50,5 +51,12 @@ export class ArrayExpression extends Expression {
 
     public toString(): string {
         return `[${this.elements.map(e => e.toString()).join(', ')}]`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'ArrayExpression',
+            elements: this.elements.map(e => e.toJson()),
+        };
     }
 }

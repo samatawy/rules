@@ -1,15 +1,15 @@
-import { ScopeContext, ScopeTypeChecker } from "../../engine/scope.memory";
-import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../../types";
-import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
-import { getReturnType, makeArrayType, makeItemType } from "../../type.utils";
-import { mergeValidationResults } from "../../common.utils";
-import type { Expression } from "../expression";
-import { FunctionExpression } from "../function.expression";
-import { LambdaExpression } from "../lambda.expression";
-import type { VariableExpression } from "../variable.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { isArrayType } from "../../parser/type.parser";
-import { WorkLogger } from "../../logging/work.logger";
+import { ScopeContext, ScopeTypeChecker } from "../engine/scope.memory";
+import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../types";
+import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import { getReturnType, makeArrayType, makeItemType } from "../type.utils";
+import { mergeValidationResults } from "../common.utils";
+import type { Expression } from "../syntax/expression";
+import { FunctionExpression } from "../syntax/function.expression";
+import { LambdaExpression } from "../syntax/lambda.expression";
+import type { VariableExpression } from "../syntax/variable.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { isArrayType } from "../parser/type.parser";
+import { WorkLogger } from "../logging/work.logger";
 
 export class ArrayLambdaFunction extends FunctionExpression {
 
@@ -210,6 +210,9 @@ export class ArrayLambdaFunction extends FunctionExpression {
         // Numbers, Dates, or other comparable primitives
         return a < b ? -1 : a > b ? 1 : 0;
     }
+}
+
+export class ArrayLambdaFunctionProvider {
 
     private static _names = ['every', 'any', 'sort', 'filter', 'map'];
 
@@ -221,16 +224,16 @@ export class ArrayLambdaFunction extends FunctionExpression {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        // if (args.length !== 2) {
-        //     throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
-        // }
-        return new this(name, args);
+        if (args.length !== 2) {
+            throw new TypeCheckError(`Function ${name} expects exactly 2 arguments, but got ${args.length}`);
+        }
+        return new ArrayLambdaFunction(name, args);
     }
 
     public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args);
+        return new ArrayLambdaFunction(name, args);
     }
 }

@@ -1,24 +1,25 @@
-import type { DateExpression, Expression, NumericExpression, StringExpression } from "../syntax/expression";
+import type { Expression } from "../syntax/expression";
 import type { FunctionExpression } from "../syntax/function.expression";
 import type { ParserOptions } from "./rule.parser";
-import { ArrayInspectionFunction } from "../syntax/functions/array.inspection.functions";
-import { ArrayCollectionFunction } from "../syntax/functions/array.collection.functions";
-import { ArrayLambdaFunction } from "../syntax/functions/array.lambda.functions";
-import { BooleanFunction } from "../syntax/functions/boolean.functions";
-import { DateTimeComparisonFunction } from "../syntax/functions/datetime.comparison.functions";
-import { DateTimeInspectionFunction } from "../syntax/functions/datetime.inspection.functions";
-import { DateTimeManipulationFunction } from "../syntax/functions/datetime.manipulation.functions";
-import { ConstantDates, ConstantNumbers } from "../syntax/functions/constant.functions";
-import { NumericComparisonFunction } from "../syntax/functions/numeric.comparison.functions";
-import { NumericManipulationFunction } from "../syntax/functions/numeric.manipulation.functions";
-import { TrigonomicFunction } from "../syntax/functions/numeric.trigonometric.functions";
-import { StringComparisonFunction } from "../syntax/functions/string.comparison.functions";
-import { StringInspectionFunction } from "../syntax/functions/string.inspection.functions";
-import { StringManipulationFunction } from "../syntax/functions/string.manipulation.functions";
-import { CustomFunctionExpression } from "../syntax/functions/custom.function";
-import { RandomFunction } from "../syntax/functions/numeric.random.functions";
 import type { FunctionProvider } from "../interfaces";
 import { ParserError } from "../rules/exception";
+
+import { ArrayInspectionFunctionProvider } from "../functions/array.inspection.functions";
+import { ArrayCollectionFunctionProvider } from "../functions/array.collection.functions";
+import { ArrayLambdaFunctionProvider } from "../functions/array.lambda.functions";
+import { BooleanFunctionProvider } from "../functions/boolean.functions";
+import { DateTimeComparisonFunctionProvider } from "../functions/datetime.comparison.functions";
+import { DateTimeInspectionFunctionProvider } from "../functions/datetime.inspection.functions";
+import { DateTimeManipulationFunctionProvider } from "../functions/datetime.manipulation.functions";
+import { ConstantDatesProvider, ConstantNumbersProvider } from "../functions/constant.functions";
+import { NumericComparisonFunctionProvider } from "../functions/numeric.comparison.functions";
+import { NumericManipulationFunctionProvider } from "../functions/numeric.manipulation.functions";
+import { TrigonometricFunctionProvider } from "../functions/numeric.trigonometric.functions";
+import { StringComparisonFunctionProvider } from "../functions/string.comparison.functions";
+import { StringInspectionFunctionProvider } from "../functions/string.inspection.functions";
+import { StringManipulationFunctionProvider } from "../functions/string.manipulation.functions";
+import { CustomFunctionExpression } from "../functions/custom.function";
+import { RandomFunctionProvider } from "../functions/numeric.random.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -28,8 +29,6 @@ import { ParserError } from "../rules/exception";
  * as new functions can simply be added to this factory without needing to modify the parsing logic elsewhere in the codebase.   
  */
 export class FunctionFactory {
-
-    // private static reserved_names: Set<string>;
 
     private static providers: FunctionProvider[] = [];
 
@@ -65,73 +64,6 @@ export class FunctionFactory {
             }
         }
 
-        // // Constants
-        // if (ConstantNumbers.names.includes(name)) {
-        //     return new ConstantNumbers(name);
-        // }
-        // if (ConstantDates.names.includes(name)) {
-        //     return new ConstantDates(name);
-        // }
-
-        // // Array functions
-        // if (ArrayInspectionFunction.names.includes(name)) {
-        //     return new ArrayInspectionFunction(name, args[0] as Expression, args.slice(1));
-        // }
-        // if (ArrayCollectionFunction.names().includes(name)) {
-        //     return new ArrayCollectionFunction(name, args[0] as Expression, args.slice(1));
-        // }
-        // if (ArrayLambdaFunction.names.includes(name)) {
-        //     return new ArrayLambdaFunction(name, args);
-        // }
-
-        // // Boolean functions
-        // if (BooleanFunction.names.includes(name.toLowerCase())) {
-        //     return new BooleanFunction(name, args[0] as Expression);
-        // }
-
-        // // Numeric functions
-        // if (NumericManipulationFunction.names.includes(name)) {
-        //     return new NumericManipulationFunction(name, args[0] as NumericExpression, args.slice(1));
-        // }
-        // if (NumericComparisonFunction.names.includes(name)) {
-        //     return new NumericComparisonFunction(name, args[0] as NumericExpression, [args[1] as Expression]);
-        // }
-        // if (RandomFunction.names.includes(name)) {
-        //     return new RandomFunction(name, args);
-        // }
-        // if (TrigonomicFunction.names.includes(name)) {
-        //     return new TrigonomicFunction(name, args[0] as NumericExpression, []);
-        // }
-
-        // // String functions
-        // if (StringManipulationFunction.names.includes(name)) {
-        //     return new StringManipulationFunction(name, args[0] as StringExpression, args.slice(1));
-        // }
-        // if (StringComparisonFunction.names.includes(name)) {
-        //     return new StringComparisonFunction(name, args[0] as StringExpression, args[1] as StringExpression);
-        // }
-        // if (StringInspectionFunction.names.includes(name)) {
-        //     return new StringInspectionFunction(name, args[0] as StringExpression, []);
-        // }
-
-        // // DateTime functions
-        // if (DateTimeManipulationFunction.names.includes(name)) {
-        //     return new DateTimeManipulationFunction(name, args[0] as DateExpression, args.slice(1));
-        // }
-        // if (DateTimeComparisonFunction.names.includes(name)) {
-        //     return new DateTimeComparisonFunction(name, args[0] as DateExpression, args[1] as DateExpression);
-        // }
-        // if (DateTimeInspectionFunction.names.includes(name)) {
-        //     return new DateTimeInspectionFunction(name, args[0] as DateExpression, []);
-        // }
-
-        // if (this.options.workspace) {
-        //     const customFunction = this.options.workspace.functionRegistry().getFunction(name);
-        //     if (customFunction && !customFunction.disabled) {
-        //         return CustomFunctionExpression.from(customFunction, args);
-        //     }
-        // }
-
         throw new ParserError(`Unknown function: "${name}()"`);
     }
 
@@ -153,42 +85,22 @@ export class FunctionFactory {
     }
 
     static {
-        this.registerProvider(ArrayCollectionFunction);
-        this.registerProvider(ArrayInspectionFunction);
-        this.registerProvider(ArrayLambdaFunction);
-        this.registerProvider(BooleanFunction);
-        this.registerProvider(ConstantDates);
-        this.registerProvider(ConstantNumbers);
-        this.registerProvider(DateTimeComparisonFunction);
-        this.registerProvider(DateTimeInspectionFunction);
-        this.registerProvider(DateTimeManipulationFunction);
-        this.registerProvider(NumericComparisonFunction);
-        this.registerProvider(NumericManipulationFunction);
-        this.registerProvider(RandomFunction);
-        this.registerProvider(TrigonomicFunction);
-        this.registerProvider(StringComparisonFunction);
-        this.registerProvider(StringInspectionFunction);
-        this.registerProvider(StringManipulationFunction);
-
-        //     this.reserved_names = new Set<string>([
-        //         ...ConstantNumbers.names,
-        //         ...ConstantDates.names,
-        //         ...ArrayInspectionFunction.names,
-        //         ...ArrayCollectionFunction.names,
-        //         ...ArrayLambdaFunction.names,
-        //         ...BooleanFunction.names,
-        //         ...StringManipulationFunction.names,
-        //         ...StringComparisonFunction.names,
-        //         ...StringInspectionFunction.names,
-        //         ...NumericManipulationFunction.names,
-        //         ...NumericComparisonFunction.names,
-        //         ...RandomFunction.names,
-        //         ...TrigonomicFunction.names,
-        //         ...DateTimeManipulationFunction.names,
-        //         ...DateTimeComparisonFunction.names,
-        //         ...DateTimeInspectionFunction.names,
-        //         // Add more built-in function names here as needed
-        //     ]);
+        this.registerProvider(ArrayCollectionFunctionProvider);
+        this.registerProvider(ArrayInspectionFunctionProvider);
+        this.registerProvider(ArrayLambdaFunctionProvider);
+        this.registerProvider(BooleanFunctionProvider);
+        this.registerProvider(ConstantDatesProvider);
+        this.registerProvider(ConstantNumbersProvider);
+        this.registerProvider(DateTimeComparisonFunctionProvider);
+        this.registerProvider(DateTimeInspectionFunctionProvider);
+        this.registerProvider(DateTimeManipulationFunctionProvider);
+        this.registerProvider(NumericComparisonFunctionProvider);
+        this.registerProvider(NumericManipulationFunctionProvider);
+        this.registerProvider(RandomFunctionProvider);
+        this.registerProvider(TrigonometricFunctionProvider);
+        this.registerProvider(StringComparisonFunctionProvider);
+        this.registerProvider(StringInspectionFunctionProvider);
+        this.registerProvider(StringManipulationFunctionProvider);
     }
 
     public static registerProvider(provider: FunctionProvider): void {
@@ -216,15 +128,6 @@ export class FunctionFactory {
         });
         this.providers = [];
     }
-
-    // public static createFromProvider(name: string, args: Expression[]): FunctionExpression | undefined {
-    //     for (const provider of this.providers) {
-    //         if (provider.names().includes(name)) {
-    //             return provider.create(name, args);
-    //         }
-    //     }
-    //     return undefined;
-    // }
 
     public static isReservedName(name: string): boolean {
         return this.reserved_names.has(name);

@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { DateExpression, Expression } from "../expression";
-import { BooleanFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { DateExpression, Expression } from "../syntax/expression";
+import { BooleanFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
@@ -79,6 +79,9 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
                 throw new EvaluationError(`Unknown date/time comparison function: ${this.name}`);
         }
     }
+}
+
+export class DateTimeComparisonFunctionProvider {
 
     private static _names = ['before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant'];
 

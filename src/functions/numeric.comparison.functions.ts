@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, NumericExpression } from "../expression";
-import { BooleanFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, NumericExpression } from "../syntax/expression";
+import { BooleanFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class NumericComparisonFunction extends BooleanFunctionExpression {
 
@@ -75,6 +75,9 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
                 throw new EvaluationError(`Unknown numeric comparison function: ${this.name}`);
         }
     }
+}
+
+export class NumericComparisonFunctionProvider {
 
     private static _names = ['equal', 'closeTo', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
 
@@ -89,13 +92,13 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         if (args.length < 2) {
             throw new TypeCheckError(`Function ${name} expects at least 2 arguments, but got ${args.length}`);
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new NumericComparisonFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): NumericComparisonFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new NumericComparisonFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 }

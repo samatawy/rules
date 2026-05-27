@@ -1,6 +1,7 @@
 import type { ArrayType, AtomicType, ObjectType } from "../types";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
 import type { Expression } from "../syntax/expression";
+import type { Renderable } from "../render/render.types";
 
 /**
  * Abstract base class for all rules in the system, providing common properties and methods for evaluating and executing rules. 
@@ -152,6 +153,8 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
     }
 
     public abstract toString(): string;
+
+    public abstract toJson(): Renderable;
 
     /**
      * Check the types of the rule using the provided type checker. 

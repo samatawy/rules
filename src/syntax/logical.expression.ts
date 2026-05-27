@@ -3,6 +3,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 import { EvaluationError } from "../rules/exception";
+import type { Renderable } from "../render/render.types";
 
 export class LogicalExpression extends BooleanExpression {
 
@@ -82,5 +83,14 @@ export class LogicalExpression extends BooleanExpression {
 
     public toString(): string {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'LogicalExpression',
+            operator: this.operator,
+            left: this.left.toJson(),
+            right: this.right.toJson(),
+        };
     }
 }

@@ -1,4 +1,5 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
+import type { Renderable } from "../render/render.types";
 import { Expression } from "./expression";
 
 export class VariableExpression extends Expression {
@@ -51,5 +52,12 @@ export class VariableExpression extends Expression {
 
     public toString(): string {
         return this.variableName;
+    }
+
+    public toJson(): Renderable {
+        return {
+            type: 'VariableExpression',
+            name: this.variableName,
+        };
     }
 }

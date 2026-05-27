@@ -4,7 +4,7 @@ import { IfThenElseRule, IfThenRule } from '../src/rules/conditional.rules';
 import { Workspace } from '../src/engine/workspace';
 import { ExpressionParser } from '../src/parser/expression.parser';
 import { RuleParser } from '../src/parser/rule.parser';
-import { CustomFunctionExpression } from '../src/syntax/functions/custom.function';
+import { CustomFunctionExpression } from '../src/functions/custom.function';
 import { FunctionParser } from '../src/parser/function.parser';
 
 describe('Engine tests', () => {
@@ -20,7 +20,7 @@ describe('Engine tests', () => {
     graph.addRule(r1);
     graph.addRule(r2);
 
-    expect(graph.roots.length).toBe(2);
+    expect(graph.getRoots().length).toBe(2);
   });
 
 
@@ -37,7 +37,7 @@ describe('Engine tests', () => {
     space.addRule(r1);
     space.addRule(r2);
 
-    expect(graph.roots.length).toBe(2);
+    expect(graph.getRoots().length).toBe(2);
     expect(space.getRules().length).toBe(2);
 
     let ctx = space.loadContext({ x: true });
@@ -53,7 +53,7 @@ describe('Engine tests', () => {
     space.addRule('if x.y then z = true');
     space.addRule('if a.b then c = true');
 
-    expect(graph.roots.length).toBe(2);
+    expect(graph.getRoots().length).toBe(2);
     expect(space.getRules().length).toBe(2);
 
     let ctx = space.loadContext({ x: { y: true } });

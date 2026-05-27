@@ -1,4 +1,5 @@
 import type { WorkingContext, Evaluator, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
+import type { Renderable } from "../render/render.types";
 
 /**
  * Represents an expression that can be evaluated in a given context to produce a value. 
@@ -63,6 +64,13 @@ export abstract class Expression implements Evaluator, HasValidity {
      * @returns a string representation of the expression.
      */
     public abstract toString(): string;
+
+    /**
+     * Get a JSON representation of the expression, which can be used for serialization, logging, 
+     * or visualization.
+     * @returns a JSON representation of the expression.
+     */
+    public abstract toJson(): Renderable;
 }
 
 export abstract class BooleanExpression extends Expression {

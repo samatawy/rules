@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { DateExpression, Expression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { DateExpression, Expression } from "../syntax/expression";
+import { NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class DateTimeInspectionFunction extends NumericFunctionExpression {
 
@@ -69,6 +69,9 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown date/time inspection function: ${this.name}`);
         }
     }
+}
+
+export class DateTimeInspectionFunctionProvider {
 
     private static _names = ['year', 'month', 'week', 'day', 'weekday', 'hour', 'minute', 'second', 'instant', 'timestamp'];
 

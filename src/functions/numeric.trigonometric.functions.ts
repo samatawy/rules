@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../../types";
-import type { WorkingContext } from "../../interfaces";
-import type { Expression, NumericExpression } from "../expression";
-import { NumericFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression, NumericExpression } from "../syntax/expression";
+import { NumericFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class TrigonomicFunction extends NumericFunctionExpression {
 
@@ -62,6 +62,9 @@ export class TrigonomicFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Unknown trigonometric function: ${this.name}`);
         }
     }
+}
+
+export class TrigonometricFunctionProvider {
 
     private static _names = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2'];
 
@@ -78,13 +81,13 @@ export class TrigonomicFunction extends NumericFunctionExpression {
         } else if (name !== 'atan2' && args.length !== 1) {
             throw new TypeCheckError(`Function ${name} expects exactly 1 argument, but got ${args.length}`);
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new TrigonomicFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): TrigonomicFunction | undefined {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new this(name, args[0] as NumericExpression, args.slice(1));
+        return new TrigonomicFunction(name, args[0] as NumericExpression, args.slice(1));
     }
 }

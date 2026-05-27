@@ -1,9 +1,9 @@
-import { ArrayExpression } from "../array.expression";
-import type { TypedParameter } from "../../types";
-import type { FunctionProvider, WorkingContext } from "../../interfaces";
-import type { Expression } from "../expression";
-import { FunctionExpression, StringFunctionExpression } from "../function.expression";
-import { EvaluationError, TypeCheckError } from "../../rules/exception";
+import { ArrayExpression } from "../syntax/array.expression";
+import type { TypedParameter } from "../types";
+import type { WorkingContext } from "../interfaces";
+import type { Expression } from "../syntax/expression";
+import { FunctionExpression, StringFunctionExpression } from "../syntax/function.expression";
+import { EvaluationError, TypeCheckError } from "../rules/exception";
 
 export class ArrayCollectionFunction extends StringFunctionExpression {
 
@@ -61,6 +61,9 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
                 throw new EvaluationError(`Unknown array collection function: ${this.name}`);
         }
     }
+}
+
+export class ArrayCollectionFunctionProvider {
 
     private static _names = ['concat', 'join'];
 
@@ -75,13 +78,13 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
         if (args.length < 1) {
             throw new TypeCheckError(`Function ${name} expects at least 1 argument, but got ${args.length}`);
         }
-        return new this(name, args[0]!, args.slice(1));
+        return new ArrayCollectionFunction(name, args[0]!, args.slice(1));
     }
 
     public static mock(name: string, args: Expression[]): FunctionExpression | undefined {
         if (!this.names().includes(name)) {
             return undefined;
         }
-        return new this(name, args[0]!, args.slice(1));
+        return new ArrayCollectionFunction(name, args[0]!, args.slice(1));
     }
 }

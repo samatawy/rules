@@ -103,12 +103,6 @@ export interface ICommandHandler {
      */
     addAction(action: ICommandAction): any | boolean;
 
-    // /**
-    //  * Add an asynchronous action to the handler. This is not currently supported by the engine, and will throw an error if used. Use addAction() instead and provide an asynchronous executeAsync function in the command definition for deferred commands.
-    //  * @param action the asynchronous action to register.
-    //  */
-    // addAsyncAction(action: ICommandAction): Promise<any | boolean>;
-
     /**
      * Execute all deferred actions that have been added to the handler. This should be called after processing rules to ensure that all deferred command actions are executed.
      * @returns A promise that resolves when all deferred actions have been executed.

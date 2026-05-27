@@ -10,6 +10,7 @@ import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
 import { withLogger } from "../logging/work.logger";
+import type { Renderable } from "../render/render.types";
 
 /**
  * A rule that assigns a value to a key whenever the requirements are provided.
@@ -65,6 +66,14 @@ export class OutputRule extends AbstractRule {
         return `SET ${this.outputKey} = ${this.expression.toString()}`;
     }
 
+    public toJson(): Renderable {
+        return {
+            type: 'OutputRule',
+            output: this.outputKey,
+            expression: this.expression.toJson(),
+        };
+    }
+
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
         if (checker?.strictSyntax() || checker?.strictInputs()) {
@@ -96,7 +105,6 @@ export class OutputRule extends AbstractRule {
         const newValue = this.expression.evaluate(context);
 
         if (equalsDeep(oldValue, newValue)) {
-            // if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return null;
         } else {
             return new OutputAction(this.outputKey, this.expression);
@@ -112,7 +120,6 @@ export class OutputRule extends AbstractRule {
         }
 
         if (equalsDeep(oldValue, newValue)) {
-            // if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return {};
         } else {
             context.setOutput(this.outputKey, newValue);

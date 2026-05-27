@@ -48,34 +48,6 @@ export class CommandHandler implements ICommandHandler {
         return true;
     }
 
-    // public async addAsyncAction(action: ICommandAction): Promise<any | boolean> {
-    //     if (action.immediate) {
-    //         if (this.immediateMap.has(action.hash)) {
-    //             throw new EngineError(`Immediate action with hash ${action.hash} is already registered.`);
-    //         }
-
-    //         const plugin = this.options.commands[action.keyword];
-    //         if (!plugin) {
-    //             throw new EngineError(`Plugin with keyword ${action.keyword} not found.`);
-    //         }
-
-    //         this.immediateMap.set(action.hash, action);
-    //         if (plugin.execute) {
-    //             return plugin.execute(action.arguments);
-    //         } else if (plugin.executeAsync) {
-    //             return await plugin.executeAsync(action.arguments);
-    //         } else {
-    //             return true; // No execution method, but still registered as immediate
-    //         }
-    //     }
-
-    //     if (this.deferredMap.has(action.hash)) {
-    //         throw new EngineError(`Deferred action with hash ${action.hash} is already registered.`);
-    //     }
-    //     this.deferredMap.set(action.hash, action);
-    //     return true;
-    // }
-
     public async executeDeferred(): Promise<any> {
         const results: Record<string, any> = {};
         for (const [hash, action] of this.deferredMap.entries()) {
