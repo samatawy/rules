@@ -1,7 +1,7 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 export class ArrayExpression extends Expression {
 

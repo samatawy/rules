@@ -1,3 +1,4 @@
+import { IfThenElseRule, LambdaExpression } from "../../browser";
 import type { WorkingContext } from "../../interfaces";
 import { AbstractRule } from "../../rules/abstract.rule";
 import { EngineError } from "../../rules/exception";
@@ -101,6 +102,8 @@ export class ReteGraph {
         } else if (expr instanceof VariableExpression) {
             const partNode = this.findOrCreateDataNode(expr);
             return partNode;
+        } else if (expr instanceof LambdaExpression) {
+            return undefined;   // Lambda expressions are not represented as nodes, but their parts may be
         } else {
             const partNode = this.findOrCreateDecisionNode(expr);
             return partNode;
@@ -136,7 +139,7 @@ export class ReteGraph {
      * @param context the working context to use when evaluating.
      * @returns a set of rules relevant to the given start node.
      */
-    public getRulesFrom(start: AbstractReteNode | string, context: WorkingContext): Set<AbstractRule> {
+    public getRulesFrom(start: AbstractReteNode | string, context: WorkingContext, lastDecision?: boolean): Set<AbstractRule> {
         const foundRules: Set<AbstractRule> = new Set<AbstractRule>();
 
         const node = (typeof start === 'string') ?
@@ -145,8 +148,13 @@ export class ReteGraph {
         if (!node) return foundRules;
 
         if (node instanceof RuleNode) {
-            if (!node.rule.isDisabled()) {
-                foundRules.add(node.rule);
+            // The last decision leading to this rule must be truthy, 
+            // (or the rule is an ifthenelse rule, which is relevant regardless of the last decision since it habdles both true and false)
+            // and the rule must not be disabled for it to be relevant.
+            if (lastDecision || node.rule instanceof IfThenElseRule) {
+                if (!node.rule.isDisabled()) {
+                    foundRules.add(node.rule);
+                }
             }
 
         } else if (node instanceof DataNode) {
@@ -157,7 +165,7 @@ export class ReteGraph {
             }
             if (value !== undefined) {  // only follow if value is known
                 for (const child of node.children) {
-                    const childRules = this.getRulesFrom(child, context);
+                    const childRules = this.getRulesFrom(child, context, !!value);
                     for (const rule of childRules) {
                         foundRules.add(rule);
                     }
@@ -170,9 +178,11 @@ export class ReteGraph {
                 value = node.expression.evaluate(context);
                 context.setCache(node.id, value);
             }
-            if (!!value) {   // only follow if truthy value
+            // if (!!value) {   // only follow if truthy value
+
+            if (value !== undefined) {  // only follow if value is known
                 for (const child of node.children) {
-                    const childRules = this.getRulesFrom(child, context);
+                    const childRules = this.getRulesFrom(child, context, !!value);
                     for (const rule of childRules) {
                         foundRules.add(rule);
                     }

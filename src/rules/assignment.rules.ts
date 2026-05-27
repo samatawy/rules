@@ -10,7 +10,7 @@ import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
 import { withLogger } from "../logging/work.logger";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 /**
  * A rule that assigns a value to a key whenever the requirements are provided.

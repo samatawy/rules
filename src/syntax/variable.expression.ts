@@ -1,5 +1,5 @@
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 import { Expression } from "./expression";
 
 export class VariableExpression extends Expression {

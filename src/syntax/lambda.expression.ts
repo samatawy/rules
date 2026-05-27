@@ -2,7 +2,7 @@ import type { AtomicType, ObjectType } from "../types";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getReturnType } from "../type.utils";
 import { Expression } from "./expression";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 /**
  * A LambdaExpression represents an anonymous function that takes a single variable as input and returns a value based on an expression.

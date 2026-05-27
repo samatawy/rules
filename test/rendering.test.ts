@@ -1,9 +1,9 @@
 import { describe, it } from "vitest";
 import { Workspace } from "../src/engine/workspace";
 import { RuleParser } from "../src/parser/rule.parser";
-import { HtmlRenderer } from "../src/render/html/html.renderer";
-import { MermaidRenderer } from "../src/render/mermaid/mermaid.renderer";
-import { DefaultMermaidTheme } from "../src/render/mermaid/mermaid.themes";
+import { HtmlRenderer } from "../src/rendering/html/html.renderer";
+import { MermaidRenderer } from "../src/rendering/mermaid/mermaid.renderer";
+import { DefaultMermaidTheme } from "../src/rendering/mermaid/mermaid.themes";
 
 describe('Rendering tests', () => {
 

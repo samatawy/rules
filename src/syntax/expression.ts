@@ -1,5 +1,5 @@
 import type { WorkingContext, Evaluator, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 /**
  * Represents an expression that can be evaluated in a given context to produce a value. 

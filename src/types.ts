@@ -53,6 +53,8 @@ export interface RootType {
      * The properties of the root type, if it is an object. This allows for nested structures and detailed type definitions.
      */
     properties?: ObjectType;
+
+    items?: ObjectType; // for root types that are arrays of objects, this defines the structure of the array items
 }
 
 export type ArgumentType = AtomicType | ArrayType | ObjectType | 'lambda' | 'any';

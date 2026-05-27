@@ -6,7 +6,7 @@ import { RuleParser } from "../parser/rule.parser";
 import { mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { EvaluationError, ExecutionError, ParserError } from "./exception";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 /**
  * A conditional rule that is executed if a condition is satisified.

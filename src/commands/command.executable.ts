@@ -6,7 +6,7 @@ import { mergeValidationResults, stringifyTypeJson } from "../common.utils";
 import { ExecutableAction } from "../rules/executable";
 import { TypeCheckError } from "../rules/exception";
 import type { ICommand } from "./types";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 
 /**

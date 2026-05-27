@@ -4,7 +4,7 @@ import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 import { EvaluationError } from "../rules/exception";
 import { isArrayType } from "../parser/type.parser";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 export class ComparisonExpression extends BooleanExpression {
 

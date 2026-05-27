@@ -4,7 +4,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { TypeCheckError } from "../rules/exception";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 export class TernaryExpression extends Expression {
 

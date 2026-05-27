@@ -3,7 +3,7 @@ import { getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import { BooleanExpression, Expression } from "./expression";
 import { EvaluationError } from "../rules/exception";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 export class LogicalExpression extends BooleanExpression {
 

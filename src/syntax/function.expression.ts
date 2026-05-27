@@ -5,7 +5,7 @@ import { mergeValidationResults } from "../common.utils";
 import { Expression } from "./expression";
 import { WorkLogger } from "../logging/work.logger";
 import { isArrayType } from "../parser/type.parser";
-import type { Renderable } from "../render/render.types";
+import type { Renderable } from "../rendering/render.types";
 
 export abstract class FunctionExpression extends Expression {
 

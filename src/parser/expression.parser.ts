@@ -160,7 +160,7 @@ export class ExpressionParser {
 
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i]!;
-            if (closers.includes(token)) {
+            if (closers.includes(token) && stack.length > 0) {
                 if (latest && closers.indexOf(token) === openers.indexOf(latest)) {
                     stack.pop();
                     latest = stack.length > 0 ? stack[stack.length - 1]! : null;
@@ -321,7 +321,7 @@ export class ExpressionParser {
         if (argsSyntax.length === 0) {
             return [];
         }
-        const { left, operator: comma, right } = this.splitOperands(argsSyntax.split(' '), [',']) || {};
+        const { left, operator: comma, right } = this.splitOperands(this.tokenize(argsSyntax), [',']) || {};
         if (left && comma && right) {
             return [left, ...this.splitArguments(right)];
         } else {
@@ -343,7 +343,7 @@ export class ExpressionParser {
         // Parse the syntax condition ? trueExpr : falseExpr
         const { left: conditionSyntax, operator: questionMark, right: remainder } = this.splitOperands(tokens, ['?']) || {};
         if (conditionSyntax && questionMark && remainder) {
-            const { left: trueSyntax, operator: colon, right: falseSyntax } = this.splitOperands(remainder.split(' '), [':']) || {};
+            const { left: trueSyntax, operator: colon, right: falseSyntax } = this.splitOperands(this.tokenize(remainder), [':']) || {};
             if (trueSyntax && colon && falseSyntax) {
                 const conditionExpr = this.parse(conditionSyntax);
                 const trueExpr = this.parse(trueSyntax);

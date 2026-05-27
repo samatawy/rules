@@ -604,15 +604,20 @@ export class Workspace implements Clonable<Workspace> {
 
             // If any executors changed outputs, we need to check if new rules have become applicable
             if (iterate) {
+                // Clean the cache to re-evaluate nodes (recursively)
+                for (const id of changes) {
+                    this.rete_graph.clearCache(id, context);
+                }
+
                 const nextApplicable = this.findReteRules(changes, context);
                 iterate = nextApplicable.size > 0;
                 logger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
 
                 if (iterate) {
                     // Clean the cache to re-evaluate nodes (recursively)
-                    for (const id of changes) {
-                        this.rete_graph.clearCache(id, context);
-                    }
+                    // for (const id of changes) {
+                    //     this.rete_graph.clearCache(id, context);
+                    // }
 
                     applicable = nextApplicable;
                 }
