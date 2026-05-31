@@ -29,7 +29,9 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
 
     private requirements: Set<string>;
 
-    private changeTargets: Record<string, AtomicType | ArrayType | ObjectType>;
+    protected changeTargets: Record<string, AtomicType | ArrayType | ObjectType>;
+
+    protected compiled_eval?: Function;
 
     constructor(syntax: string, salience?: number) {
         this.syntax = syntax;
@@ -118,19 +120,16 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
      * @param changes a record mapping changed data keys to their expected types.
      */
     protected willChange(changes: Record<string, AtomicType | ArrayType | ObjectType>): void {
-        for (const target of Object.keys(changes)) {
-            if (changes[target]) {
-                this.changeTargets[target] = changes[target];
-            }
-        }
+        // for (const target of Object.keys(changes)) {
+        //     if (changes[target]) {
+        //         this.changeTargets[target] = changes[target];
+        //     }
+        // }
+        this.changeTargets = { ...this.changeTargets, ...changes };
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
-        const typedChanges: Record<string, AtomicType | ArrayType | ObjectType> = {};
-        for (const [key, type] of Object.entries(this.changeTargets)) {
-            typedChanges[key] = type;
-        }
-        return typedChanges;
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
+        return this.changeTargets;
     }
 
     /**

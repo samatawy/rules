@@ -7,6 +7,9 @@ import { mergeValidationResults } from "../common.utils";
 import type { Workspace } from "../engine/workspace";
 import { EvaluationError, ExecutionError, ParserError } from "./exception";
 import type { Renderable } from "../rendering/render.types";
+import type { AtomicType, ArrayType, ObjectType } from "../types";
+import { FunctionCompiler } from "../parser/function.compiler";
+import { WorkLogger } from "../logging/work.logger";
 
 /**
  * A conditional rule that is executed if a condition is satisified.
@@ -30,11 +33,11 @@ export class IfThenRule extends AbstractRule {
         return this.condition;
     }
 
-    static parsed(syntax: string, condition: Expression, consequence: ExecutableAction): IfThenRule {
-        return new IfThenRule(syntax, condition, consequence);
+    static parsed(syntax: string, condition: Expression, consequence: ExecutableAction, checker?: TypeChecker): IfThenRule {
+        return new IfThenRule(syntax, condition, consequence, checker);
     }
 
-    protected constructor(syntax: string, condition?: Expression | null, consequence?: ExecutableAction | null) {
+    protected constructor(syntax: string, condition?: Expression | null, consequence?: ExecutableAction | null, checker?: TypeChecker) {
         super(syntax);
         this.condition = condition as Expression;
         this.consequence = consequence as ExecutableAction;
@@ -49,7 +52,15 @@ export class IfThenRule extends AbstractRule {
         }
         this.consequence = this.consequence || new ExceptionThrower(`Condition met: ${syntax} but no consequence provided`);
         this.require(...this.condition.required(), ...this.consequence.required());
-        this.willChange(this.consequence.typedChanges());
+        this.willChange(this.consequence.typedChanges(checker));
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.condition)) {
+                WorkLogger.warn(`Cannot compile IfThenRule condition due to missing function dependencies in the condition expression`);
+            } else {
+                this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
+            }
+        }
     }
 
     public toString(): string {
@@ -71,8 +82,18 @@ export class IfThenRule extends AbstractRule {
         )
     }
 
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
+        if (Object.keys(this.changeTargets).length === 0) {
+            this.changeTargets = this.consequence.typedChanges(checker);
+        }
+        return this.changeTargets;
+    }
+
     public evaluate(context: WorkingContext): Executor | null {
-        return (this.condition.evaluate(context)) ? this.consequence.prepareEffect({ satisfied: true }) : null;
+        const satisfied = this.compiled_eval && FunctionCompiler.enabled
+            ? this.compiled_eval(context)
+            : this.condition.evaluate(context);
+        return satisfied ? this.consequence.prepareEffect({ satisfied: true }) : null;
     }
 
     public execute(context: WorkingContext): RuleEffect {
@@ -92,7 +113,10 @@ export class IfThenElseRule extends AbstractRule {
 
     protected alternative: ExecutableAction;
 
+    protected compiled_alt_exec?: Function;
+
     public getExpression(): Expression {
+        // TODO: Reconsider this - it may be useful since else is supported.
         // const trueSyntax = this.condition.toString();
         // const both = new ExpressionParser({}).parse(`${trueSyntax} OR not(${trueSyntax})`);
         // return both;
@@ -108,11 +132,11 @@ export class IfThenElseRule extends AbstractRule {
         }
     }
 
-    static parsed(syntax: string, condition: Expression, consequence: ExecutableAction, alternative: ExecutableAction): IfThenElseRule {
-        return new IfThenElseRule(syntax, condition, consequence, alternative);
+    static parsed(syntax: string, condition: Expression, consequence: ExecutableAction, alternative: ExecutableAction, checker?: TypeChecker): IfThenElseRule {
+        return new IfThenElseRule(syntax, checker, condition, consequence, alternative);
     }
 
-    protected constructor(syntax: string, condition?: Expression | null, consequence?: ExecutableAction | null, alternative?: ExecutableAction | null) {
+    protected constructor(syntax: string, checker?: TypeChecker, condition?: Expression | null, consequence?: ExecutableAction | null, alternative?: ExecutableAction | null) {
         super(syntax);
         this.condition = condition as Expression;
         this.consequence = consequence as ExecutableAction;
@@ -131,7 +155,15 @@ export class IfThenElseRule extends AbstractRule {
         this.consequence = this.consequence || new ExceptionThrower(`Condition met: ${syntax} but no consequence provided`);
         this.alternative = this.alternative || new ExceptionThrower(`Condition failed: ${syntax} but no alternative provided`);
         this.require(...this.condition.required(), ...this.consequence.required(), ...this.alternative.required());
-        this.willChange({ ...this.consequence.typedChanges(), ...this.alternative.typedChanges() });
+        this.willChange({ ...this.consequence.typedChanges(checker), ...this.alternative.typedChanges(checker) });
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.condition)) {
+                WorkLogger.warn(`Cannot compile IfThenElseRule condition due to missing function dependencies in the condition expression`);
+            } else {
+                this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
+            }
+        }
     }
 
     public toString(): string {
@@ -155,8 +187,19 @@ export class IfThenElseRule extends AbstractRule {
         );
     }
 
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
+        if (Object.keys(this.changeTargets).length === 0) {
+            this.changeTargets = { ...this.consequence.typedChanges(checker), ...this.alternative.typedChanges(checker) };
+        }
+        return this.changeTargets;
+    }
+
     public evaluate(context: WorkingContext): Executor | null {
-        return (this.condition.evaluate(context)) ?
+        const satisfied = this.compiled_eval && FunctionCompiler.enabled
+            ? this.compiled_eval(context)
+            : this.condition.evaluate(context);
+
+        return (satisfied) ?
             this.consequence.prepareEffect({ satisfied: true }) :
             this.alternative.prepareEffect({ satisfied: false });
     }
@@ -209,6 +252,14 @@ export class IfThrowRule extends AbstractRule {
             }
         }
         this.require(...this.condition.required(), ...this.consequence.required());
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.condition)) {
+                WorkLogger.warn(`Cannot compile IfThrowRule condition due to missing function dependencies in the condition expression`);
+            } else {
+                this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
+            }
+        }
     }
 
     public toString(): string {
@@ -231,7 +282,10 @@ export class IfThrowRule extends AbstractRule {
     }
 
     public evaluate(context: WorkingContext): Executor | null {
-        return (this.condition.evaluate(context)) ? this.consequence.prepareEffect({ satisfied: true }) : null;
+        const satisfied = this.compiled_eval && FunctionCompiler.enabled
+            ? this.compiled_eval(context)
+            : this.condition.evaluate(context);
+        return (satisfied) ? this.consequence.prepareEffect({ satisfied: true }) : null;
     }
 
     public execute(context: WorkingContext): RuleEffect {

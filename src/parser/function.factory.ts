@@ -2,6 +2,7 @@ import type { Expression } from "../syntax/expression";
 import type { FunctionExpression } from "../syntax/function.expression";
 import type { ParserOptions } from "./rule.parser";
 import type { FunctionProvider } from "../interfaces";
+import { FunctionCompiler } from "./function.compiler";
 import { ParserError } from "../rules/exception";
 
 import { ArrayInspectionFunctionProvider } from "../functions/array.inspection.functions";
@@ -51,11 +52,10 @@ export class FunctionFactory {
     public create(name: string, args: Expression[]): FunctionExpression {
 
         if (FunctionFactory.isReservedName(name)) {
-            for (const provider of FunctionFactory.providers) {
-                if (provider.names().includes(name)) {
-                    const func = provider.create(name, args);
-                    if (func) return func;
-                }
+            const provider = FunctionFactory.getProvider(name);
+            if (provider) {
+                const func = provider.create(name, args);
+                if (func) return func;
             }
         }
         else if (this.options.workspace) {
@@ -70,11 +70,9 @@ export class FunctionFactory {
 
     public mock(name: string, args: Expression[]): FunctionExpression | undefined {
         if (FunctionFactory.isReservedName(name)) {
-            for (const provider of FunctionFactory.providers) {
-                if (provider.names().includes(name)) {
-                    const func = provider.mock(name, args);
-                    if (func) return func;
-                }
+            const provider = FunctionFactory.getProvider(name);
+            if (provider) {
+                return provider.mock(name, args);
             }
         }
         else if (this.options.workspace) {
@@ -112,6 +110,16 @@ export class FunctionFactory {
                 throw new ParserError(`Function name "${name}" is reserved and cannot be registered by a provider.`);
             }
             this.reserved_names.set(name, provider);
+
+            if (FunctionCompiler.enabled) {
+                const compilable = provider.toJS(name);
+                if (compilable) {
+                    const func = FunctionCompiler.compileFunction(compilable.args, compilable.body);
+                    if (func) {
+                        (globalThis as any)[name] = func;
+                    }
+                }
+            }
         }
     }
 
@@ -138,4 +146,9 @@ export class FunctionFactory {
     public static getReservedNames(): Set<string> {
         return new Set(this.reserved_names.keys());
     }
+
+    private static getProvider(name: string): FunctionProvider | undefined {
+        return this.reserved_names.get(name);
+    }
+
 }

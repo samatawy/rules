@@ -5,6 +5,7 @@ import { ScopeTypeChecker } from "./scope.memory";
 import type { WorkspaceOptions } from "./workspace";
 import { ParserError } from "../rules/exception";
 import { FunctionFactory } from "../parser/function.factory";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
@@ -68,6 +69,18 @@ export class FunctionRegistry {
             throw new ParserError(`Function with name ${func.name} already exists`);
         }
         this.functions.set(func.name, func);
+
+        if (FunctionCompiler.enabled) {
+            // TODO: Is this required? Since its a definition we may not need it.
+            // if (FunctionCompiler.missingFunctions(func.expression)) {
+            //     WorkLogger.warn(`Cannot compile function ${func.name} due to missing dependencies`);
+            //     return;
+            // }
+            const compiled = FunctionCompiler.compileDefinition(func);
+            if (compiled) {
+                (globalThis as any)[func.name] = compiled;
+            }
+        }
     }
 
     /**
@@ -129,7 +142,7 @@ export class FunctionRegistry {
 
         for (const line of definition.lines || []) {
             checks.push(line.checkTypes(scopeChecker));
-            const changes = line.typedChanges();
+            const changes = line.typedChanges(checker);
             for (const change of Object.keys(changes)) {
                 const newType = changes[change];
                 if (newType) {

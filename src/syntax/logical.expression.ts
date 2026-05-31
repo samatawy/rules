@@ -85,6 +85,16 @@ export class LogicalExpression extends BooleanExpression {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
     }
 
+    public toJS(): string {
+        let op: string;
+        switch (this.operator.toUpperCase()) {
+            case 'AND': op = '&&'; break;
+            case 'OR': op = '||'; break;
+            default: throw new Error(`Unsupported logical operator: ${this.operator}`);
+        };
+        return `(${this.left.toJS()} ${op} ${this.right.toJS()})`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'LogicalExpression',

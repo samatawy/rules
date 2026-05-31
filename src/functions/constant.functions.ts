@@ -90,6 +90,46 @@ export class ConstantNumbersProvider {
         }
         return new ConstantNumbers(name);
     }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'pi':
+                return { args: [], body: 'return Math.PI;' };
+            case 'e':
+                return { args: [], body: 'return Math.E;' };
+            case 'phi':
+                return { args: [], body: 'return (1 + Math.sqrt(5)) / 2;' };
+            case 'tau':
+                return { args: [], body: 'return 2 * Math.PI;' };
+            case 'c':
+            case 'speedOfLight':
+                return { args: [], body: 'return 299792458;' };
+            case 'g':
+                return { args: [], body: 'return 9.80665;' };
+            case 'goldenRatio':
+                return { args: [], body: 'return (1 + Math.sqrt(5)) / 2;' };
+            case 'avogadro':
+                return { args: [], body: 'return 6.02214076e23;' };
+            case 'planck':
+                return { args: [], body: 'return 6.62607015e-34;' };
+            case 'electronMass':
+                return { args: [], body: 'return 9.10938356e-31;' };
+            case 'protonMass':
+                return { args: [], body: 'return 1.6726219e-27;' };
+            case 'neutronMass':
+                return { args: [], body: 'return 1.674927471e-27;' };
+            case 'boltzmann':
+                return { args: [], body: 'return 1.380649e-23;' };
+            case 'gasConstant':
+                return { args: [], body: 'return 8.314462618;' };
+            case 'faraday':
+                return { args: [], body: 'return 96485.33212;' };
+            case 'gravitationalConstant':
+                return { args: [], body: 'return 6.67430e-11;' };
+            default:
+                throw new TypeCheckError(`Unknown constant number function: ${name}`);
+        }
+    }
 }
 
 export class ConstantDates extends DateFunctionExpression {
@@ -160,5 +200,54 @@ export class ConstantDatesProvider {
             return undefined;
         }
         return new ConstantDates(name);
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'now':
+                return { args: [], body: 'return new Date();' };
+            case 'today':
+                return {
+                    args: [],
+                    body: `
+                        const now = new Date();
+                        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    `
+                };
+            case 'yearStart':
+                return {
+                    args: [],
+                    body: `
+                        const currentYear = new Date().getFullYear();
+                        return new Date(currentYear, 0, 1);
+                    `
+                };
+            case 'yearEnd':
+                return {
+                    args: [],
+                    body: `
+                        const currentYearEnd = new Date().getFullYear();
+                        return new Date(currentYearEnd, 11, 31);
+                    `
+                };
+            case 'monthStart':
+                return {
+                    args: [],
+                    body: `
+                        const nowMonth = new Date();
+                        return new Date(nowMonth.getFullYear(), nowMonth.getMonth(), 1);
+                    `
+                };
+            case 'monthEnd':
+                return {
+                    args: [],
+                    body: `
+                        const nowMonthEnd = new Date();
+                        return new Date(nowMonthEnd.getFullYear(), nowMonthEnd.getMonth() + 1, 0);
+                    `
+                };
+            default:
+                throw new TypeCheckError(`Unknown constant date function: ${name}`);
+        }
     }
 }

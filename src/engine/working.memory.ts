@@ -1,5 +1,5 @@
 import { AbstractException } from "../rules/exception";
-import { getPathValue, pathExists, setPathValue } from "../common.utils";
+import { cloneDeep, getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
@@ -36,7 +36,14 @@ export class WorkingMemory implements WorkingContext {
 
     private logImpl?: ILogger;
 
-    constructor(data: any, workspace: Workspace, logger?: ILogger) {
+    /**
+     * Create a new instance implementing WorkingContext.
+     * @data Any input data that needs to be evaluated.
+     * @workspace the current workspace, used to access rules, constants, and other shared data.
+     * @sharedData optional additional data that should be accessible to the output but not altered.
+     * @logger optional logger instance to use for this context. If not provided, a default logger will be created.
+     */
+    constructor(data: any, workspace: Workspace, sharedData: any, logger?: ILogger) {
         this.input = data === undefined ? {} : data;
         this.workspace = workspace;
         this.command_handler = new CommandHandler({ context: this, commands: workspace.commandRegistry().getCommands() });
@@ -45,8 +52,15 @@ export class WorkingMemory implements WorkingContext {
         // TODO: maybe we should check if strict_inputs are enforced
         // to decide which path to take
         // this.output = cloneDeep(this.input);
-        const coerceDataLogged = withLogger(this.logImpl, workspace.typeChecker().coerceData.bind(workspace.typeChecker()));
+        const typeChecker = workspace.typeChecker();
+        const coerceDataLogged = withLogger(this.logImpl, typeChecker.coerceData.bind(typeChecker));
         this.output = coerceDataLogged(this.input);
+
+        if (sharedData) {
+            for (const key of Object.keys(sharedData)) {
+                this.output[key] = sharedData[key];
+            }
+        }
 
         this.exceptions = [];
         this.auditLog = [];

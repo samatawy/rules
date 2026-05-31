@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, NumericExpression } from "../syntax/expression";
 import { BooleanFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class NumericComparisonFunction extends BooleanFunctionExpression {
 
@@ -44,6 +45,13 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         for (const arg of evaluatedArgs) {
             if (typeof arg !== 'number') {
                 throw new EvaluationError(`Arguments for function ${this.name} did not evaluate to numbers`);
+            }
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
             }
         }
 
@@ -100,5 +108,26 @@ export class NumericComparisonFunctionProvider {
             return undefined;
         }
         return new NumericComparisonFunction(name, args[0] as NumericExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'equal':
+                return { args: ['x', 'y'], body: 'return x === y;' };
+            case 'closeTo':
+                return { args: ['x', 'target', 'tolerance'], body: 'return Math.abs(x - target) <= Math.abs(tolerance);' };
+            case 'greaterThan':
+                return { args: ['x', 'y'], body: 'return x > y;' };
+            case 'lessThan':
+                return { args: ['x', 'y'], body: 'return x < y;' };
+            case 'greaterThanOrEqual':
+                return { args: ['x', 'y'], body: 'return x >= y;' };
+            case 'lessThanOrEqual':
+                return { args: ['x', 'y'], body: 'return x <= y;' };
+            case 'between':
+                return { args: ['x', 'lower', 'upper'], body: 'return x >= lower && x <= upper;' };
+            default:
+                throw new TypeCheckError(`Unknown numeric comparison function: ${name}`);
+        }
     }
 }

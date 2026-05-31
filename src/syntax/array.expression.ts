@@ -53,6 +53,10 @@ export class ArrayExpression extends Expression {
         return `[${this.elements.map(e => e.toString()).join(', ')}]`;
     }
 
+    public toJS(): string {
+        return `[${this.elements.map(e => e.toJS()).join(', ')}]`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'ArrayExpression',

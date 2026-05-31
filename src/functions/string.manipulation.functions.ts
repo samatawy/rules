@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, StringExpression } from "../syntax/expression";
 import { StringFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class StringManipulationFunction extends StringFunctionExpression {
 
@@ -49,6 +50,13 @@ export class StringManipulationFunction extends StringFunctionExpression {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a string`);
         }
 
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
+            }
+        }
+
         switch (this.name) {
             case 'substring':
                 return targetValue.substring(evaluatedArgs[0], evaluatedArgs[1]);
@@ -78,6 +86,7 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
     }
+
 }
 
 export class StringManipulationFunctionProvider {
@@ -103,5 +112,32 @@ export class StringManipulationFunctionProvider {
             return undefined;
         }
         return new StringManipulationFunction(name, args[0] as StringExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'substring':
+                return { args: ['target', 'from', 'to'], body: `return target.substring(from, to)` };
+            case 'firstChars':
+                return { args: ['target', 'count'], body: `return target.substring(0, count)` };
+            case 'lastChars':
+                return { args: ['target', 'count'], body: `return target.substring(target.length - count)` };
+            case 'append':
+                return { args: ['target', 'value'], body: `return target + value` };
+            case 'replace':
+                return { args: ['target', 'search', 'replace'], body: `return target.replace(search, replace)` };
+            case 'upperCase':
+                return { args: ['target'], body: `return target.toUpperCase()` };
+            case 'lowerCase':
+                return { args: ['target'], body: `return target.toLowerCase()` };
+            case 'capitalize':
+                return { args: ['target'], body: `return target.charAt(0).toUpperCase() + target.slice(1).toLowerCase()` };
+            case 'capitalizeWords':
+                return { args: ['target'], body: `return target.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')` };
+            case 'extract':
+                return { args: ['target', 'pattern'], body: `const regex = new RegExp(pattern); const match = target.match(regex); return match && match.length > 0 ? match[1] || '' : '';` };
+            default:
+                throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
+        }
     }
 }

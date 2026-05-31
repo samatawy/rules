@@ -5,7 +5,7 @@ import { makeAtomic, makeItemType } from "../type.utils";
 import type { AbstractRule } from "../rules/abstract.rule";
 import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
-import { cloneDeep } from "../common.utils";
+import { cloneDeep, hasOwn } from "../common.utils";
 import { isArrayType, isAtomicType } from "../parser/type.parser";
 import { WorkLogger } from "../logging/work.logger";
 
@@ -79,21 +79,19 @@ export class WorkspaceTypeChecker implements TypeChecker {
 
     public checkData(input: any): ValidationResult {
 
-        WorkLogger.debug(`Validating input: ${JSON.stringify(input)} against type definitions.`, this.types);
         const errors: string[] = [];
 
-        for (const [rootKey, data] of Object.entries(input)) {
-            if (this.types.hasRootType(rootKey)) {
-                WorkLogger.debug(`Validating key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
-
-                const expectedType = this.types.getRootType(rootKey);
-                if (expectedType) {
-                    const result = this.validateType(rootKey, data, expectedType);
-                    if (!result.valid) {
-                        // One of the properties did not match the expected type
-                        errors.push(...(result.errors || []));
+        for (const rootKey in input) {
+            const expectedType = this.types.getRootType(rootKey);
+            if (expectedType) {
+                const result = this.validateType(rootKey, input[rootKey], expectedType);
+                if (!result.valid) {
+                    // One of the properties did not match the expected type
+                    for (const err of result.errors || []) {
+                        errors.push(`${rootKey}.${err}`);
                     }
                 }
+
             } else {
                 // No type definition found for this key, skipping validation
                 WorkLogger.warn(`No type definition found for key: ${rootKey}.`);
@@ -122,7 +120,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
         //     return { valid: false, errors: [`${key} is undefined, expected type ${JSON.stringify(expectedType)}.`] };
         // }
 
-        WorkLogger.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
+        // WorkLogger.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
         const expected: any = expectedType as any;
         const errors: string[] = [];
 
@@ -134,7 +132,7 @@ export class WorkspaceTypeChecker implements TypeChecker {
             // An array type
             return this.validateArray(key, value, expectedType);
         }
-        else if (expected.hasOwnProperty('type') && isAtomicType(expected.type)) {
+        else if (hasOwn(expected, 'type') && isAtomicType(expected.type)) {
             // A leaf node with an atomic type defined in a RootType
             const actualType = typeof value;
             if (actualType === expected.type) {
@@ -144,19 +142,21 @@ export class WorkspaceTypeChecker implements TypeChecker {
                 return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expected.type}.`] };
             }
         }
-        else if (expected.hasOwnProperty('type') && isArrayType(expected.type)) {
+        else if (hasOwn(expected, 'type') && isArrayType(expected.type)) {
             // A leaf node with an array type defined in a RootType
             return this.validateArray(key, value, expected.type);
         }
 
-        else if (expected.hasOwnProperty('properties')) {
+        else if (hasOwn(expected, 'properties')) {
             // An object type with nested properties
-            for (const [key, propertyType] of Object.entries(expected.properties!)) {
-                WorkLogger.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
-                const result = this.validateType(key, value[key], propertyType);
+            for (const propKey in expected.properties) {
+                // WorkLogger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
+                const result = this.validateType(propKey, value[propKey], expected.properties[propKey]);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
-                    errors.push(...(result.errors || []));
+                    for (const err of result.errors || []) {
+                        errors.push(`${propKey}.${err}`);
+                    }
                 }
             }
             return {
@@ -168,12 +168,14 @@ export class WorkspaceTypeChecker implements TypeChecker {
 
         else if (typeof expected === 'object' && Object.keys(expected).length > 0) {
             // A record type with dynamic keys
-            for (const [key, propertyType] of Object.entries(expected)) {
-                WorkLogger.debug(`Validating property: ${key} with value: ${value[key]} against property type definition.`);
-                const result = this.validateType(key, value[key], propertyType);
+            for (const propKey in expected) {
+                // WorkLogger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
+                const result = this.validateType(propKey, value[propKey], expected[propKey]);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
-                    errors.push(...(result.errors || []));
+                    for (const err of result.errors || []) {
+                        errors.push(`${key}.${propKey}.${err}`);
+                    }
                 }
             }
             return {
@@ -231,7 +233,9 @@ export class WorkspaceTypeChecker implements TypeChecker {
             WorkLogger.debug(`Validating array element at index ${i}: ${element} against expected array type: ${expectedType}.`);
             const result = this.validateType(`${key}[${i}]`, element, elementType);
             if (!result.valid) {
-                errors.push(...(result.errors || []));
+                for (const err of result.errors || []) {
+                    errors.push(`${key}[${i}].${err}`);
+                }
             }
         }
         return {
@@ -242,15 +246,16 @@ export class WorkspaceTypeChecker implements TypeChecker {
 
     public coerceData(input: any): any {
 
-        WorkLogger.debug(`Coercing input: ${JSON.stringify(input)} against type definitions.`, this.types);
+        // WorkLogger.debug(`Coercing input: ${JSON.stringify(input)} against type definitions.`, this.types);
         if (typeof input !== 'object') {
             return undefined;
         }
         const output: any = {};
 
-        for (const [rootKey, data] of Object.entries(input)) {
+        for (const rootKey in input) {
+            const data = input[rootKey];
             if (this.types.hasRootType(rootKey)) {
-                WorkLogger.debug(`Coercing key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
+                // WorkLogger.debug(`Coercing key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
 
                 const expectedType = this.types.getRootType(rootKey);
                 if (expectedType) {
@@ -268,11 +273,11 @@ export class WorkspaceTypeChecker implements TypeChecker {
     }
 
     private coerceType(value: any, expectedType: RootType | PropertyType | any): any {
-        if (value === undefined) {
-            return undefined;
+        if (value == null) {
+            return value;
         }
 
-        WorkLogger.debug(`Coercing value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
+        // WorkLogger.debug(`Coercing value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
         const expected: any = expectedType as any;
 
         if (isAtomicType(expectedType)) {
@@ -285,23 +290,23 @@ export class WorkspaceTypeChecker implements TypeChecker {
             const clonedArray = value.map((item: any) => this.coerceType(item, itemType) || item);
             return clonedArray;
         }
-        else if (expected.hasOwnProperty('type') && isAtomicType(expected.type)) {
+        else if (hasOwn(expected, 'type') && isAtomicType(expected.type)) {
             // A leaf node with an atomic type defined in a RootType
             return makeAtomic(value, expected.type) || value;
         }
-        else if (expected.hasOwnProperty('type') && isArrayType(expected.type)) {
+        else if (hasOwn(expected, 'type') && isArrayType(expected.type)) {
             // A leaf node with an array type defined in a RootType
             const itemType = makeItemType(expected.type);
             const clonedArray = value.map((item: any) => this.coerceType(item, itemType) || item);
             return clonedArray;
         }
 
-        else if (expected.hasOwnProperty('properties')) {
+        else if (hasOwn(expected, 'properties')) {
             // An object type with nested properties
             const clonedObject: any = {};
-            for (const [key, propertyType] of Object.entries(expected.properties!)) {
-                if (value[key] === undefined) continue;
-                clonedObject[key] = this.coerceType(value[key], propertyType) || value[key];
+            for (const propKey in expected.properties) {
+                if (value[propKey] === undefined) continue;
+                clonedObject[propKey] = this.coerceType(value[propKey], expected.properties[propKey]) || value[propKey];
             }
             return clonedObject;
         }
@@ -309,9 +314,9 @@ export class WorkspaceTypeChecker implements TypeChecker {
         else if (typeof expected === 'object' && Object.keys(expected).length > 0) {
             // A record type with dynamic keys
             const clonedObject: any = {};
-            for (const [key, propertyType] of Object.entries(expected)) {
-                if (value[key] === undefined) continue;
-                clonedObject[key] = this.coerceType(value[key], propertyType) || value[key];
+            for (const propKey in expected) {
+                if (value[propKey] === undefined) continue;
+                clonedObject[propKey] = this.coerceType(value[propKey], expected[propKey]) || value[propKey];
             }
             return clonedObject;
 

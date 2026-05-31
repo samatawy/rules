@@ -140,59 +140,108 @@ export class ReteGraph {
      * @param context the working context to use when evaluating.
      * @returns a set of rules relevant to the given start node.
      */
-    public getRulesFrom(start: AbstractReteNode | string, context: WorkingContext, lastDecision?: boolean): Set<AbstractRule> {
-        const foundRules: Set<AbstractRule> = new Set<AbstractRule>();
+    public getRulesFrom(
+        start: AbstractReteNode | string,
+        context: WorkingContext,
+        lastDecision: boolean = false,
+        foundRules: Set<AbstractRule> = new Set<AbstractRule>(),
+        visited = new Set<AbstractReteNode>() // prevents cycles
+    ): Set<AbstractRule> {
 
-        const node = (typeof start === 'string') ?
-            this.dataMap.get(start) || this.decisionMap.get(start)
+        // Resolve start node
+        const node = typeof start === 'string'
+            ? this.dataMap.get(start) || this.decisionMap.get(start)
             : start;
-        if (!node) return foundRules;
 
+        if (!node || visited.has(node)) return foundRules;
+        visited.add(node);
+
+        // Handle RuleNode (terminal case)
         if (node instanceof RuleNode) {
-            // The last decision leading to this rule must be truthy, 
-            // (or the rule is an ifthenelse rule, which is relevant regardless of the last decision since it habdles both true and false)
-            // and the rule must not be disabled for it to be relevant.
-            if (lastDecision || node.rule instanceof IfThenElseRule) {
-                if (!node.rule.isDisabled()) {
-                    foundRules.add(node.rule);
-                }
+            if ((lastDecision || node.rule instanceof IfThenElseRule) && !node.rule.isDisabled()) {
+                foundRules.add(node.rule);
             }
+            return foundRules;
+        }
 
-        } else if (node instanceof DataNode) {
-            let value = context.getCached(node.id);
-            if (value === undefined) {
-                value = node.expression.evaluate(context);
-                context.setCache(node.id, value);
-            }
-            if (value !== undefined) {  // only follow if value is known
-                for (const child of node.children) {
-                    const childRules = this.getRulesFrom(child, context, !!value);
-                    for (const rule of childRules) {
-                        foundRules.add(rule);
-                    }
-                }
-            }
+        // Shared caching logic for DataNode/DecisionNode
+        const value = this.getCachedOrEvaluate(node as DataNode | DecisionNode, context);
 
-        } else if (node instanceof DecisionNode) {
-            let value = context.getCached(node.id);
-            if (value === undefined) {
-                value = node.expression.evaluate(context);
-                context.setCache(node.id, value);
-            }
-            // if (!!value) {   // only follow if truthy value
-
-            if (value !== undefined) {  // only follow if value is known
-                for (const child of node.children) {
-                    const childRules = this.getRulesFrom(child, context, !!value);
-                    for (const rule of childRules) {
-                        foundRules.add(rule);
-                    }
-                }
+        // Only traverse children if value is known (not undefined)
+        if (value !== undefined) {
+            const nextDecision = Boolean(value);
+            for (const child of node.children) {
+                this.getRulesFrom(child, context, nextDecision, foundRules, visited);
             }
         }
 
         return foundRules;
     }
+
+    // Extracted helper: eliminates duplication + centralizes caching policy
+    private getCachedOrEvaluate(node: DataNode | DecisionNode, context: WorkingContext): any {
+        let value = context.getCached(node.id);
+        if (value === undefined) {
+            value = node.expression.evaluate(context);
+            context.setCache(node.id, value);
+        }
+        return value;
+    }
+
+    // TODO: Delete this if not needed in a few days
+    // public getRulesFrom(start: AbstractReteNode | string, context: WorkingContext, lastDecision?: boolean): Set<AbstractRule> {
+    //     const foundRules: Set<AbstractRule> = new Set<AbstractRule>();
+
+    //     const node = (typeof start === 'string') ?
+    //         this.dataMap.get(start) || this.decisionMap.get(start)
+    //         : start;
+    //     if (!node) return foundRules;
+
+    //     if (node instanceof RuleNode) {
+    //         // The last decision leading to this rule must be truthy, 
+    //         // (or the rule is an ifthenelse rule, which is relevant regardless of the last decision since it habdles both true and false)
+    //         // and the rule must not be disabled for it to be relevant.
+    //         if (lastDecision || node.rule instanceof IfThenElseRule) {
+    //             if (!node.rule.isDisabled()) {
+    //                 foundRules.add(node.rule);
+    //             }
+    //         }
+
+    //     } else if (node instanceof DataNode) {
+    //         let value = context.getCached(node.id);
+    //         if (value === undefined) {
+    //             value = node.expression.evaluate(context);
+    //             context.setCache(node.id, value);
+    //         }
+    //         if (value !== undefined) {  // only follow if value is known
+    //             for (const child of node.children) {
+    //                 const childRules = this.getRulesFrom(child, context, !!value);
+    //                 for (const rule of childRules) {
+    //                     foundRules.add(rule);
+    //                 }
+    //             }
+    //         }
+
+    //     } else if (node instanceof DecisionNode) {
+    //         let value = context.getCached(node.id);
+    //         if (value === undefined) {
+    //             value = node.expression.evaluate(context);
+    //             context.setCache(node.id, value);
+    //         }
+    //         // if (!!value) {   // only follow if truthy value
+
+    //         if (value !== undefined) {  // only follow if value is known
+    //             for (const child of node.children) {
+    //                 const childRules = this.getRulesFrom(child, context, !!value);
+    //                 for (const rule of childRules) {
+    //                     foundRules.add(rule);
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return foundRules;
+    // }
 
     public clearCache(id: string, context: WorkingContext): void {
         context.clearCache(id);

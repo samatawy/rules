@@ -97,6 +97,10 @@ export class ArithmeticExpression extends NumericExpression {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
     }
 
+    public toJS(): string {
+        return `(${this.left.toJS()} ${this.operator} ${this.right.toJS()})`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'ArithmeticExpression',

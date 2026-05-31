@@ -97,6 +97,10 @@ export class TernaryExpression extends Expression {
         return `(${this.condition.toString()} ? ${this.trueExpression.toString()} : ${this.falseExpression.toString()})`;
     }
 
+    public toJS(): string {
+        return `(${this.condition.toJS()}) ? (${this.trueExpression.toJS()}) : (${this.falseExpression.toJS()})`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'TernaryExpression',

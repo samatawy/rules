@@ -154,6 +154,23 @@ export class ComparisonExpression extends BooleanExpression {
         return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
     }
 
+    public toJS(): string {
+        let op: string;
+        switch (this.operator) {
+            case '==': op = '=='; break;
+            case '!=': op = '!='; break;
+            case '>': op = '>'; break;
+            case '<': op = '<'; break;
+            case '>=': op = '>='; break;
+            case '<=': op = '<='; break;
+            case 'IN': op = 'in'; break; // Note: JavaScript doesn't have a direct equivalent of SQL's IN operator, so this will require special handling in the generated code
+            case 'BEFORE': op = '<'; break; // For date comparisons, we can use < and > in JavaScript, but we need to ensure the values are Date objects
+            case 'AFTER': op = '>'; break;
+            default: throw new Error(`Unknown operator: ${this.operator}`);
+        }
+        return `(${this.left.toJS()} ${op} ${this.right.toJS()})`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'ComparisonExpression',

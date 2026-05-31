@@ -177,7 +177,7 @@ export class RuleParser {
             if (!consequence) {
                 throw new ParserError(`Failed to parse consequence for IfThenRule: ${consequenceSyntax}`);
             }
-            return IfThenRule.parsed(syntax, condition, consequence);
+            return IfThenRule.parsed(syntax, condition, consequence, this.options.workspace?.typeChecker());
         }
         throw new ParserError(`Syntax does not match IfThenRule pattern: ${syntax}`);
     }
@@ -203,7 +203,7 @@ export class RuleParser {
                 throw new ParserError(`Failed to parse alternative for IfThenElseRule: ${alternativeSyntax}`);
             }
 
-            return IfThenElseRule.parsed(syntax, condition, consequence, alternative);
+            return IfThenElseRule.parsed(syntax, condition, consequence, alternative, this.options.workspace?.typeChecker());
         }
         return null;
     }
@@ -241,7 +241,7 @@ export class RuleParser {
                 throw new ParserError(`Failed to parse value expression for StateRule: ${valueSyntax}`);
             }
 
-            return OutputRule.parsed(syntax, variableName, valueExpr);
+            return OutputRule.parsed(syntax, variableName, valueExpr, this.options.workspace?.typeChecker());
         }
         return null;
     }
@@ -267,7 +267,7 @@ export class RuleParser {
                 throw new ParserError(`Failed to parse condition expression for StateIfRule: ${conditionSyntax}`);
             }
 
-            return IfThenRule.parsed(syntax, conditionExpr, new OutputAction(variableName, valueExpr));
+            return IfThenRule.parsed(syntax, conditionExpr, new OutputAction(variableName, valueExpr), this.options.workspace?.typeChecker());
         }
         return null;
     }

@@ -56,10 +56,6 @@ export class ArrayComparisonFunction extends NumericFunctionExpression {
         }
     }
 
-    public expectsParameterArray(): boolean {
-        return false;
-    }
-
     public evaluate(context: WorkingContext): number {
         const cached = context.getCached(this.syntax);
         if (cached !== undefined) return cached;
@@ -413,5 +409,10 @@ export class ArrayComparisonFunctionProvider {
             return undefined;
         }
         return new ArrayComparisonFunction(name, args[0]!, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        // TODO: Implement if necessary
+        return { args: [], body: '' }
     }
 }

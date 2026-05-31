@@ -32,6 +32,8 @@ export function pathExists(context: any, key: string): boolean {
     }
 }
 
+// const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
+
 /**
  * Read a value from the context using a key that can be a nested path with dot notation.
  * TODO: Support arrays in the path (e.g., "person.children.name").
@@ -43,6 +45,69 @@ export function pathExists(context: any, key: string): boolean {
 export function getPathValue(context: any, key: string): any {
     if (context == null || typeof context !== 'object') {
         return undefined;
+    }
+    if (typeof key !== 'string') {
+        throw new Error(`Key must be a string, but got ${typeof key}`);
+    }
+
+    if (key.includes('.')) {
+        return getSplitPathValue(context, key.split('.'));
+    } else {
+        return context[key];
+    }
+}
+
+export function getSplitPathValue(context: any, keys: string[]): any {
+    if (context == null || typeof context !== 'object') {
+        return undefined;
+    }
+    if (!Array.isArray(keys)) {
+        throw new Error(`Keys must be an array of strings, but got ${typeof keys}`);
+    }
+
+    let currentContext = context;
+    let level = 0;
+    for (const k of keys) {
+        if (currentContext && typeof currentContext === 'object' && hasOwn(currentContext, k)) {
+            currentContext = currentContext[k];
+            level += 1;
+        } else if (currentContext && Array.isArray(currentContext)) {
+            // follow all items in the array and check if the key exists in any of the items, if so we return an array of the values at that key for each item
+
+            // preallocate for performance
+            const remaining = keys.slice(level);
+            const results = new Array(currentContext.length);
+            let count = 0;
+            for (let i = 0; i < currentContext.length; i++) {
+                const value = getSplitPathValue(currentContext[i], remaining);
+                if (value !== undefined) {
+                    results[count++] = value;
+                }
+            }
+            results.length = count; // trim the results array to the number of valid entries
+            return results;
+            // const items = currentContext.map(item => getSplitPathValue(item, remaining));
+
+            // currentContext = items.filter(item => item !== undefined);
+            // return currentContext;
+
+        } else {
+            return undefined;
+        }
+    }
+    return currentContext;
+}
+
+// Cache hasOwnProperty for speed + prototype safety
+export const hasOwn = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
+
+
+export function getPathValue2(context: any, key: string): any {
+    if (context == null || typeof context !== 'object') {
+        return undefined;
+    }
+    if (typeof key !== 'string') {
+        throw new Error(`Key must be a string, but got ${typeof key}`);
     }
 
     if (key.includes('.')) {
@@ -151,7 +216,11 @@ export function mergeValidationResults(...results: ValidationResult[]): Validati
     for (const result of results) {
         merged.valid = merged.valid && result.valid;
         if (result.errors) {
-            merged.errors = merged.errors ? [...merged.errors, ...result.errors] : [...result.errors];
+            merged.errors = merged.errors || [];
+            for (const error of result.errors) {
+                merged.errors.push(error);
+            }
+            // merged.errors = merged.errors ? [...merged.errors, ...result.errors] : [...result.errors];
         }
     }
     return merged;
@@ -208,4 +277,12 @@ export function toDateSafe(value: unknown): Date | undefined {
     // 6. Fallback: try native constructor
     const fallback = new Date(value as any);
     return Number.isNaN(fallback.getTime()) ? undefined : fallback;
+}
+
+export function garbageCollect() {
+    if (globalThis.gc) try {
+        globalThis.gc();
+    } catch (e) {
+        // Ignore errors when calling gc, as it may not be exposed or available in all environments
+    }
 }

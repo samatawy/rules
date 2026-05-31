@@ -394,21 +394,44 @@ export class Workspace implements Clonable<Workspace> {
      * @param data Any input data that needs to be evaluated.
      * @returns a new instance of WorkingMemory initialized with the given data and the current workspace.
      */
-    public loadContext(data: any): WorkingMemory {
-        return new WorkingMemory(data, this);
+    public loadContext(data: any, sharedData?: any): WorkingMemory {
+        return new WorkingMemory(data, this, sharedData);
     }
 
-    private flattenKeys(data: any, prefix: string = ''): Set<string> {
-        const paths = new Set<string>();
+    private flattenKeys(data: any, prefix: string = '', paths: Set<string> = new Set<string>()): Set<string> {
+
+        if (Array.isArray(data)) {
+            // Traverse array contents (original code silently skipped them)
+            for (const item of data) {
+                if (item !== undefined && typeof item === 'object') {
+                    this.flattenKeys(item, prefix, paths);
+                }
+            }
+        } else if (data) {
+            for (const [key, value] of Object.entries(data)) {
+                if (value !== undefined) {
+                    paths.add(prefix + key);
+                    if (typeof value === 'object') this.flattenKeys(value, prefix + key + '.', paths);
+                }
+            }
+        }
+        return paths;
+    }
+
+    private flattenKeys2(data: any, prefix: string = '', paths: Set<string>): Set<string> {
+        // const paths = new Set<string>();
+        paths = paths || new Set<string>();
         const valueMap = new Map<string, any>();
 
         if (data === null || data === undefined) return paths;
 
-        for (const [key, value] of Object.entries(data)) {
-            if (value === undefined) {
-                continue;
-            } else {
-                valueMap.set(prefix + key, value);
+        if (typeof data === 'object' && !Array.isArray(data)) {
+            for (const [key, value] of Object.entries(data)) {
+                if (value === undefined) {
+                    continue;
+                } else {
+                    valueMap.set(prefix + key, value);
+                }
             }
         }
 
@@ -417,13 +440,13 @@ export class Workspace implements Clonable<Workspace> {
 
             if (Array.isArray(value)) {
                 for (const item of value) {
-                    const nestedPaths = this.flattenKeys(item, path + '.');
+                    const nestedPaths = this.flattenKeys(item, path + '.', paths);
                     for (const nested of nestedPaths) {
                         paths.add(nested);
                     }
                 }
             } else if (typeof value === 'object' && value !== null) {
-                const nestedPaths = this.flattenKeys(value, path + '.');
+                const nestedPaths = this.flattenKeys(value, path + '.', paths);
                 for (const nested of nestedPaths) {
                     paths.add(nested);
                 }
@@ -466,19 +489,23 @@ export class Workspace implements Clonable<Workspace> {
         return Array.from(ruleset);
     }
 
-    private getRulesAffecting(variable: string, rules?: AbstractRule[]): Set<AbstractRule> {
+    private getRulesAffecting(variable: string, rules?: AbstractRule[], visited?: Set<string>): Set<AbstractRule> {
         const all = rules || this.rules.getRules();
         const immediate = all.filter(rule => {
-            const outputs = Object.keys(rule.typedChanges());
+            const outputs = Object.keys(rule.typedChanges(this.type_checker));
             return outputs.includes(variable);
         });
         const set = new Set<AbstractRule>(immediate);
 
+        visited = visited || new Set<string>();
+        visited.add(variable);
         immediate.forEach(rule => {
             // Add all required rules recursively
             const required = rule.required();
             for (const req of required) {
-                const nested = this.getRulesAffecting(req, all);
+                if (visited.has(req)) continue;
+
+                const nested = this.getRulesAffecting(req, all, visited);
                 for (const nestedRule of nested) {
                     set.add(nestedRule);
                 }
@@ -542,6 +569,7 @@ export class Workspace implements Clonable<Workspace> {
         let satisfied: AbstractRule[] = [];
         let rootKeys = this.flattenKeys(context.getOutput());
         let applicable = this.findReteRules(Array.from(rootKeys), context);
+        // let applicable2 = new Set(this.dependency_graph.applicableRules(context));
         let iterate = (applicable.size > 0), iteration = 0;
         let executors: Executor[] = [];
         let changes: string[];
@@ -563,6 +591,7 @@ export class Workspace implements Clonable<Workspace> {
 
                 const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
                 const executor = evaluateLogged(context);
+                // const executor = rule.evaluate(context);
 
                 if (executor) {
                     satisfied.push(rule);
@@ -581,6 +610,7 @@ export class Workspace implements Clonable<Workspace> {
 
                 const executeLogged = withLogger(logger, executor.execute.bind(executor));
                 const effect = executeLogged(context);
+                // const effect = executor.execute(context);
 
                 // Log the rule being executed
                 if (satisfied[idx]) context.addToLog(satisfied[idx], effect);
@@ -591,8 +621,14 @@ export class Workspace implements Clonable<Workspace> {
                     break;
                 }
                 if (effect.changed) {
-                    changes.push(effect.changed);
-                    logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
+                    if (effect.changed.includes(',')) {
+                        const vars = effect.changed.split(',');
+                        logger.debug(`Executor changed output keys: ${vars} to values: ${vars.map(v => context.getOutput(v))}`);
+                        changes.push(...vars);
+                    } else {
+                        changes.push(effect.changed);
+                        logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
+                    }
                     iterate = true;
                 }
             } catch (e) {
@@ -610,6 +646,7 @@ export class Workspace implements Clonable<Workspace> {
                 }
 
                 const nextApplicable = this.findReteRules(changes, context);
+                // const nextApplicable2 = new Set(this.dependency_graph.applicableRules(context));
                 iterate = nextApplicable.size > 0;
                 logger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
 
@@ -840,25 +877,26 @@ export class Workspace implements Clonable<Workspace> {
             for (const rule of sorted) try {
                 logger.debug('Evaluating rule:', rule.toString());
 
-                const required = Array.from(rule.required());
-                const missing = required.filter(req => {
-                    const val = new VariableExpression(req).evaluate(context);
-                    return val === undefined;
-                });
-                if (missing.length > 0) {
-                    logger.warn(`Rule ${rule.getSyntax()} is missing required variables:`, missing);
-                    const errorMessage = `Rule ${rule.getSyntax()} is missing required variables: ${missing.join(', ')}`;
-                    context.addToLog(rule, { exception: errorMessage });
-                    context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
-                    continue;   // skip this rule since it cannot be evaluated yet
-                }
+                // const required = Array.from(rule.required());
+                // const missing = required.filter(req => {
+                //     const val = new VariableExpression(req).evaluate(context);
+                //     return val === undefined;
+                // });
+                // if (missing.length > 0) {
+                //     logger.warn(`Rule ${rule.getSyntax()} is missing required variables:`, missing);
+                //     const errorMessage = `Rule ${rule.getSyntax()} is missing required variables: ${missing.join(', ')}`;
+                //     context.addToLog(rule, { exception: errorMessage });
+                //     context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
+                //     continue;   // skip this rule since it cannot be evaluated yet
+                // }
 
                 const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
                 const executor = evaluateLogged(context);
 
                 if (executor) {
-                    const executeLogged = withLogger(logger, executor.execute.bind(executor));
-                    const effect = executeLogged(context);
+                    // const executeLogged = withLogger(logger, executor.execute.bind(executor));
+                    // const effect = executeLogged(context);
+                    const effect = executor.execute(context);
 
                     if (effect.exception || effect.changed) {
                         context.addToLog(rule, effect);
@@ -868,7 +906,21 @@ export class Workspace implements Clonable<Workspace> {
                         iterate = false;
                         break;
                     }
+                } else {
+                    const required = Array.from(rule.required());
+                    const missing = required.filter(req => {
+                        const val = new VariableExpression(req).evaluate(context);
+                        return val === undefined;
+                    });
+                    if (missing.length > 0) {
+                        logger.warn(`Rule ${rule.getSyntax()} is missing required variables:`, missing);
+                        const errorMessage = `Rule ${rule.getSyntax()} is missing required variables: ${missing.join(', ')}`;
+                        context.addToLog(rule, { exception: errorMessage });
+                        context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
+                        continue;   // skip this rule since it cannot be evaluated yet
+                    }
                 }
+
             } catch (e) {
                 const errorMessage = `Error evaluating rule: ${e instanceof Error ? e.message : String(e)}`;
                 logger.warn(errorMessage, { rule: rule.getSyntax() });
@@ -881,6 +933,24 @@ export class Workspace implements Clonable<Workspace> {
             iterate = (context.getExceptions().length === 0)
                 && context.getOutput(variable) === undefined;
         }
+        // "TypeError: Cannot read properties of undefined (reading 'candidate')\n    
+        // at eval (eval at compileDefinition (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/parser/function.compiler.ts:19:20), <anonymous>:3:28)\n    
+        // at eval (eval at compileFunction (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/parser/function.compiler.ts:30:20), <anonymous>:6:27)\n    
+        // at /Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/functions/array.lambda.functions.ts:189…:37)\n    
+        // at Workspace.evaluate (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/engine/workspace.ts:877:45)\n    
+        // at SelectionSpace.process (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/engine/special/selection.workspace.ts:219:39)\n    
+        // at /Users/samatawy/Documents/projects/node-tests/powerzero/rules/test/selection.test.ts:358:19\n    
+        // at file:///Users/samatawy/Documents/projects/node-tests/powerzero/rules/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11"
+
+        // "TypeError: Cannot read properties of undefined (reading 'Candidate')\n    
+        // at eval(eval at compileDefinition(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser / function.compiler.ts: 19: 20), <anonymous>: 3: 17) \n   
+        // at eval(eval at compileDefinition(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser / function.compiler.ts: 19: 20), <anonymous>: 3: 9) \n    
+        // at eval(eval at compileFunction(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser /…s.ts: 189: 40) \n    
+        // at OutputAction.execute(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / rules / executable.ts: 134: 37) \n    
+        // at Workspace.evaluate(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / engine / workspace.ts: 867: 45) \n    
+        // at SelectionSpace.process(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / engine / special / selection.workspace.ts: 219: 39) \n    
+        // at / Users / samatawy / Documents / projects / node - tests / powerzero / rules / test / selection.test.ts: 358: 19"
+
 
         // After processing, optionally log results
         if (iteration === maxIterations) {

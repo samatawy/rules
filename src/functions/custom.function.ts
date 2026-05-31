@@ -41,7 +41,7 @@ export class CustomFunctionExpression extends FunctionExpression {
                 }
             }
             for (const line of this.definition.lines || []) {
-                const changes = line.typedChanges();
+                const changes = line.typedChanges(checker);
                 for (const change of Object.keys(changes)) {
                     const newType = changes[change];
                     if (newType) {

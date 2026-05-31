@@ -13,18 +13,30 @@ export class WorkLogger {
 
     private static loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
 
+    private static levelSupport: Record<LogLevel, boolean> = {
+        trace: rankedLogLevels['trace'] >= rankedLogLevels[this.logLevel],
+        debug: rankedLogLevels['debug'] >= rankedLogLevels[this.logLevel],
+        info: rankedLogLevels['info'] >= rankedLogLevels[this.logLevel],
+        warn: rankedLogLevels['warn'] >= rankedLogLevels[this.logLevel],
+        error: rankedLogLevels['error'] >= rankedLogLevels[this.logLevel],
+        fatal: rankedLogLevels['fatal'] >= rankedLogLevels[this.logLevel],
+    };
+
     /**
      * Globally set the logging level for all Rule engine classes.
      * @param level the level at which to start logging events.
      */
     public static setLogLevel(level: LogLevel): void {
         this.logLevel = level;
+
+        // Update level support for all log levels based on the new log level
+        for (const logLevel of Object.keys(this.levelSupport) as LogLevel[]) {
+            this.levelSupport[logLevel] = rankedLogLevels[logLevel] >= rankedLogLevels[this.logLevel];
+        }
     }
 
     public static canLog(level: LogLevel): boolean {
-        const current = rankedLogLevels[this.logLevel];
-        const required = rankedLogLevels[level];
-        return current <= required;
+        return this.levelSupport[level];
     }
 
     protected static perform(logger: ILogger | any, func: string, msg: string, ...args: unknown[]) {
@@ -34,15 +46,13 @@ export class WorkLogger {
     }
 
     protected static performAll(func: LogLevel, msg: string, ...args: unknown[]) {
-        const impl = this.getImpl() as ILogger;
-        if (impl !== this) {
-            if (impl.canLog(func)) {
-                this.perform(impl, func, msg, ...args);
-            }
+        const canLog = this.canLog(func);
+        if (!canLog) {
             return;
         }
-
-        if (!this.canLog(func)) {
+        const impl = this.getImpl() as ILogger;
+        if (impl !== this) {
+            this.perform(impl, func, msg, ...args);
             return;
         }
 

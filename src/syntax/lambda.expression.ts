@@ -3,6 +3,8 @@ import type { TypeChecker, ValidationResult, WorkingContext } from "../interface
 import { getReturnType } from "../type.utils";
 import { Expression } from "./expression";
 import type { Renderable } from "../rendering/render.types";
+import { FunctionCompiler } from "../parser/function.compiler";
+import { WorkLogger } from "../logging/work.logger";
 
 /**
  * A LambdaExpression represents an anonymous function that takes a single variable as input and returns a value based on an expression.
@@ -20,6 +22,8 @@ export class LambdaExpression extends Expression {
 
     protected expression: Expression;
 
+    protected compiled?: Function;
+
     /**
      * Creates a new LambdaExpression with the given variable name and expression body.
      * The variable name is the identifier used in the expression body to refer to the input value of the lambda function.
@@ -32,6 +36,14 @@ export class LambdaExpression extends Expression {
         this.expression = expression;
 
         this.syntax = this.toString();
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.expression)) {
+                WorkLogger.warn(`Cannot compile LambdaExpression due to missing function dependencies in the expression body`);
+            } else {
+                this.compiled = FunctionCompiler.compileFunction([this.variableName], `{ return (${this.expression.toJS()}); }`);
+            }
+        }
     }
 
     /**
@@ -42,12 +54,16 @@ export class LambdaExpression extends Expression {
         return this.variableName;
     }
 
+    public compiledFunction(): Function | undefined {
+        return this.compiled;
+    }
+
     public getParts(): Expression[] {
         return this.expression.getParts();
     }
 
     public required(): Set<string> {
-        return new Set([this.variableName, ...this.expression.required()]);
+        return new Set<string>();
     }
 
     public invokes(): Set<string> {
@@ -75,6 +91,13 @@ export class LambdaExpression extends Expression {
 
     public toString(): string {
         return this.variableName + " => " + this.expression.toString();
+    }
+
+    public toJS(): string {
+        let syntax = this.expression.toJS();
+        syntax = FunctionCompiler.normalizeParameters([this.variableName], syntax);
+
+        return `(${this.variableName}) => { return (${syntax}); }`;
     }
 
     public toJson(): Renderable {

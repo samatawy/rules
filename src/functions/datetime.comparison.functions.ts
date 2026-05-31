@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { DateExpression, Expression } from "../syntax/expression";
 import { BooleanFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
@@ -40,6 +41,13 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
         const leftValue = this.left_arg.evaluate(context);
         const rightValue = this.right_arg.evaluate(context);
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(leftValue, rightValue, context);
+            }
+        }
 
         if (!(leftValue instanceof Date) || !(rightValue instanceof Date)) {
             throw new EvaluationError(`Arguments for function ${this.name} did not evaluate to dates`);
@@ -105,4 +113,57 @@ export class DateTimeComparisonFunctionProvider {
         }
         return new DateTimeComparisonFunction(name, args[0] as DateExpression, args[1] as DateExpression);
     }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'before':
+                return { args: ['date1', 'date2'], body: 'return date1.getTime() < date2.getTime();' };
+            case 'after':
+                return { args: ['date1', 'date2'], body: 'return date1.getTime() > date2.getTime();' };
+            case 'sameYear':
+                return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear();' };
+            case 'sameMonth':
+                return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth();' };
+            case 'sameWeek':
+                return {
+                    args: ['date1', 'date2'],
+                    body: `
+                            const getWeekStart = (date) => {
+                                const weekStart = new Date(date);
+                                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                                weekStart.setHours(0, 0, 0, 0);
+                                return weekStart;
+                            };
+                            const date1WeekStart = getWeekStart(date1);
+                            const date2WeekStart = getWeekStart(date2);
+                            return date1WeekStart.getTime() === date2WeekStart.getTime();
+                        `
+                };
+            case 'sameDay':
+                return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();' };
+            case 'sameHour':
+                return {
+                    args: ['date1', 'date2'],
+                    body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate() && date1.getHours() === date2.getHours();'
+                };
+            case 'sameMinute':
+                return {
+                    args: ['date1', 'date2'],
+                    body: 'const diff = Math.abs(date1.getTime() - date2.getTime()); return diff < 60 * 1000'
+                };
+            case 'sameSecond':
+                return {
+                    args: ['date1', 'date2'],
+                    body: 'const diff = Math.abs(date1.getTime() - date2.getTime()); return diff < 1000'
+                };
+            case 'sameInstant':
+                return {
+                    args: ['date1', 'date2'],
+                    body: 'return date1.getTime() === date2.getTime();'
+                };
+            default:
+                throw new TypeCheckError(`Unknown date/time comparison function: ${name}`);
+        }
+    }
+
 }

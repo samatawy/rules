@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { DateExpression, Expression } from "../syntax/expression";
 import { NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class DateTimeInspectionFunction extends NumericFunctionExpression {
 
@@ -41,6 +42,13 @@ export class DateTimeInspectionFunction extends NumericFunctionExpression {
         const targetValue = this.target_arg.evaluate(context);
         if (!(targetValue instanceof Date)) {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a date`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, context);
+            }
         }
 
         switch (this.name) {
@@ -94,5 +102,38 @@ export class DateTimeInspectionFunctionProvider {
             return undefined;
         }
         return new DateTimeInspectionFunction(name, args[0] as DateExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'year':
+                return { args: ['date'], body: 'return date.getFullYear();' };
+            case 'month':
+                return { args: ['date'], body: 'return date.getMonth() + 1;' };
+            case 'week':
+                return {
+                    args: ['date'],
+                    body: `
+                        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+                        const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / (24 * 60 * 60 * 1000);
+                        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                    `
+                };
+            case 'day':
+                return { args: ['date'], body: 'return date.getDate();' };
+            case 'weekday':
+                return { args: ['date'], body: 'return date.getDay() === 0 ? 7 : date.getDay();' };
+            case 'hour':
+                return { args: ['date'], body: 'return date.getHours();' };
+            case 'minute':
+                return { args: ['date'], body: 'return date.getMinutes();' };
+            case 'second':
+                return { args: ['date'], body: 'return date.getSeconds();' };
+            case 'instant':
+            case 'timestamp':
+                return { args: ['date'], body: 'return date.getTime();' };
+            default:
+                throw new TypeCheckError(`Unknown date/time inspection function: ${name}`);
+        }
     }
 }

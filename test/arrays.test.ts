@@ -182,7 +182,6 @@ describe('Engine tests', () => {
 
 
   it('handles array comparison functions', async () => {
-
     const space = new Workspace({ strict_syntax: true, strict_inputs: true, strict_outputs: true });
 
     space.typeRegistry().addRootType({

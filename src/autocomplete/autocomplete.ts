@@ -90,6 +90,7 @@ export class Autocomplete {
             const firstArg = this.suggestions.find(s => s.value === mustChainPrefix);
             if (firstArg && firstArg.returns) {
                 const funcs = this.suggestions.filter(s => (s.kind === 'function') && s.comes_after?.includes(firstArg.returns!));
+                return ([] as AutocompleteSuggestion[]).concat(vars, funcs);
                 return [...vars, ...funcs];
             }
             return vars

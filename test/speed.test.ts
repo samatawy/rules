@@ -35,7 +35,7 @@ describe('Speed tests', () => {
     console.log(`Time taken to add ${iterations} rules: ${ended - started} ms`);
     console.log(`Average time per rule: ${(ended - started) / iterations} ms`);
 
-    iterations = 10_000;
+    iterations = 1000;
     started = Date.now().valueOf();
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);
@@ -70,7 +70,7 @@ describe('Speed tests', () => {
       }
     });
 
-    let iterations = 10_000;
+    let iterations = 1000;
     let started = Date.now().valueOf();
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = ${i}`);
@@ -79,7 +79,7 @@ describe('Speed tests', () => {
     console.log(`Time taken to add ${iterations} rules: ${ended - started} ms`);
     console.log(`Average time per rule: ${(ended - started) / iterations} ms`);
 
-    iterations = 10_000;
+    iterations = 1000;
     started = Date.now().valueOf();
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);

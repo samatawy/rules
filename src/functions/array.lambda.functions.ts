@@ -8,8 +8,9 @@ import { FunctionExpression } from "../syntax/function.expression";
 import { LambdaExpression } from "../syntax/lambda.expression";
 import type { VariableExpression } from "../syntax/variable.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
-import { isArrayType } from "../parser/type.parser";
+import { isArrayType, isTypedObjectType } from "../parser/type.parser";
 import { WorkLogger } from "../logging/work.logger";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class ArrayLambdaFunction extends FunctionExpression {
 
@@ -38,6 +39,8 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 if ((arrayType as ObjectArrayType) && (arrayType as ObjectArrayType).items) {
                     const items = (arrayType as ObjectArrayType).items!;
                     this.localChecker.setType(this.lambda_arg.getVariableName(), items);
+                } else if (isTypedObjectType(arrayType)) {
+                    this.localChecker.setType(this.lambda_arg.getVariableName(), arrayType as ObjectType);
                 } else {
                     const itemType = (arrayType as ArrayType).endsWith('[]') ? (arrayType as ArrayType).slice(0, -2) as AtomicType : {} as ObjectType;
                     if (itemType) {
@@ -167,18 +170,50 @@ export class ArrayLambdaFunction extends FunctionExpression {
             throw new EvaluationError(`Second argument to ${this.name} must be a lambda expression`);
         }
 
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                const lambdaCompiled = this.lambda_arg.compiledFunction();
+                if (lambdaCompiled) {
+                    return compiled(targetArray, lambdaCompiled, context);
+                }
+            }
+        }
+
         // Run the lambda expression for each item in the array and collect the results
-        const values = targetArray.map((item: any) => {
-            const scope = new ScopeContext(context);
+        // const valueType = this.lambda_arg.returnsType(this.localChecker);
+        const values: unknown[] = [];
+        const scope = new ScopeContext(context);
+        for (const item of targetArray) {
             scope.setData(this.lambda_arg.getVariableName(), item);
-            return this.lambda_arg.evaluate(scope);
-        });
+            values.push(this.lambda_arg.evaluate(scope));
+            scope.clearCache();
+        }
+        // const values = targetArray.map((item: any) => {
+        //     const scope = new ScopeContext(context);
+        //     scope.setData(this.lambda_arg.getVariableName(), item);
+        //     return this.lambda_arg.evaluate(scope);
+        // });
 
         switch (this.name) {
             case 'every':
-                return values.reduce((acc, val) => acc && !!val, true);
+                for (const val of values) {
+                    if (!val) {
+                        return false;
+                    }
+                }
+                return true;
+            // Alternatively:
+            // return values.reduce((acc, val) => acc && !!val, true);
             case 'any':
-                return values.reduce((acc, val) => acc || !!val, false);
+                for (const val of values) {
+                    if (val) {
+                        return true;
+                    }
+                }
+                return false;
+            // Alternatively:
+            // return values.reduce((acc, val) => acc || !!val, false);
             case 'sort':
                 const indices = targetArray.map((_, idx) => idx);
                 indices.sort((a, b) => {
@@ -188,6 +223,15 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 return indices.map(idx => targetArray[idx]);
 
             case 'filter':
+                const filtered = [];
+                for (let i = 0; i < targetArray.length; i++) {
+                    if (values[i]) {
+                        filtered.push(targetArray[i]);
+                    }
+                }
+                return filtered;
+                // Alternatively:
+                // return targetArray.filter((_: any, index: number) => !!values[index]);
                 return targetArray.filter((_: any, index: number) => !!values[index]);
             case 'map':
                 return values;
@@ -234,5 +278,39 @@ export class ArrayLambdaFunctionProvider {
             return undefined;
         }
         return new ArrayLambdaFunction(name, args);
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'every':
+                return { args: ['array', 'lambda'], body: 'return array.every(item => lambda(item, context));' };
+            case 'any':
+                return { args: ['array', 'lambda'], body: 'return array.some(item => lambda(item, context));' };
+            case 'filter':
+                return { args: ['array', 'lambda'], body: 'return array.filter(item => lambda(item, context));' };
+            case 'map':
+                return { args: ['array', 'lambda'], body: 'return array.map(item => lambda(item, context));' };
+            case 'sort':
+                return {
+                    args: ['array', 'lambda'],
+                    body: `
+                        const sorted = [...array];
+                        sorted.sort((a, b) => {
+                            const valA = lambda(a, context);
+                            const valB = lambda(b, context);
+                            if (valA === valB) return 0;
+                            if (valA == null) return -1;
+                            if (valB == null) return 1;
+                            if (typeof valA === 'string' && typeof valB === 'string') {
+                                return valA.localeCompare(valB);
+                            }
+                            return valA < valB ? -1 : 1;
+                        });
+                        return sorted;
+                    `
+                };
+            default:
+                throw new TypeCheckError(`Unknown lambda function: ${name}`);
+        }
     }
 }

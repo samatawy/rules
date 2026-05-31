@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { NumericExpression } from "../syntax/expression";
 import { NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class RandomFunction extends NumericFunctionExpression {
 
@@ -32,6 +33,13 @@ export class RandomFunction extends NumericFunctionExpression {
                 throw new EvaluationError(`Argument ${index} for function ${this.name} did not evaluate to a number`);
             }
         });
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(...evaluatedArgs, context);
+            }
+        }
 
         switch (this.name) {
             case 'random':
@@ -70,5 +78,24 @@ export class RandomFunctionProvider {
             return undefined;
         }
         return new RandomFunction(name, args as NumericExpression[]);
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'random':
+                return { args: [], body: 'return Math.random();' };
+            case 'randomBetween':
+                return {
+                    args: ['min', 'max'],
+                    body: 'return Math.random() * (max - min) + min;'
+                };
+            case 'randomInteger':
+                return {
+                    args: ['min', 'max'],
+                    body: 'return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);'
+                };
+            default:
+                throw new TypeCheckError(`Unknown random function: ${name}`);
+        }
     }
 }

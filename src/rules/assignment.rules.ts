@@ -1,6 +1,6 @@
 import { AbstractRule } from "./abstract.rule";
 import type { Expression } from "../syntax/expression";
-import type { ArrayType, AtomicType } from "../types";
+import type { ArrayType, AtomicType, ObjectType } from "../types";
 import type { Executor, WorkingContext, RuleEffect, TypeChecker, ValidationResult } from "../interfaces";
 import { RuleParser } from "../parser/rule.parser";
 import { getReturnType } from "../type.utils";
@@ -9,8 +9,9 @@ import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { withLogger } from "../logging/work.logger";
+import { withLogger, WorkLogger } from "../logging/work.logger";
 import type { Renderable } from "../rendering/render.types";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 /**
  * A rule that assigns a value to a key whenever the requirements are provided.
@@ -21,6 +22,8 @@ export class OutputRule extends AbstractRule {
     protected outputKey: string;
 
     protected expression: Expression;
+
+    protected compiled_exec?: Function;
 
     /**
      * Get the expression that will return a value to be set.
@@ -39,11 +42,11 @@ export class OutputRule extends AbstractRule {
         }
     }
 
-    static parsed(syntax: string, key: string, expression: Expression): OutputRule {
-        return new OutputRule(syntax, key, expression);
+    static parsed(syntax: string, key: string, expression: Expression, checker?: TypeChecker): OutputRule {
+        return new OutputRule(syntax, key, expression, checker);
     }
 
-    protected constructor(syntax: string, key: string, expression: Expression | null) {
+    protected constructor(syntax: string, key: string, expression: Expression | null, checker?: TypeChecker) {
         super(syntax);
         this.outputKey = key;
         if (expression) {
@@ -59,7 +62,15 @@ export class OutputRule extends AbstractRule {
             }
         }
         this.require(...this.expression.required());
-        this.willChange({ [this.outputKey]: getReturnType(this.expression) as AtomicType | ArrayType });
+        this.willChange({ [this.outputKey]: getReturnType(this.expression, checker) as AtomicType | ArrayType });
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.expression)) {
+                WorkLogger.warn(`Cannot compile OutputRule for key '${this.outputKey}' due to missing function dependencies in the expression`);
+            } else {
+                this.compiled_exec = FunctionCompiler.compileFunction([], `return ${this.expression.toJS()};`);
+            }
+        }
     }
 
     public toString(): string {
@@ -100,9 +111,18 @@ export class OutputRule extends AbstractRule {
         return mergeValidationResults(...checks);
     }
 
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
+        if (Object.keys(this.changeTargets).length === 0) {
+            this.changeTargets = { [this.outputKey]: getReturnType(this.expression, checker) as AtomicType | ArrayType | ObjectType };
+        }
+        return this.changeTargets;
+    }
+
     public evaluate(context: WorkingContext): Executor | null {
         const oldValue = context.getOutput(this.outputKey);
-        const newValue = this.expression.evaluate(context);
+        const newValue = this.compiled_exec && FunctionCompiler.enabled
+            ? this.compiled_exec(context)
+            : this.expression.evaluate(context);
 
         if (equalsDeep(oldValue, newValue)) {
             return null;
@@ -113,7 +133,9 @@ export class OutputRule extends AbstractRule {
 
     public execute(context: WorkingContext): RuleEffect {
         const oldValue = context.getOutput(this.outputKey);
-        const newValue = this.expression.evaluate(context);
+        const newValue = this.compiled_exec && FunctionCompiler.enabled
+            ? this.compiled_exec(context)
+            : this.expression.evaluate(context);
 
         if (oldValue && typeof oldValue === 'object') {
             throw new ExecutionError('Should not override an "object" in an assignment');

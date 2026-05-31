@@ -137,7 +137,7 @@ export interface Executor {
      * Get the data keys that this executor will change when executed, along with their expected types.
      * @returns a record mapping data keys to their expected types.
      */
-    typedChanges(): Record<string, AtomicType | ArrayType | ObjectType>;
+    typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType>;
 
     /**
      * Execute the required action in the given context and return the effects of the execution.
@@ -188,6 +188,9 @@ export type FunctionProvider = {
      * @returns a mock function expression, or undefined if the function name is not supported.
      */
     mock(name: string, args: Expression[]): FunctionExpression | undefined;
+
+    toJS(name: string): { args: string[], body: string } | undefined;
+    // , expectsParameterArray?: boolean.  -- was removed because the function expression can determine this on its own by checking for rest parameters in the args array.
 }
 
 export interface ValidationResult {

@@ -40,6 +40,13 @@ export class LiteralExpression extends Expression {
         return String(this.value);
     }
 
+    public toJS(): string {
+        if (typeof this.value === 'string') {
+            return JSON.stringify(this.value);
+        }
+        return String(this.value);
+    }
+
     public toJson(): Renderable {
         return {
             type: 'LiteralExpression',

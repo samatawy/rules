@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, StringExpression } from "../syntax/expression";
 import { NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class StringInspectionFunction extends NumericFunctionExpression {
 
@@ -38,6 +39,13 @@ export class StringInspectionFunction extends NumericFunctionExpression {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a string`);
         }
         const evaluatedArgs = this.extra_args.map(arg => arg.evaluate(context));
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
+            }
+        }
 
         switch (this.name) {
             case 'length':
@@ -77,5 +85,20 @@ export class StringInspectionFunctionProvider {
             return undefined;
         }
         return new StringInspectionFunction(name, args[0] as StringExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'length':
+                return { args: ['str'], body: 'return str.length;' };
+            case 'countOf':
+                return { args: ['str', 'substr'], body: 'return str.split(substr).length - 1;' };
+            case 'indexOf':
+                return { args: ['str', 'substr'], body: 'return str.indexOf(substr);' };
+            case 'lastIndexOf':
+                return { args: ['str', 'substr'], body: 'return str.lastIndexOf(substr);' };
+            default:
+                throw new TypeCheckError(`Unknown string inspection function: ${name}`);
+        }
     }
 }

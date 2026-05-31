@@ -98,26 +98,6 @@ export class MermaidRenderer {
 
             text += this.renderOutputAction(json);
             text += `end\n`;
-
-            // const expr: Renderable = { type: 'VariableExpression', name: json.output };
-            // text += this.renderExpression(expr);
-            // text += `end\n`;
-            // if (blockStyle) {
-            //     text += `style SET ${blockStyle}\n`;
-            // }
-
-            // if (json.expression) {
-            //     text += `subgraph EXPRESSION[&nbsp;]\n`;
-            //     text += 'direction LR\n';
-
-            //     text += this.renderExpression(json.expression);
-            //     text += `end\n`;
-
-            //     if (blockStyle) {
-            //         text += `style EXPRESSION ${blockStyle}\n`;
-            //     }
-            //     text += 'SET --> EXPRESSION\n';
-            // }
         }
 
         return text;
@@ -370,12 +350,10 @@ export class MermaidRenderer {
         text += `${commandId}["${json.name}"]:::command\n`;
 
         for (const arg of json.arguments || []) {
-            // let nameId = this.nodeId({ type: 'VariableExpression', name: arg.name });
             let exprId = this.nodeId(arg.expression!);
             text += this.renderExpression(arg.expression!);
-
-            // text += `${nameId}["${arg.name}"]:::variable\n`;
-            text += this.renderExpression(arg.expression!);
+            // TODO: Why was this duplicated?
+            // text += this.renderExpression(arg.expression!);
 
             text += `${exprId} -- ${arg.name} --> ${commandId}\n`;
         }

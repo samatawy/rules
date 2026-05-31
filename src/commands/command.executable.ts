@@ -39,12 +39,22 @@ export class CommandExecutable extends ExecutableAction {
         return new Set(all);
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
         return {};
     }
 
     public toString(): string {
         return `${this.command.keyword} (${stringifyTypeJson(this.arguments)})`;
+    }
+
+    public toJS(): string {
+        // const argsJS = Object.entries(this.arguments)
+        //     .map(([key, expr]) => `${key}: ${expr.toJS()}`)
+        //     .join(', ');
+        // return `context.executeCommand("${this.command.keyword}", { ${argsJS} })`;
+
+        // Custom Command cannot be compiled to JS without a command handler implementation;
+        return '';
     }
 
     public toJson(): Renderable {

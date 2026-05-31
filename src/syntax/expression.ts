@@ -65,6 +65,8 @@ export abstract class Expression implements Evaluator, HasValidity {
      */
     public abstract toString(): string;
 
+    public abstract toJS(): string;
+
     /**
      * Get a JSON representation of the expression, which can be used for serialization, logging, 
      * or visualization.

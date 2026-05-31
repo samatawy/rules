@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, StringExpression } from "../syntax/expression";
 import { BooleanFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class StringComparisonFunction extends BooleanFunctionExpression {
 
@@ -29,6 +30,13 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
 
         if (typeof leftValue !== 'string' || typeof rightValue !== 'string') {
             throw new EvaluationError(`Arguments for function ${this.name} did not evaluate to strings`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(leftValue, rightValue, context);
+            }
         }
 
         switch (this.name) {
@@ -115,7 +123,6 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             .replace(/_/g, '.')
             .replace(/\%/g, '.*');
     }
-
 }
 
 export class StringComparisonFunctionProvider {
@@ -147,5 +154,58 @@ export class StringComparisonFunctionProvider {
             return undefined;
         }
         return new StringComparisonFunction(name, args[0] as StringExpression, args[1] as StringExpression);
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'equals':
+                return { args: ['str1', 'str2'], body: 'return str1 === str2;' };
+            case 'equalsIgnoreCase':
+                return { args: ['str1', 'str2'], body: 'return str1.toLowerCase() === str2.toLowerCase();' };
+            case 'includes':
+            case 'contains':
+                return { args: ['str1', 'str2'], body: 'return str1.includes(str2);' };
+            case 'includesIgnoreCase':
+            case 'containsIgnoreCase':
+                return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().includes(str2.toLowerCase());' };
+            case 'startsWith':
+                return { args: ['str1', 'str2'], body: 'return str1.startsWith(str2);' };
+            case 'startsWithIgnoreCase':
+                return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().startsWith(str2.toLowerCase());' };
+            case 'endsWith':
+                return { args: ['str1', 'str2'], body: 'return str1.endsWith(str2);' };
+            case 'endsWithIgnoreCase':
+                return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().endsWith(str2.toLowerCase());' };
+            case 'matches':
+                return { args: ['str', 'regex'], body: 'return new RegExp(regex).test(str);' };
+            case 'matchesIgnoreCase':
+                return { args: ['str', 'regex'], body: 'return new RegExp(regex, "i").test(str);' };
+            case 'like':
+                const regex = /([.+?^=!:${}()|[\]\/\\])/g;
+                return {
+                    args: ['str', 'pattern'],
+                    body: `
+                        const regexPattern = pattern.replace(${regex}, '\\\\$1')
+                            .replace(/_/g, '.')
+                            .replace(/\\%/g, '.*');
+                        return new RegExp('^' + regexPattern + '$')
+                            .test(str);
+                    `
+                };
+            case 'likeIgnoreCase':
+                const regex_i = /([.+?^=!:${}()|[\]\/\\])/g;
+                return {
+                    args: ['str', 'pattern'],
+                    body: `
+                        const regexPattern = pattern.replace(${regex_i}, '\\\\$1')
+                            .replace(/_/g, '.')
+                            .replace(/\\%/g, '.*');
+                        return new RegExp('^' + regexPattern + '$', 'i')
+                            .test(str);
+                    `
+                };
+            default:
+                throw new TypeCheckError(`Unknown string comparison function: ${name}`);
+        }
     }
 }

@@ -64,4 +64,16 @@ export class BooleanFunctionProvider {
         }
         return new BooleanFunction(name, args[0]!);
     }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name.toLowerCase()) {
+            case 'if':
+            case 'is':
+                return { args: ['value'], body: 'return !!value;' };
+            case 'not':
+                return { args: ['value'], body: 'return !value;' };
+            default:
+                throw new TypeCheckError(`Unknown boolean function: ${name}`);
+        }
+    }
 }

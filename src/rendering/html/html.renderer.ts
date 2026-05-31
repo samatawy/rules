@@ -81,8 +81,6 @@ export class HtmlRenderer {
         if (json.output) {
             html += `<div class="block set">`;
             html = this.renderOutputAction(json);
-            // html += '<span class="keyword"> SET&nbsp;</span>';
-            // html += this.renderExpression({ type: 'VariableExpression', name: json.output });
             html += `</div>`;
         }
 
@@ -125,10 +123,8 @@ export class HtmlRenderer {
                 return this.renderCommandExecutable(json);
 
             default:
-                // return expression.toString();
                 throw new Error(`Unsupported expression type: ${json.type}`);
         }
-        // return expression.toString();
     }
 
     private operator(op: string | undefined): string {

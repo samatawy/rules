@@ -50,7 +50,7 @@
         "postbuild": "node ./scripts/strip-dist-comments.mjs",
         "dev": "tsup src/browser/index.ts src/autocomplete/index.ts src/node/index.ts --format esm,cjs --dts --watch",
         "lint": "tsc --noEmit -p tsconfig.json",
-        "test": "vitest run",
+        "test": "NODE_OPTIONS=\"--expose-gc\" vitest run",
         "test:watch": "vitest",
         "docs": "typedoc",
         "prepublishOnly": "npm run lint && npm run test && npm run build"

@@ -4,6 +4,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression } from "../syntax/expression";
 import { FunctionExpression, StringFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class ArrayCollectionFunction extends StringFunctionExpression {
 
@@ -41,6 +42,11 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
         if (this.expectsParameterArray()) {
             const firstArg = this.target_arg.evaluate(context);
             const isArray = this.target_arg instanceof ArrayExpression || Array.isArray(firstArg);
+            if (isArray && (this.extra_args[-1] as any) === context) {
+                // In case context is passed as the last argument
+                this.extra_args.pop();
+            }
+
             this.target_arg = isArray ? this.target_arg : new ArrayExpression([this.target_arg, ...this.extra_args]);
             this.extra_args = [];
         }
@@ -49,6 +55,13 @@ export class ArrayCollectionFunction extends StringFunctionExpression {
         if (!Array.isArray(targetValue)) {
             context.logger().debug('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to an array`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, context);
+            }
         }
 
         switch (this.name) {
@@ -86,5 +99,16 @@ export class ArrayCollectionFunctionProvider {
             return undefined;
         }
         return new ArrayCollectionFunction(name, args[0]!, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } | undefined {
+        switch (name) {
+            case 'concat':
+                return { args: ['...arr'], body: 'return arr.join("");' };
+            case 'join':
+                return { args: ['arr', 'separator'], body: 'return arr.join(separator || "");' };
+            default:
+                throw new TypeCheckError(`Unknown array collection function: ${name}`);
+        }
     }
 }

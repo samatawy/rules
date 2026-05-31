@@ -54,6 +54,10 @@ export class VariableExpression extends Expression {
         return this.variableName;
     }
 
+    public toJS(): string {
+        return `context.getData('${this.variableName}')`;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'VariableExpression',

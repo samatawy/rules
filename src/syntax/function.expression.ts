@@ -78,7 +78,6 @@ export abstract class FunctionExpression extends Expression {
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
         const checks: ValidationResult[] = [];
-        // const logger = checker?.logger() || WorkLogger;
 
         for (const arg of this.args) {
             checks.push(arg.checkTypes(checker));
@@ -92,6 +91,11 @@ export abstract class FunctionExpression extends Expression {
 
         // If the function expects a parameter array, we check that all provided arguments match the expected type
         if (this.expectsParameterArray()) {
+            if ((typeof this.args[-1] as any).getData === 'function') {
+                // In case context is passed as the last argument
+                this.args.pop();
+            }
+
             const expectedType = expected[0]!.type;
             const itemType = getArrayType(this.args, checker);
             if (itemType !== expectedType && expectedType !== 'any') {
@@ -158,6 +162,12 @@ export abstract class FunctionExpression extends Expression {
     public toString(): string {
         const argsString = this.args.map(arg => arg?.toString() || '').join(', ');
         return `${this.name}(${argsString})`;
+    }
+
+    public toJS(): string {
+        const argsJS = this.args.map(arg => arg?.toJS() || '');
+        argsJS.push('context');
+        return `${this.name}(${argsJS.join(', ')})`;
     }
 
     public toJson(): Renderable {

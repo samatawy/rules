@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, NumericExpression } from "../syntax/expression";
 import { NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class TrigonomicFunction extends NumericFunctionExpression {
 
@@ -41,6 +42,13 @@ export class TrigonomicFunction extends NumericFunctionExpression {
         const targetValue = this.target_arg.evaluate(context);
         if (typeof targetValue !== 'number') {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a number`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
+            }
         }
 
         switch (this.name) {
@@ -89,5 +97,21 @@ export class TrigonometricFunctionProvider {
             return undefined;
         }
         return new TrigonomicFunction(name, args[0] as NumericExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'sin':
+            case 'cos':
+            case 'tan':
+            case 'asin':
+            case 'acos':
+            case 'atan':
+                return { args: ['x'], body: `return Math.${name}(x);` };
+            case 'atan2':
+                return { args: ['y', 'x'], body: `return Math.atan2(y, x);` };
+            default:
+                throw new TypeCheckError(`Unknown trigonometric function: ${name}`);
+        }
     }
 }

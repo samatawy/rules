@@ -5,8 +5,9 @@ import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { withLogger } from "../logging/work.logger";
+import { withLogger, WorkLogger } from "../logging/work.logger";
 import type { Renderable } from "../rendering/render.types";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 /**
  * An executable action represents a specific operation that can be executed in the context of a rule.
@@ -19,6 +20,8 @@ import type { Renderable } from "../rendering/render.types";
 export abstract class ExecutableAction implements Executor, HasValidity {
 
     protected preparedEffect?: Partial<RuleEffect>;
+
+    protected compiled?: Function;
 
     /**
      * What data keys are required for this action to be evaluated? 
@@ -36,7 +39,7 @@ export abstract class ExecutableAction implements Executor, HasValidity {
      * What data keys will be changed when this action is executed, along with their expected types?
      * @returns a record mapping data keys to their expected types.
      */
-    public abstract typedChanges(): Record<string, AtomicType | ArrayType | ObjectType>;
+    public abstract typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType>;
 
     public prepareEffect(partial: Partial<RuleEffect>): this {
         this.preparedEffect = { ...this.preparedEffect, ...partial };
@@ -44,6 +47,8 @@ export abstract class ExecutableAction implements Executor, HasValidity {
     };
 
     public abstract toString(): string;
+
+    public abstract toJS(): string;
 
     public abstract toJson(): Renderable;
 
@@ -67,7 +72,16 @@ export class OutputAction extends ExecutableAction {
         super();
         this.key = key;
         this.value = value;
+
+        if (FunctionCompiler.enabled) {
+            if (FunctionCompiler.missingFunctions(this.value)) {
+                WorkLogger.warn(`Cannot compile OutputAction for key '${this.key}' due to missing function dependencies`);
+            } else {
+                this.compiled = FunctionCompiler.compileFunction([], `return ${this.value.toJS()};`);
+            }
+        }
     }
+
 
     public required(): Set<string> {
         return this.value.required();
@@ -77,12 +91,16 @@ export class OutputAction extends ExecutableAction {
         return this.value.invokes();
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
-        return { [this.key]: getReturnType(this.value) as AtomicType | ArrayType | ObjectType };
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
+        return { [this.key]: getReturnType(this.value, checker) as AtomicType | ArrayType | ObjectType };
     }
 
     public toString(): string {
         return `SET ${this.key} = ${this.value.toString()}`;
+    }
+
+    public toJS(): string {
+        return `${this.key} = ${this.value.toJS()}`;
     }
 
     public toJson(): Renderable {
@@ -124,7 +142,9 @@ export class OutputAction extends ExecutableAction {
 
     public execute(context: WorkingContext): RuleEffect {
         const oldValue = context.getOutput(this.key);
-        const newValue = this.value.evaluate(context);
+        const newValue = (this.compiled && FunctionCompiler.enabled)
+            ? this.compiled(context)
+            : this.value.evaluate(context);
 
         if (withLogger(context.logger(), equalsDeep)(oldValue, newValue)) {
             return {};
@@ -134,6 +154,7 @@ export class OutputAction extends ExecutableAction {
         }
     }
 }
+
 
 /**
  * A composite action allows for combining multiple executable actions into a single action that executes all of them together. 
@@ -164,16 +185,20 @@ export class CompositeAction extends ExecutableAction {
         return new Set(all);
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
         let changes: Record<string, AtomicType | ArrayType | ObjectType> = {};
         for (const action of this.actions) {
-            changes = { ...changes, ...action.typedChanges() };
+            changes = { ...changes, ...action.typedChanges(checker) };
         }
         return changes;
     }
 
     public toString(): string {
         return this.actions.map(action => action.toString()).join('; ');
+    }
+
+    public toJS(): string {
+        return this.actions.map(action => action.toJS()).join(';\n');
     }
 
     public toJson(): Renderable {
@@ -237,12 +262,16 @@ export class ExceptionThrower extends ExecutableAction {
         return new Set();
     }
 
-    public typedChanges(): Record<string, AtomicType | ArrayType | ObjectType> {
+    public typedChanges(checker?: TypeChecker): Record<string, AtomicType | ArrayType | ObjectType> {
         return {}
     }
 
     public toString(): string {
         return `THROW ${this.errorMessage}`;
+    }
+
+    public toJS(): string {
+        return `throw new Error("${this.errorMessage}")`;
     }
 
     public toJson(): Renderable {

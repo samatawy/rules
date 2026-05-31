@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression, NumericExpression } from "../syntax/expression";
 import { NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class NumericManipulationFunction extends NumericFunctionExpression {
 
@@ -53,6 +54,13 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
         const targetValue = this.target_arg.evaluate(context);
         if (typeof targetValue !== 'number') {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a number`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
+            }
         }
 
         switch (this.name) {
@@ -117,5 +125,47 @@ export class NumericManipulationFunctionProvider {
             return undefined;
         }
         return new NumericManipulationFunction(name, args[0] as NumericExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'neg':
+            case 'negative':
+                return { args: ['x'], body: 'return -x;' };
+            case 'abs':
+                return { args: ['x'], body: 'return Math.abs(x);' };
+            case 'sign':
+                return { args: ['x'], body: 'return Math.sign(x);' };
+            case 'sqrt':
+                return { args: ['x'], body: 'return Math.sqrt(x);' };
+            case 'log':
+                return { args: ['x'], body: 'return Math.log(x);' };
+            case 'log10':
+                return { args: ['x'], body: 'return Math.log10(x);' };
+            case 'log2':
+                return { args: ['x'], body: 'return Math.log2(x);' };
+            case 'exp':
+                return { args: ['x'], body: 'return Math.exp(x);' };
+            case 'ceil':
+                return { args: ['x'], body: 'return Math.ceil(x);' };
+            case 'floor':
+                return { args: ['x'], body: 'return Math.floor(x);' };
+            case 'round':
+                return { args: ['x'], body: 'return Math.round(x);' };
+            case 'roundTo':
+                return {
+                    args: ['x', 'precision'],
+                    body: `
+                        const factor = Math.pow(10, precision);
+                        return Math.round(x * factor) / factor;
+                    `};
+            case 'pow':
+            case 'power':
+                return { args: ['x', 'y'], body: 'return Math.pow(x, y);' };
+            case 'root':
+                return { args: ['x', 'n'], body: 'return Math.pow(x, 1 / n);' };
+            default:
+                throw new TypeCheckError(`Unknown numeric manipulation function: ${name}`);
+        }
     }
 }

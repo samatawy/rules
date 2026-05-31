@@ -120,6 +120,23 @@ export class SwitchExpression extends Expression {
         return str;
     }
 
+    public toJS(): string {
+        let js = `(function() { const condition = ${this.condition.toJS()}; `;
+        for (let i = 0; i < this.caseValues.length; i++) {
+            const caseValueExpr = this.caseValues[i];
+            const caseExpr = this.caseExpressions[i];
+            if (!caseValueExpr || !caseExpr) continue;
+            js += `if (condition === ${caseValueExpr.toJS()}) { return ${caseExpr.toJS()}; } `;
+        }
+        if (this.defaultExpression) {
+            js += `return ${this.defaultExpression.toJS()}; `;
+        } else {
+            js += `throw new Error('No matching case found in switch expression and no default expression provided'); `;
+        }
+        js += `})()`;
+        return js;
+    }
+
     public toJson(): Renderable {
         return {
             type: 'SwitchExpression',

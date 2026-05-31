@@ -4,6 +4,7 @@ import type { WorkingContext } from "../interfaces";
 import type { Expression } from "../syntax/expression";
 import { FunctionExpression, NumericFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class ArrayInspectionFunction extends NumericFunctionExpression {
 
@@ -49,6 +50,11 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         if (this.expectsParameterArray()) {
             const firstArg = this.target_arg.evaluate(context);
             const isArray = this.target_arg instanceof ArrayExpression || Array.isArray(firstArg);
+            if (isArray && (this.extra_args[-1] as any) === context) {
+                // In case context is passed as the last argument
+                this.extra_args.pop();
+            }
+
             this.target_arg = isArray ? this.target_arg : new ArrayExpression([this.target_arg, ...this.extra_args]);
             this.extra_args = [];
         }
@@ -57,6 +63,13 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
         if (!Array.isArray(targetValue)) {
             context.logger().warn('Received argument', targetValue, `for argument ${this.target_arg} in function ${this.name}`);
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to an array`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, context);
+            }
         }
 
         switch (this.name) {
@@ -115,5 +128,41 @@ export class ArrayInspectionFunctionProvider {
             return undefined;
         }
         return new ArrayInspectionFunction(name, args[0]!, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } | undefined {
+        switch (name) {
+            case 'count':
+                return { args: ['...arr'], body: 'return arr.length;' };
+            case 'sum':
+            case 'total':
+                return { args: ['...arr'], body: 'return arr.reduce((acc, val) => acc + val, 0);' };
+            case 'avg':
+            case 'average':
+            case 'mean':
+                return { args: ['...arr'], body: 'return arr.reduce((acc, val) => acc + val, 0) / arr.length;' };
+            case 'median':
+                return {
+                    args: ['...arr'],
+                    body: `
+                        if (arr.length === 0) return 0;
+                        const sorted = [...arr].sort((a, b) => a - b);
+                        const mid = Math.floor(sorted.length / 2);
+                        if (sorted.length % 2 === 0) {
+                            return (sorted[mid - 1] + sorted[mid]) / 2;
+                        } else {
+                            return sorted[mid];
+                        }`};
+
+            case 'min':
+                return { args: ['...arr'], body: 'return Math.min(...arr);' };
+            case 'max':
+                return { args: ['...arr'], body: 'return Math.max(...arr);' };
+            case 'range':
+                return { args: ['...arr'], body: 'return Math.max(...arr) - Math.min(...arr);' };
+
+            default:
+                throw new EvaluationError(`Unknown array inspection function: ${this.name}`);
+        }
     }
 }

@@ -3,6 +3,7 @@ import type { WorkingContext } from "../interfaces";
 import type { DateExpression, Expression } from "../syntax/expression";
 import { DateFunctionExpression } from "../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
+import { FunctionCompiler } from "../parser/function.compiler";
 
 export class DateTimeManipulationFunction extends DateFunctionExpression {
 
@@ -47,6 +48,13 @@ export class DateTimeManipulationFunction extends DateFunctionExpression {
         const targetValue = this.target_arg.evaluate(context);
         if (!(targetValue instanceof Date)) {
             throw new EvaluationError(`Target argument for function ${this.name} did not evaluate to a Date`);
+        }
+
+        if (FunctionCompiler.enabled) {
+            const compiled = (globalThis as any)[this.name] as Function;
+            if (typeof compiled === 'function') {
+                return compiled(targetValue, ...evaluatedArgs, context);
+            }
         }
 
         switch (this.name) {
@@ -108,5 +116,41 @@ export class DateTimeManipulationFunctionProvider {
             return undefined;
         }
         return new DateTimeManipulationFunction(name, args[0] as DateExpression, args.slice(1));
+    }
+
+    public static toJS(name: string): { args: string[], body: string } {
+        switch (name) {
+            case 'addYears':
+                return { args: ['date', 'n'], body: 'return new Date(date.getFullYear() + n, date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());' };
+            case 'addMonths':
+                return { args: ['date', 'n'], body: 'return new Date(date.getFullYear(), date.getMonth() + n, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());' };
+            case 'addWeeks':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() + n * 7 * 24 * 60 * 60 * 1000);' };
+            case 'addDays':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() + n * 24 * 60 * 60 * 1000);' };
+            case 'addHours':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() + n * 60 * 60 * 1000);' };
+            case 'addMinutes':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() + n * 60 * 1000);' };
+            case 'addSeconds':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() + n * 1000);' };
+
+            case 'subtractYears':
+                return { args: ['date', 'n'], body: 'return new Date(date.getFullYear() - n, date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());' };
+            case 'subtractMonths':
+                return { args: ['date', 'n'], body: 'return new Date(date.getFullYear(), date.getMonth() - n, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());' };
+            case 'subtractWeeks':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() - n * 7 * 24 * 60 * 60 * 1000);' };
+            case 'subtractDays':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() - n * 24 * 60 * 60 * 1000);' };
+            case 'subtractHours':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() - n * 60 * 60 * 1000);' };
+            case 'subtractMinutes':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() - n * 60 * 1000);' };
+            case 'subtractSeconds':
+                return { args: ['date', 'n'], body: 'return new Date(date.getTime() - n * 1000);' };
+            default:
+                throw new TypeCheckError(`Unknown date/time manipulation function: ${name}`);
+        }
     }
 }
