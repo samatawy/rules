@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IfThenRule } from '../src/rules/conditional.rules';
-import { WorkspaceTypeChecker } from '../src/engine/workspace.type.checker';
+import { WorkingTypeChecker } from '../src/engine/working.type.checker';
 import { getDefinedType, hasDefinedType } from '../src/type.utils';
 import { TypeRegistry } from '../src/engine/type.registry';
 import type { ObjectArrayType } from '../src/types';
@@ -10,7 +10,7 @@ describe('Types Test', () => {
 
   it('handles typed inputs and outputs', async () => {
     const registry = new TypeRegistry();
-    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: true });
+    const types = new WorkingTypeChecker(registry, { strict_inputs: true, strict_outputs: true });
     registry.addRootType({
       key: 'Person',
       properties: {
@@ -49,7 +49,7 @@ describe('Types Test', () => {
     expect(getDefinedType(personType!, 'age')).toBe('number');
     expect(getDefinedType(personType!, 'nonexistent')).toBeUndefined();
 
-    // Check hasType and getType methods in WorkspaceTypeChecker
+    // Check hasType and getType methods in WorkingTypeChecker
     expect(types.hasType('Person')).toBe(true);
     expect(types.hasType('Person.name')).toBe(true);
     expect(types.getType('Person')).toBeDefined();
@@ -62,7 +62,7 @@ describe('Types Test', () => {
 
   it('handles type checking for rules', async () => {
     const registry = new TypeRegistry();
-    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
+    const types = new WorkingTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
     registry.addRootType({
       key: 'Person',
       properties: {
@@ -100,7 +100,7 @@ describe('Types Test', () => {
 
   it('handles type checking for rules with functions', async () => {
     const registry = new TypeRegistry();
-    const types = new WorkspaceTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
+    const types = new WorkingTypeChecker(registry, { strict_inputs: true, strict_outputs: false });
     registry.addRootType({
       key: 'Person',
       properties: {
@@ -127,7 +127,7 @@ describe('Types Test', () => {
     expect(invalidParamsTypeCheckResult.errors?.length).toBeGreaterThan(0);
 
     registry.clear();
-    const types2 = new WorkspaceTypeChecker(registry, { strict_inputs: false, strict_outputs: true });
+    const types2 = new WorkingTypeChecker(registry, { strict_inputs: false, strict_outputs: true });
     registry.addRootType({
       key: 'Person',
       properties: {

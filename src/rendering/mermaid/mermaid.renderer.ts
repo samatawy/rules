@@ -37,14 +37,14 @@ export class MermaidRenderer {
         if (expression instanceof AbstractRule) {
             const text = this.renderRule(expression);
             const classDefs = this.getClassDefs();
-            const graph = `flowchart ${this.layout}\n${classDefs}\n\n${text}`;
+            const graph = `flowchart ${this.layout}\n${classDefs}\n${text}`;
             return graph;
         }
 
         if (expression instanceof Expression) {
             const text = this.renderExpression(expression);
             const classDefs = this.getClassDefs();
-            const graph = `graph ${this.layout}\n${classDefs}\n\n${text}`;
+            const graph = `graph ${this.layout}\n${classDefs}\n${text}`;
             return graph;
         }
 

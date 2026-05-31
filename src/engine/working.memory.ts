@@ -26,6 +26,8 @@ export class WorkingMemory implements WorkingContext {
 
     private input: any;
 
+    private shared_data: any;
+
     private exceptions: AbstractException[];
 
     private output: any;
@@ -56,6 +58,7 @@ export class WorkingMemory implements WorkingContext {
         const coerceDataLogged = withLogger(this.logImpl, typeChecker.coerceData.bind(typeChecker));
         this.output = coerceDataLogged(this.input);
 
+        this.shared_data = sharedData;
         if (sharedData) {
             for (const key of Object.keys(sharedData)) {
                 this.output[key] = sharedData[key];
@@ -170,6 +173,24 @@ export class WorkingMemory implements WorkingContext {
             return this.output;
         }
         return getPathValue(this.output, key);
+    }
+
+    /**
+     * Get output with only the keys that are present in the shared data, if shared data is provided. This is useful for cases where the context is used to compute some output based on the input and constants, but only a subset of the output (the one defined in shared data) should be returned or further processed, while the rest is considered intermediate data that should not be exposed.
+     * @returns 
+     */
+    public getCleanOutput(): void {
+        if (this.shared_data) {
+            const result: any = {};
+            for (const key of Object.keys(this.output)) {
+                if (!this.shared_data.hasOwnProperty(key)) {
+                    result[key] = this.output[key];
+                }
+            }
+            return result;
+        } else {
+            return this.output;
+        }
     }
 
     public logger(): ILogger {

@@ -6,30 +6,6 @@ export class FunctionCompiler {
 
     public static enabled: boolean = true;
 
-    // when true
-    // Time taken to add 1000 rules: 28 ms
-    // Average time per rule: 0.028 ms
-    // Time taken to add 1000 rules: 54 ms
-    // Average time per rule: 0.054 ms
-    // Time taken to process 1000 times with 2000 rules: 229 ms
-    // Average time per process(): 0.229 ms
-    // Average time per rule per process(): 0.0001145 ms
-    // 
-    // Time taken to execute function in rules 100000 times: 167 ms
-    // Time taken to execute compiled multiline function 100000 times: 1 ms
-
-    // when false
-    // Time taken to add 1000 rules: 82 ms
-    // Average time per rule: 0.082 ms
-    // Time taken to add 1000 rules: 138 ms
-    // Average time per rule: 0.138 ms
-    // Time taken to process 1000 times with 2000 rules: 246 ms
-    // Average time per process(): 0.246 ms
-    // Average time per rule per process(): 0.000123 ms
-    //
-    // Time taken to execute function in rules 100000 times: 246 ms
-    // Time taken to execute compiled multiline function 100000 times: 1 ms
-
     public static compileDefinition(definition: FunctionDefinition): Function | undefined {
         const params = definition.parameters.map(p => p.name);
         if (!params.some(p => p === 'context')) {

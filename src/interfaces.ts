@@ -189,8 +189,14 @@ export type FunctionProvider = {
      */
     mock(name: string, args: Expression[]): FunctionExpression | undefined;
 
+    /**
+     * Convert the function to a JavaScript representation.
+     * This can be used to generate JavaScript code from the function expression using dynamic compilation.
+     * 
+     * @param name the name of the function to convert.
+     * @returns an object containing the argument names and the function body as a string, or undefined if the function name is not supported.
+     */
     toJS(name: string): { args: string[], body: string } | undefined;
-    // , expectsParameterArray?: boolean.  -- was removed because the function expression can determine this on its own by checking for rest parameters in the args array.
 }
 
 export interface ValidationResult {

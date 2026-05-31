@@ -30,23 +30,6 @@ The engine is designed for cases where the decision logic changes more often tha
 - detection/prevention of invalid syntax, invalid data types, cyclic dependencies, etc.
 - flexible declaration loading through parsers and file readers, including markdown-backed rule documentation
 
-### Version History
-
-- Since version `0.3.0`:
-  - rendering and visualization of rules and expressions to HTML and Mermaid are available.
-  - experimental dynamic compilation is available for faster evaluation of large data loads.
-- Since version `0.2.0`:
-  - backward-chaining goal-oriented tasks are supported.
-  - cyclic dependency detection is available.
-  - coded function providers are supported as a new extension mechanism.
-  - additional built-in functions are available.
-
-N.B.
-- You may see warnings of eval-like code as a security concern. This is due to dynamic compilation.
-- The engine compiles generated code from its own DSL model rather than executing arbitrary user-supplied JavaScript directly. This reduces the attack surface compared with raw `eval`, but environments and scanners may still treat it as dynamic code execution.
-- This feature only works in environments that allow dynamic code generation.
-- You can enable or disable dynamic compilation by importing `FunctionCompiler` from `@samatawy/rules` and setting `FunctionCompiler.enabled = true` or `FunctionCompiler.enabled = false`.
-
 ## Installation
 
 ```bash
@@ -94,6 +77,25 @@ console.log(context.getOutput('invoice.tax_rate'));
 console.log(context.getOutput('invoice.tax'));
 console.log(context.getOutput('invoice.review'));
 ```
+
+
+## Version History
+
+- Since version `0.3.0`:
+  - rendering and visualization of rules and expressions to HTML and Mermaid are available.
+  - experimental dynamic compilation is available for faster evaluation of large data loads.
+- Since version `0.2.0`:
+  - backward-chaining goal-oriented tasks are supported.
+  - cyclic dependency detection is available.
+  - coded function providers are supported as a new extension mechanism.
+  - additional built-in functions are available.
+
+### N.B.
+
+- You may see warnings of eval-like code as a security concern. This is due to dynamic compilation.
+- The engine compiles generated code from its own DSL model rather than executing arbitrary user-supplied JavaScript directly. This reduces the attack surface compared with raw `eval`, but environments and scanners may still treat it as dynamic code execution.
+- This feature only works in environments that allow dynamic code generation.
+- You can enable or disable dynamic compilation by importing `FunctionCompiler` from `@samatawy/rules` and setting `FunctionCompiler.enabled = true` or `FunctionCompiler.enabled = false`.
 
 ## Documentation
 

@@ -82,6 +82,7 @@
         "rimraf": "^6.0.1",
         "tsup": "^8.5.0",
         "typedoc": "^0.28.18",
+        "typedoc-plugin-mermaid": "^1.12.0",
         "typescript": "^5.9.2",
         "vitest": "^3.2.4"
     },

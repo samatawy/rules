@@ -70,7 +70,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.debug('Final output:', ctx.getOutput());
         // console.debug('Nearby candidates:', ctx.getOutput('Nearby'));
@@ -148,7 +148,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('BySeniority')[0].name).toEqual('Bob');
@@ -216,7 +216,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('Ranked')[0].name).toBeOneOf(['Alice', 'Charlie']);
@@ -273,7 +273,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.debug('Final output:', JSON.stringify(ctx.getOutput(), null, '    '));
         console.debug('Nearby candidates:', ctx.getOutput('Nearby').length);
@@ -358,18 +358,14 @@ describe('Selection tests', () => {
 
         const iterations = 10_000;
 
-        let perflog = new PerformanceLogger('error', 'Selection using special workspace');
+        let perflog = new PerformanceLogger('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using special workspace`);
         let ctx = space.loadContext(payload.Task);
-
-        // WorkLogger.setLogLevel('info');
-        // space.process(ctx);
-        // WorkLogger.setLogLevel('error');
 
         for (let i = 0; i < iterations; i++) {
             ctx = space.loadContext(payload.Task);
             space.process(ctx);
         }
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.log(ctx.getOutput());
         console.log('Selected candidates:', ctx.getSelected());
@@ -390,7 +386,7 @@ describe('Selection tests', () => {
         });
         space.buildWorkspace();
 
-        perflog = new PerformanceLogger('error', 'Selection using native functions');
+        perflog = new PerformanceLogger('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using native functions`);
 
         let eligible: any[] = [];
         let scored: any[] = [];
@@ -401,11 +397,13 @@ describe('Selection tests', () => {
             selected = scored.sort((a, b) => b.score - a.score);
         }
 
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
         console.debug('Selected candidates (native):', selected);
 
         // ===========================================
         // Testing with large number of candidates
+
+        // WorkLogger.setLogLevel('info'); // Set log level to info to reduce output during test
 
         const largeCandidates = Array.from({ length: 10_000 }, (_, i) => ({
             name: `Candidate${i}`,
@@ -424,7 +422,7 @@ describe('Selection tests', () => {
         garbageCollect(); // Force garbage collection before starting the test to get a cleaner memory profile
         let peakHeap = 0;
         let initialHeap = process.memoryUsage().heapUsed;
-        perflog = new PerformanceLogger('error', `Selection from pool with ${candidates.length} candidates ${poolIterations} times using workspace functions`);
+        perflog = new PerformanceLogger('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using workspace functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             ctx = space.loadContext(largeTask);
@@ -437,7 +435,7 @@ describe('Selection tests', () => {
                 }
             }
         }
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         let finalHeap = process.memoryUsage().heapUsed;
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);
@@ -450,7 +448,7 @@ describe('Selection tests', () => {
         garbageCollect();
         peakHeap = 0;
         initialHeap = process.memoryUsage().heapUsed;
-        perflog = new PerformanceLogger('error', `Selection from pool with ${candidates.length} candidates ${poolIterations} times using native functions`);
+        perflog = new PerformanceLogger('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             eligible = largeCandidates.filter(candidate => space.isEligible(candidate, largeTask));
@@ -466,7 +464,7 @@ describe('Selection tests', () => {
         }
         finalHeap = process.memoryUsage().heapUsed;
 
-        perflog.end();
+        console.debug(perflog.checkpoint().message);
 
         // console.log(`Time taken to select from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions: ${ended - started} ms`);
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);
@@ -480,72 +478,6 @@ describe('Selection tests', () => {
             if (!err && profile) {
                 fs.writeFileSync('./selection_test.cpuprofile', JSON.stringify(profile));
                 console.log('Successfully selection_test.cpuprofile!');
-            }
-        });
-    });
-
-    it('test compiled functions', async () => {
-        // Start recording the CPU activity
-        session.post('Profiler.enable');
-        session.post('Profiler.start');
-
-        const space = new Workspace();
-        const expressionParser = new ExpressionParser({ workspace: space });
-        const executableParser = new ExecutableParser({ workspace: space });
-
-        space.addFunction({
-            name: 'calc',
-            parameters: [
-                { name: 'a', type: 'number' },
-                { name: 'b', type: 'number' },
-            ],
-            lines: [
-                executableParser.parse('c = a + b')!,
-                executableParser.parse('d = a - b')!,
-            ],
-            expression: expressionParser.parse('c + d'),
-        });
-        space.addRule('if a AND b then set x = calc(4, 5)');
-
-        const ctx = space.loadContext({ a: 4, b: 5 });
-        const iterations = 100_000;
-
-        let perflog = new PerformanceLogger('error', `Executing functions in rules ${iterations} times`);
-        for (let i = 0; i < iterations; i++) {
-            space.process(ctx);
-        }
-        perflog.end();
-
-        const spaceResult = space.evaluate('x', ctx);
-
-        // console.debug('Result of function from workspace:', spaceResult);
-        expect(spaceResult).toEqual(4 * 2);
-
-        const func = new Function('a', 'b', 'return a + b;');
-        const compiledFunc = func as any as (...args: any[]) => any;
-
-        const result = compiledFunc(2, 3);
-        // console.debug('Result of compiled function:', result);
-        expect(result).toEqual(5);
-
-        const funclines = new Function('a', 'b', 'c = a + b; d = a - b; return c + d;');
-        // as any as (...args: any[]) => any;
-        const result2 = funclines(4, 5);
-        // console.debug('Result of multiline function:', result2);
-        expect(result2).toEqual(4 * 2);
-
-        perflog = new PerformanceLogger('error', `Execution of compiled multiline function ${iterations} times`);
-
-        for (let i = 0; i < iterations; i++) {
-            funclines(4, 5);
-        }
-        perflog.end();
-
-        // Stop recording and save the physical profile directly to disk
-        session.post('Profiler.stop', (err, { profile }) => {
-            if (!err && profile) {
-                fs.writeFileSync('./rules_bottleneck.cpuprofile', JSON.stringify(profile));
-                console.log('Successfully saved rules_bottleneck.cpuprofile!');
             }
         });
     });

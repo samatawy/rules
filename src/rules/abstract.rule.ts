@@ -120,11 +120,6 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
      * @param changes a record mapping changed data keys to their expected types.
      */
     protected willChange(changes: Record<string, AtomicType | ArrayType | ObjectType>): void {
-        // for (const target of Object.keys(changes)) {
-        //     if (changes[target]) {
-        //         this.changeTargets[target] = changes[target];
-        //     }
-        // }
         this.changeTargets = { ...this.changeTargets, ...changes };
     }
 

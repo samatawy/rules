@@ -3,6 +3,13 @@ import { Workspace } from '../src/engine/workspace';
 import { WorkLogger } from '../src/logging/work.logger';
 import { PerformanceLogger } from '../src/logging/performance.logger';
 
+import inspector from 'node:inspector';
+import fs from 'node:fs';
+
+import { ExecutableParser, ExpressionParser } from '../src';
+const session = new inspector.Session();
+session.connect();
+
 describe('Speed tests', () => {
 
   it('suitable parsing speed', async () => {
@@ -32,14 +39,14 @@ describe('Speed tests', () => {
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = ${i}`);
     }
-    perflog.end();
+    console.debug(perflog.checkpoint().message);
 
     iterations = 1000;
     perflog = new PerformanceLogger('error', `Adding ${iterations} rules with function calls`);
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);
     }
-    perflog.end();
+    console.debug(perflog.checkpoint().message);
 
     // expect(space.checkTypes().valid).toBe(true);
   });
@@ -77,7 +84,7 @@ describe('Speed tests', () => {
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);
     }
-    perflog.end();
+    console.debug(perflog.checkpoint().message);
 
     // expect(space.checkTypes().valid).toBe(true);
 
@@ -105,9 +112,78 @@ describe('Speed tests', () => {
     for (let i = 0; i < iterations; i++) {
       space.process(ctx);
     }
-    perflog.end();
+    console.debug(perflog.checkpoint().message);
 
     const ruleCount = space.dependencyGraph().applicableRules(ctx).length;
 
   });
+
+  it('test compiled functions', async () => {
+    // Start recording the CPU activity
+    session.post('Profiler.enable');
+    session.post('Profiler.start');
+
+    WorkLogger.setLogLevel('error'); // Set log level to error to reduce output during test
+
+    const space = new Workspace();
+    const expressionParser = new ExpressionParser({ workspace: space });
+    const executableParser = new ExecutableParser({ workspace: space });
+
+    space.addFunction({
+      name: 'calc',
+      parameters: [
+        { name: 'a', type: 'number' },
+        { name: 'b', type: 'number' },
+      ],
+      lines: [
+        executableParser.parse('c = a + b')!,
+        executableParser.parse('d = a - b')!,
+      ],
+      expression: expressionParser.parse('c + d'),
+    });
+    space.addRule('if a AND b then set x = calc(4, 5)');
+
+    const ctx = space.loadContext({ a: 4, b: 5 });
+    const iterations = 100_000;
+
+    let perflog = new PerformanceLogger('error', `Executing uncompiled functions ${iterations} times`);
+    for (let i = 0; i < iterations; i++) {
+      space.process(ctx);
+    }
+    console.debug(perflog.checkpoint().message);
+
+    const spaceResult = space.evaluate('x', ctx);
+
+    // console.debug('Result of function from workspace:', spaceResult);
+    expect(spaceResult).toEqual(4 * 2);
+
+    const func = new Function('a', 'b', 'return a + b;');
+    const compiledFunc = func as any as (...args: any[]) => any;
+
+    const result = compiledFunc(2, 3);
+    // console.debug('Result of compiled function:', result);
+    expect(result).toEqual(5);
+
+    const funclines = new Function('a', 'b', 'c = a + b; d = a - b; return c + d;');
+    // as any as (...args: any[]) => any;
+    const result2 = funclines(4, 5);
+    // console.debug('Result of multiline function:', result2);
+    expect(result2).toEqual(4 * 2);
+
+    perflog = new PerformanceLogger('error', `Execution of compiled multiline function ${iterations} times`);
+
+    for (let i = 0; i < iterations; i++) {
+      funclines(4, 5);
+    }
+    console.debug(perflog.checkpoint().message);
+
+    // Stop recording and save the physical profile directly to disk
+    session.post('Profiler.stop', (err, { profile }) => {
+      if (!err && profile) {
+        fs.writeFileSync('./rules_bottleneck.cpuprofile', JSON.stringify(profile));
+        console.log('Successfully saved rules_bottleneck.cpuprofile!');
+      }
+    });
+  });
+
 });

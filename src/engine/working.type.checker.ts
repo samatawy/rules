@@ -14,7 +14,7 @@ import { WorkLogger } from "../logging/work.logger";
  * It holds the types of all known root types in the workspace.
  * You should not need to use this class directly.
  */
-export class WorkspaceTypeChecker implements TypeChecker {
+export class WorkingTypeChecker implements TypeChecker {
 
     protected types: TypeRegistry;
 

@@ -63,6 +63,7 @@ export class MarkdownFileReader extends GeneralFileReader {
         let match;
 
         while ((match = codeBlockRegex.exec(content)) !== null) {
+            // TODO: Should we check for syntax?
             // if (match[1] && match[1].toLowerCase() !== 'powerzero') {
             //     continue;
             // }

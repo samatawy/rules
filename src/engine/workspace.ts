@@ -6,7 +6,7 @@ import { DependencyGraph } from "./graph/dependency.graph";
 import { ReteGraph } from "./graph/rete.graph";
 import { RuleParser } from "../parser/rule.parser";
 import { RuleRegistry } from "./rule.registry";
-import { WorkspaceTypeChecker } from "./workspace.type.checker";
+import { WorkingTypeChecker } from "./working.type.checker";
 import { FunctionRegistry } from "./function.registry";
 import { FunctionParser } from "../parser/function.parser";
 import { TypeRegistry } from "./type.registry";
@@ -75,7 +75,7 @@ export class Workspace implements Clonable<Workspace> {
 
     protected constants: Record<string, any>;
 
-    protected type_checker: WorkspaceTypeChecker;
+    protected type_checker: WorkingTypeChecker;
 
     protected types: TypeRegistry;
 
@@ -97,7 +97,7 @@ export class Workspace implements Clonable<Workspace> {
         this.constants = commonConstants;
         this.functions = new FunctionRegistry(options);
         this.types = new TypeRegistry(options);
-        this.type_checker = new WorkspaceTypeChecker(this.types, options);
+        this.type_checker = new WorkingTypeChecker(this.types, options);
         this.rules = new RuleRegistry(options);
         this.dependency_graph = new DependencyGraph();
         this.rete_graph = new ReteGraph();
@@ -419,43 +419,6 @@ export class Workspace implements Clonable<Workspace> {
         return paths;
     }
 
-    private flattenKeys2(data: any, prefix: string = '', paths: Set<string>): Set<string> {
-        // const paths = new Set<string>();
-        paths = paths || new Set<string>();
-        const valueMap = new Map<string, any>();
-
-        if (data === null || data === undefined) return paths;
-
-        if (typeof data === 'object' && !Array.isArray(data)) {
-            for (const [key, value] of Object.entries(data)) {
-                if (value === undefined) {
-                    continue;
-                } else {
-                    valueMap.set(prefix + key, value);
-                }
-            }
-        }
-
-        for (const [path, value] of valueMap.entries()) {
-            paths.add(path);
-
-            if (Array.isArray(value)) {
-                for (const item of value) {
-                    const nestedPaths = this.flattenKeys(item, path + '.', paths);
-                    for (const nested of nestedPaths) {
-                        paths.add(nested);
-                    }
-                }
-            } else if (typeof value === 'object' && value !== null) {
-                const nestedPaths = this.flattenKeys(value, path + '.', paths);
-                for (const nested of nestedPaths) {
-                    paths.add(nested);
-                }
-            }
-        }
-        return paths;
-    }
-
     /**
      * Use the rete graph to find rules relevant to a given array of input keys.
      * 
@@ -572,7 +535,6 @@ export class Workspace implements Clonable<Workspace> {
         let satisfied: AbstractRule[] = [];
         let rootKeys = this.flattenKeys(context.getOutput());
         let applicable = this.findReteRules(Array.from(rootKeys), context);
-        // let applicable2 = new Set(this.dependency_graph.applicableRules(context));
         let iterate = (applicable.size > 0), iteration = 0;
         let executors: Executor[] = [];
         let changes: string[];
@@ -649,16 +611,10 @@ export class Workspace implements Clonable<Workspace> {
                 }
 
                 const nextApplicable = this.findReteRules(changes, context);
-                // const nextApplicable2 = new Set(this.dependency_graph.applicableRules(context));
                 iterate = nextApplicable.size > 0;
                 logger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
 
                 if (iterate) {
-                    // Clean the cache to re-evaluate nodes (recursively)
-                    // for (const id of changes) {
-                    //     this.rete_graph.clearCache(id, context);
-                    // }
-
                     applicable = nextApplicable;
                 }
             }
@@ -676,8 +632,10 @@ export class Workspace implements Clonable<Workspace> {
         } else {
             logger.info(`Evaluation completed in a single iteration.`);
         }
-        logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
+        // if (logger.canLog('info')) {
+        // logger.info('Final output after evaluation:', JSON.stringify(context.getCleanOutput(), null, '  '));
         logger.info('Cache metrics', context.getCacheMetrics());
+        // }
 
         performanceLogger.end();
 
@@ -685,162 +643,6 @@ export class Workspace implements Clonable<Workspace> {
 
         return context.getExceptions().length === 0;
     }
-
-    // /**
-    //  * Copy implementation of process() with some changes for backward-chaining.
-    //  * It uses iterations to evaluate immediate rules first, then loads other rules
-    //  * if requirements are missing.
-    //  */
-    // public evaluate2(variable: string, context: WorkingMemory): any {
-
-    //     context.clearLog();
-    //     const logger = context.logger();
-
-    //     const already = new VariableExpression(variable).evaluate(context);
-    //     if (already !== undefined) {
-    //         logger.debug(`Variable ${variable} already has value:`, already);
-    //         return already;
-    //     }
-
-    //     if (this.isValidContext(context) === false) {
-    //         logger.warn('Context failed validation. Aborting rule processing.');
-    //         return undefined;
-    //     }
-
-    //     const allRules = this.rules.getRules();
-    //     // let starters = allRules.filter(rule => rule.typedChanges()[variable] !== undefined);
-
-    //     let satisfied: AbstractRule[] = [];
-    //     // let applicable = new Set(starters);
-    //     let applicable = this.getRulesAffecting(variable, allRules);
-    //     let iterate = (applicable.size > 0), iteration = 0;
-    //     let executors: Executor[] = [];
-    //     let changes: string[];
-    //     const maxIterations = this.options.max_iterations;
-
-    //     while (iterate && iteration < maxIterations) {
-    //         logger.debug(`Iteration ${iteration + 1}: Applicable rules:`, applicable.size);
-
-    //         iteration++;
-    //         iterate = true;
-    //         satisfied = [];
-    //         executors = [];
-    //         changes = [];
-
-    //         // Evaluate all applicable rules and collect their executors
-    //         const sorted = this.rules.sortRules(Array.from(applicable), logger);
-    //         for (const rule of sorted) try {
-    //             logger.debug('Evaluating rule:', rule.toString());
-
-    //             const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
-    //             const executor = evaluateLogged(context);
-
-    //             if (executor) {
-    //                 satisfied.push(rule);
-    //                 executors.push(executor);
-    //             }
-    //         } catch (e) {
-    //             const errorMessage = `Error evaluating rule: ${e instanceof Error ? e.message : String(e)}`;
-    //             logger.warn(errorMessage, { rule: rule.getSyntax() });
-    //             context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
-    //             return undefined;
-    //         }
-
-    //         // Execute all collected executors and track if any outputs were changed
-    //         for (const executor of executors) try {
-    //             const idx = executors.indexOf(executor);
-
-    //             const executeLogged = withLogger(logger, executor.execute.bind(executor));
-    //             const effect = executeLogged(context);
-
-    //             // Log the rule being executed
-    //             if (satisfied[idx]) {
-    //                 if (effect.exception || effect.changed) {
-    //                     context.addToLog(satisfied[idx], effect);
-    //                 }
-    //             }
-
-    //             if (effect.exception) {
-    //                 logger.warn('Executor threw an exception:', effect.exception);
-    //                 iterate = false;
-    //                 break;
-    //             }
-    //             if (effect.changed) {
-    //                 changes.push(effect.changed);
-    //                 logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
-
-    //                 const changed_vars = effect.changed.split(',').map(s => s.trim());
-    //                 if (changed_vars.includes(variable)) {
-    //                     logger.debug(`Variable ${variable} has been assigned a value:`, context.getOutput(variable));
-    //                     iterate = false;
-    //                     break;
-    //                 }
-    //             }
-    //         } catch (e) {
-    //             const errorMessage = `Error executing rule: ${e instanceof Error ? e.message : String(e)}`;
-    //             logger.warn(errorMessage, { executor: executor });
-    //             context.addException(new EngineException(errorMessage, { executor: executor }));
-    //             return undefined;
-    //         }
-
-    //         if (executors.length === 0) {
-    //             iterate = context.getOutput(variable) === undefined;
-    //             logger.debug('No executors to run. Iteration will continue if variable is still undefined:', variable);
-    //         }
-
-    //         // If any executors changed outputs, we need to check if new rules have become applicable
-    //         if (iterate) {
-    //             // To find the next set of applicable rules, 
-    //             // we need to find the requirements of rules evaluated in this iteration.
-    //             const required = new Set<string>();
-    //             for (const rule of applicable) {
-    //                 for (const key of rule.required()) {
-    //                     required.add(key);
-    //                 }
-    //             }
-    //             // find rules that set any of the required keys, 
-    //             // since those are the only ones that could become applicable with the changes
-    //             // const nextApplicable = allRules.filter(rule => {
-    //             //     const keys = Object.keys(rule.typedChanges());
-    //             //     return keys.some(key => required.has(key));
-    //             // });
-
-    //             // iterate = nextApplicable.length > 0;
-    //             logger.debug(iterate ? 'Iterating since changes' : 'Not iterating despite changes', changes);
-
-    //             if (iterate) {
-    //                 // Clean the cache to re-evaluate nodes (recursively)
-    //                 for (const id of changes) {
-    //                     this.rete_graph.clearCache(id, context);
-    //                 }
-
-    //                 // for (const rule of nextApplicable) {
-    //                 //     applicable.add(rule);
-    //                 // }
-    //                 // applicable = new Set(nextApplicable, ...applicable);
-    //             }
-    //         }
-    //     }
-
-    //     // After processing, optionally log results
-    //     if (iteration === maxIterations) {
-    //         logger.warn(`Reached maximum iterations (${maxIterations}) while evaluating rules. There may be a cycle in the rules.`);
-    //     } else if (iteration > 1) {
-    //         logger.info(`Evaluation completed in ${iteration} iterations.`);
-    //     } else {
-    //         logger.info(`Evaluation completed in a single iteration.`);
-    //     }
-    //     logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
-    //     logger.info('Cache metrics', context.getCacheMetrics());
-
-    //     if (logger instanceof ContextLogger) logger.flush();
-
-    //     if (context.getExceptions().length > 0) {
-    //         return undefined;
-    //     } else {
-    //         return context.getOutput(variable);
-    //     }
-    // }
 
     /**
      * Perform backward-chaining style evaluation to determine the value of a specific variable 
@@ -884,26 +686,12 @@ export class Workspace implements Clonable<Workspace> {
             for (const rule of sorted) try {
                 logger.debug('Evaluating rule:', rule.toString());
 
-                // const required = Array.from(rule.required());
-                // const missing = required.filter(req => {
-                //     const val = new VariableExpression(req).evaluate(context);
-                //     return val === undefined;
-                // });
-                // if (missing.length > 0) {
-                //     logger.warn(`Rule ${rule.getSyntax()} is missing required variables:`, missing);
-                //     const errorMessage = `Rule ${rule.getSyntax()} is missing required variables: ${missing.join(', ')}`;
-                //     context.addToLog(rule, { exception: errorMessage });
-                //     context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
-                //     continue;   // skip this rule since it cannot be evaluated yet
-                // }
-
                 const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
                 const executor = evaluateLogged(context);
 
                 if (executor) {
-                    // const executeLogged = withLogger(logger, executor.execute.bind(executor));
-                    // const effect = executeLogged(context);
-                    const effect = executor.execute(context);
+                    const executeLogged = withLogger(logger, executor.execute.bind(executor));
+                    const effect = executeLogged(context);
 
                     if (effect.exception || effect.changed) {
                         context.addToLog(rule, effect);
@@ -933,7 +721,6 @@ export class Workspace implements Clonable<Workspace> {
                 logger.warn(errorMessage, { rule: rule.getSyntax() });
                 context.addToLog(rule, { exception: errorMessage });
                 context.addException(new EngineException(errorMessage, { rule: rule.getSyntax() }));
-                // return undefined;
             }
 
             // For sanity, we can still iterate if the value was not set
@@ -949,8 +736,11 @@ export class Workspace implements Clonable<Workspace> {
         } else {
             logger.info(`Evaluation completed in a single iteration.`);
         }
-        logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
+
+        // if (logger.canLog('info')) {
+        //     logger.info('Final output after evaluation:', JSON.stringify(context.getCleanOutput(), null, ' '));
         logger.info('Cache metrics', context.getCacheMetrics());
+        // }
 
         performanceLogger.end();
 

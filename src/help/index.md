@@ -3,6 +3,7 @@ title: Rule engine
 children:
   - ./introduction.md
   - ./engine.md
+  - ./performance.md
   - ./comparisons.md
   - ./declared.components.md
   - ./declaration.files.md
@@ -32,4 +33,5 @@ Pages in this section:
 - [Logging and Audit Trails](logging.md) for built-in context auditing, log levels, and custom logger integration.
 - [Rendering](rendering.md) for JSON output and the built-in HTML and Mermaid renderers.
 - [How to Design Rules](howto.design.rules.md) for advice and best practices.
+- [Performance](performance.md) for benchmarks, charts, and guidance on compiler and execution-mode choices.
 - [Contributing (Extending Functionality)](contributing.md) to publish your own enhancements and libraries.

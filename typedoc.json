@@ -27,5 +27,8 @@
         "documents-first",
         "source-order"
     ],
-    "sortEntryPoints": false
+    "sortEntryPoints": false,
+    "plugin": [
+        "typedoc-plugin-mermaid"
+    ]
 }

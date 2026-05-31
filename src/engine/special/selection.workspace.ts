@@ -214,9 +214,7 @@ export class SelectionSpace<C, T> {
         if (!this.candidateType) {
             throw new Error('Candidate type is not defined for the selection space.');
         }
-        // this.buildWorkspace();
 
-        // const result = this.workspace.process(context as WorkingMemory);
         const result = this.workspace.evaluate('Selected', context as WorkingMemory);
 
         return result;

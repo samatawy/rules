@@ -104,7 +104,7 @@ export class ArithmeticExpression extends NumericExpression {
     public toJson(): Renderable {
         return {
             type: 'ArithmeticExpression',
-            operator: this.operator,
+            operator: this.operator === '*' ? 'x' : this.operator,
             left: this.left.toJson(),
             right: this.right.toJson(),
         };

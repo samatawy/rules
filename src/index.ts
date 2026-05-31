@@ -12,7 +12,7 @@ export * from './engine/type.registry';
 export * from './engine/function.registry';
 export * from './engine/rule.registry';
 export * from './engine/scope.memory';
-export * from './engine/workspace.type.checker';
+export * from './engine/working.type.checker';
 export * from './engine/working.memory';
 
 export * from './engine/graph/rete.graph';
