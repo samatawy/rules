@@ -933,24 +933,6 @@ export class Workspace implements Clonable<Workspace> {
             iterate = (context.getExceptions().length === 0)
                 && context.getOutput(variable) === undefined;
         }
-        // "TypeError: Cannot read properties of undefined (reading 'candidate')\n    
-        // at eval (eval at compileDefinition (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/parser/function.compiler.ts:19:20), <anonymous>:3:28)\n    
-        // at eval (eval at compileFunction (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/parser/function.compiler.ts:30:20), <anonymous>:6:27)\n    
-        // at /Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/functions/array.lambda.functions.ts:189…:37)\n    
-        // at Workspace.evaluate (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/engine/workspace.ts:877:45)\n    
-        // at SelectionSpace.process (/Users/samatawy/Documents/projects/node-tests/powerzero/rules/src/engine/special/selection.workspace.ts:219:39)\n    
-        // at /Users/samatawy/Documents/projects/node-tests/powerzero/rules/test/selection.test.ts:358:19\n    
-        // at file:///Users/samatawy/Documents/projects/node-tests/powerzero/rules/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11"
-
-        // "TypeError: Cannot read properties of undefined (reading 'Candidate')\n    
-        // at eval(eval at compileDefinition(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser / function.compiler.ts: 19: 20), <anonymous>: 3: 17) \n   
-        // at eval(eval at compileDefinition(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser / function.compiler.ts: 19: 20), <anonymous>: 3: 9) \n    
-        // at eval(eval at compileFunction(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / parser /…s.ts: 189: 40) \n    
-        // at OutputAction.execute(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / rules / executable.ts: 134: 37) \n    
-        // at Workspace.evaluate(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / engine / workspace.ts: 867: 45) \n    
-        // at SelectionSpace.process(/Users/samatawy / Documents / projects / node - tests / powerzero / rules / src / engine / special / selection.workspace.ts: 219: 39) \n    
-        // at / Users / samatawy / Documents / projects / node - tests / powerzero / rules / test / selection.test.ts: 358: 19"
-
 
         // After processing, optionally log results
         if (iteration === maxIterations) {

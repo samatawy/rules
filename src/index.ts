@@ -25,6 +25,7 @@ export * from './engine/graph/dependency.nodes';
 export * from './parser/expression.parser';
 export * from './parser/executable.parser';
 export * from './parser/function.factory';
+export * from './parser/function.compiler';
 export * from './parser/function.parser';
 export * from './parser/rule.parser';
 export * from './parser/type.parser';
