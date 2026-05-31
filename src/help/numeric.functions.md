@@ -94,7 +94,7 @@ Rounds a number to a fixed number of decimal places.
 set tax = roundTo(invoiceTotal, 2)
 ```
 
-### `power(number, exponent)`
+### `pow(number, exponent)` or `power(number, exponent)`
 Raises a number to the given exponent.
 
 ```

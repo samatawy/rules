@@ -40,6 +40,17 @@ const volatile = space.clone();
 const duplicate = RulesEngine.cloneWorkspace(space, 'TESTING SALES');
 ```
 
+If you want to combine declarations from one workspace into another, you can import them instead of cloning the whole object:
+
+```
+const base = RulesEngine.getWorkspace('COMMON');
+const sales = RulesEngine.getWorkspace('SALES');
+
+sales.import(base);
+```
+
+Use `clone()` when you want an isolated copy that can diverge safely. Use `import()` when you want to merge rules, functions, types, and constants from one workspace into another workspace you are already building.
+
 ## Workspace
 
 A workspace holds a set of rules and any types, constants, and functions they may need.
@@ -62,6 +73,59 @@ const newSpace = new Workspace({
 ```
 
 - A workspace can create a context to hold input data, then processes that context. After processing, the context contains its inputs, outputs, any errors encountered, and an audit trail of the rules used.
+
+### Forward chaining
+
+The normal processing mode is forward chaining.
+
+In forward chaining, the workspace starts from the data already present in the context, finds relevant rules, executes satisfied consequences, then keeps iterating while new outputs make more rules applicable.
+
+```
+const space = RulesEngine.defaultSpace();
+const ctx = space.loadContext({ order: { total: 1200 } });
+
+space.process(ctx);
+
+console.log(ctx.getOutput());
+```
+
+This is the right mode when you want the engine to calculate all reachable consequences for a given input.
+
+### Backward chaining
+
+The workspace also supports a goal-oriented evaluation mode through `workspace.evaluate(variable, context)`.
+
+In backward chaining, you ask for one specific variable and the workspace evaluates rules that can contribute to that target value.
+
+```
+const space = RulesEngine.defaultSpace();
+
+space.addRule('SET invoice.tax_rate = invoice.total > 1000 ? 0.10 : 0.14');
+space.addRule('SET invoice.tax = invoice.total * invoice.tax_rate');
+
+const ctx = space.loadContext({
+    invoice: {
+        total: 1200,
+    },
+});
+
+const tax = space.evaluate('invoice.tax', ctx);
+
+console.log(tax);
+console.log(ctx.getOutput('invoice.tax_rate'));
+```
+
+Use backward chaining when:
+
+- you only need one output or a small number of outputs
+- you want to answer a goal-oriented query instead of running the full rule set
+- you are building selector, recommendation, or lookup-style flows
+
+Practical notes:
+
+- `evaluate()` still uses the same context, logging, exceptions, and type validation flow as normal processing.
+- If the target variable already has a value in the current context, that value is returned immediately.
+- If the target cannot be derived cleanly, `evaluate()` returns `undefined` and the context keeps any logged exceptions.
 
 ## Working Context
 

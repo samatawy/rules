@@ -133,10 +133,10 @@ export class IfThenElseRule extends AbstractRule {
     }
 
     static parsed(syntax: string, condition: Expression, consequence: ExecutableAction, alternative: ExecutableAction, checker?: TypeChecker): IfThenElseRule {
-        return new IfThenElseRule(syntax, checker, condition, consequence, alternative);
+        return new IfThenElseRule(syntax, condition, consequence, alternative, checker);
     }
 
-    protected constructor(syntax: string, checker?: TypeChecker, condition?: Expression | null, consequence?: ExecutableAction | null, alternative?: ExecutableAction | null) {
+    protected constructor(syntax: string, condition?: Expression | null, consequence?: ExecutableAction | null, alternative?: ExecutableAction | null, checker?: TypeChecker) {
         super(syntax);
         this.condition = condition as Expression;
         this.consequence = consequence as ExecutableAction;

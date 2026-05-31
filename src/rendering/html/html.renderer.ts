@@ -110,8 +110,6 @@ export class HtmlRenderer {
                 return this.renderSwitchExpression(json);
             case 'FunctionExpression':
                 return this.renderFunctionExpression(json);
-            case 'VariableExpression':
-                return this.renderVariableExpression(json);
             case 'LambdaExpression':
                 return this.renderLambdaExpression(json);
 

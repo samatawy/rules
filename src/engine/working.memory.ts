@@ -38,12 +38,12 @@ export class WorkingMemory implements WorkingContext {
 
     /**
      * Create a new instance implementing WorkingContext.
-     * @data Any input data that needs to be evaluated.
-     * @workspace the current workspace, used to access rules, constants, and other shared data.
-     * @sharedData optional additional data that should be accessible to the output but not altered.
-     * @logger optional logger instance to use for this context. If not provided, a default logger will be created.
+     * @param data Any input data that needs to be evaluated.
+     * @param workspace the current workspace, used to access rules, constants, and other shared data.
+     * @param sharedData optional additional data that should be accessible to the output but not altered.
+     * @param logger optional logger instance to use for this context. If not provided, a default logger will be created.
      */
-    constructor(data: any, workspace: Workspace, sharedData: any, logger?: ILogger) {
+    constructor(data: any, workspace: Workspace, sharedData?: any, logger?: ILogger) {
         this.input = data === undefined ? {} : data;
         this.workspace = workspace;
         this.command_handler = new CommandHandler({ context: this, commands: workspace.commandRegistry().getCommands() });

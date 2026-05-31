@@ -10,6 +10,7 @@ children:
   - ./rules.syntax.md
   - ./functions.md
   - ./logging.md
+  - ./rendering.md
   - ./howto.design.rules.md
   - ./contributing.md
 ---
@@ -29,5 +30,6 @@ Pages in this section:
 - [Rules Syntax](rules.syntax.md) for full rule shapes, annotations, comments, and authoring tips.
 - [Functions](functions.md) for how to use built-in and custom functions.
 - [Logging and Audit Trails](logging.md) for built-in context auditing, log levels, and custom logger integration.
+- [Rendering](rendering.md) for JSON output and the built-in HTML and Mermaid renderers.
 - [How to Design Rules](howto.design.rules.md) for advice and best practices.
 - [Contributing (Extending Functionality)](contributing.md) to publish your own enhancements and libraries.

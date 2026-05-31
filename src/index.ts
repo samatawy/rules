@@ -1,6 +1,7 @@
 // Basic files
 export * from './types';
 export * from './interfaces';
+export * from './renderable';
 export * from './type.utils';
 export * from './common.utils';
 
@@ -16,6 +17,7 @@ export * from './engine/working.memory';
 
 export * from './engine/graph/rete.graph';
 export * from './engine/graph/rete.nodes';
+export * from './engine/graph/dependency.chain';
 export * from './engine/graph/dependency.graph';
 export * from './engine/graph/dependency.nodes';
 

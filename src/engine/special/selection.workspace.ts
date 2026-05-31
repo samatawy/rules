@@ -29,8 +29,9 @@ export class SelectionContext<C, T> extends WorkingMemory {
     constructor(task: T, candidates: C[], workspace: Workspace) {
         super({
             Task: task,
+        }, workspace, {
             Candidates: candidates
-        }, workspace);
+        });
     }
 
     public getTask(): T {

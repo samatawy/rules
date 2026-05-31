@@ -3,7 +3,6 @@ import { EngineError } from "../rules/exception";
 import type { WorkspaceOptions } from "./workspace";
 import type { ILogger } from "../logging/interfaces";
 import type { TypeChecker, ValidationResult } from "../interfaces";
-import type { DependencyChain } from "./graph/dependency.chain";
 
 /**
  * RuleRegistry is responsible for storing all rules in the workspace and managing their salience and potential conflicts. 

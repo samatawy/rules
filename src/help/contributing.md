@@ -17,6 +17,8 @@ You can extend the functionality of this Rules Engine (and contribute to the com
 
 4. Provide custom loggers
 
+5. Provide custom renderers
+
 ## Provide declared function libraries
 
 - You can declare functions in a markdown file, providing both the DSL and the necessary documentation in one place.
@@ -100,3 +102,49 @@ WorkLogger.register('sentry', new SentryLogger( settings ));
 - You can handle logging immediately or buffer them until `flush()` is called (which is generally recommended for log readability).
 
 Learn more about [Logging and Audit Trails](logging.md)
+
+## Provide custom renderers
+
+- You can build your own renderer on top of the same `toJson()` tree used by the built-in HTML and Mermaid renderers.
+
+- This is useful if you want rule output as Markdown, React components, PDF fragments, SVG, plain text, or any domain-specific format.
+
+- Unlike function providers, commands, or loggers, renderers do not need engine-wide registration. They are ordinary classes that your application can instantiate wherever it needs to display or export rules.
+
+- A custom renderer should accept either a parsed rule or expression, call `toJson()`, then recursively transform the returned `Renderable` nodes.
+
+```ts
+import { AbstractRule, Expression, type Renderable } from '@samatawy/rules';
+
+export class MarkdownRenderer {
+
+    public render(input: Expression | AbstractRule): string {
+        return this.renderNode(input.toJson());
+    }
+
+    private renderNode(node: Renderable | undefined): string {
+        if (!node) {
+            return '';
+        }
+
+        switch (node.type) {
+            case 'LiteralExpression':
+                return String(node.value);
+            case 'VariableExpression':
+                return `\`${node.name}\``;
+            case 'ComparisonExpression':
+                return `${this.renderNode(node.left)} ${node.operator} ${this.renderNode(node.right)}`;
+            case 'OutputAction':
+                return `SET ${node.output} = ${this.renderNode(node.expression)}`;
+            default:
+                return node.type;
+        }
+    }
+}
+```
+
+- This approach keeps rendering concerns separate from parsing and evaluation, which means you can evolve your output format without affecting engine behavior.
+
+- If you want to match the built-in renderer model, style by `ElementType` categories such as `variable`, `literal`, `operator`, `function`, and `block` instead of coupling your renderer to concrete classes.
+
+Learn more about [Rendering](rendering.md)

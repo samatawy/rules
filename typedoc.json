@@ -1,7 +1,11 @@
 {
     "$schema": "https://typedoc.org/schema.json",
     "entryPoints": [
-        "src/index.ts"
+        "src/index.ts",
+        "src/autocomplete/index.ts",
+        "src/browser/index.ts",
+        "src/node/index.ts",
+        "src/rendering/index.ts"
     ],
     "projectDocuments": [
         "src/help/index.md",

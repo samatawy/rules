@@ -57,6 +57,7 @@ Optional features are exposed as subpath imports so consumers do not need to pul
 - Node runtime including core, string readers, and file-system readers: `@samatawy/rules`
 - Browser core engine, syntax, rules, and parsers: `@samatawy/rules/browser`
 - Autocomplete helpers: `@samatawy/rules/autocomplete`
+- Rendering and visualization helpers: `@samatawy/rules/render`
 
 ## Quick Example
 

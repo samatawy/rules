@@ -13,14 +13,14 @@ Returns the number of items in an array.
 set childCount = count(Person.children)
 ```
 
-### `sum(numbers)`
+### `sum(numbers)` or `total(numbers)`
 Returns the sum of a numeric array.
 
 ```
 set totalSales = sum(Order.amounts)
 ```
 
-### `avg(numbers)` or `mean(numbers)`
+### `avg(numbers)` or `average(numbers)` or `mean(numbers)`
 Returns the arithmetic mean of a numeric array.
 
 ```
