@@ -77,3 +77,4 @@ export * from './logging/work.logger';
 export * from './logging/abstract.logger';
 export * from './logging/context.logger';
 export * from './logging/console.logger';
+export * from './logging/performance.logger';

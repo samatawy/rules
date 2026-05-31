@@ -18,6 +18,7 @@ import { ContextLogger } from "../logging/context.logger";
 import { CommandRegistry } from "../commands/command.registry";
 import type { FunctionDefinition } from "../types";
 import { VariableExpression } from "../syntax/variable.expression";
+import { PerformanceLogger } from "../logging/performance.logger";
 
 /**
  * Options for configuring the behavior of the Workspace, including debugging, conflict resolution, and iteration limits.
@@ -558,6 +559,8 @@ export class Workspace implements Clonable<Workspace> {
      */
     public process(context: WorkingMemory): boolean {
 
+        const performanceLogger = new PerformanceLogger('info', 'Workspace.process');
+
         context.clearLog();
         const logger = context.logger();
 
@@ -675,6 +678,8 @@ export class Workspace implements Clonable<Workspace> {
         }
         logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
         logger.info('Cache metrics', context.getCacheMetrics());
+
+        performanceLogger.end();
 
         if (logger instanceof ContextLogger) logger.flush();
 
@@ -847,6 +852,8 @@ export class Workspace implements Clonable<Workspace> {
      */
     public evaluate(variable: string, context: WorkingMemory): any {
 
+        const performanceLogger = new PerformanceLogger('info', 'Workspace.evaluate');
+
         context.clearLog();
         const logger = context.logger();
 
@@ -944,6 +951,8 @@ export class Workspace implements Clonable<Workspace> {
         }
         logger.info('Final output after evaluation:', JSON.stringify(context.getOutput()));
         logger.info('Cache metrics', context.getCacheMetrics());
+
+        performanceLogger.end();
 
         if (logger instanceof ContextLogger) logger.flush();
 

@@ -6,6 +6,7 @@ import { ExecutableParser, ExpressionParser, garbageCollect } from '../src';
 
 import inspector from 'node:inspector';
 import fs from 'node:fs';
+import { PerformanceLogger } from '../src/logging/performance.logger';
 
 const session = new inspector.Session();
 session.connect();
@@ -60,7 +61,7 @@ describe('Selection tests', () => {
         space.addRule('if Task and Eligible and not(Selected) then set Selected = Eligible');
         space.addRule('if Selected.count() == 0 then Message = "Nobody is eligible for the task" else Message = concat("Selected ", Selected.count(), " candidates")');
 
-        let started = Date.now().valueOf();
+        let perflog = new PerformanceLogger('error', 'Eligibility-based selection');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -69,8 +70,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to select by eligibility: ${ended - started} ms`);
+        perflog.end();
 
         // console.debug('Final output:', ctx.getOutput());
         // console.debug('Nearby candidates:', ctx.getOutput('Nearby'));
@@ -140,8 +140,7 @@ describe('Selection tests', () => {
                                         .sort(candidate : neg(candidate.score))
         `);
 
-        let started = Date.now().valueOf();
-
+        let perflog = new PerformanceLogger('error', 'Scoring-based selection');
         let ctx = space.loadContext({
             Task: payload.Task,
         }, {
@@ -149,8 +148,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to select by score: ${ended - started} ms`);
+        perflog.end();
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('BySeniority')[0].name).toEqual('Bob');
@@ -209,7 +207,7 @@ describe('Selection tests', () => {
         space.addRule('if Projected then Ranked = Projected.sort(candidate : abs(candidate.target_workload - candidate.projected_workload))');
 
 
-        let started = Date.now().valueOf();
+        let perflog = new PerformanceLogger('error', 'Target distribution-based selection');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -218,8 +216,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to select by target distribution: ${ended - started} ms`);
+        perflog.end();
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('Ranked')[0].name).toBeOneOf(['Alice', 'Charlie']);
@@ -267,7 +264,7 @@ describe('Selection tests', () => {
         space.addRule('if Task and Eligible and not(Selected) then set Selected = Eligible');
         space.addRule('if Selected.count() == 0 then Message = "Nobody is eligible for the task" else Message = concat("Selected ", Selected.count(), " candidates")');
 
-        let started = Date.now().valueOf();
+        let perflog = new PerformanceLogger('error', 'Select from large candidate pool');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -276,8 +273,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to select from large candidate pool: ${ended - started} ms`);
+        perflog.end();
 
         // console.debug('Final output:', JSON.stringify(ctx.getOutput(), null, '    '));
         console.debug('Nearby candidates:', ctx.getOutput('Nearby').length);
@@ -361,7 +357,8 @@ describe('Selection tests', () => {
         space.buildWorkspace();
 
         const iterations = 10_000;
-        let started = Date.now().valueOf();
+
+        let perflog = new PerformanceLogger('error', 'Selection using special workspace');
         let ctx = space.loadContext(payload.Task);
 
         // WorkLogger.setLogLevel('info');
@@ -372,9 +369,8 @@ describe('Selection tests', () => {
             ctx = space.loadContext(payload.Task);
             space.process(ctx);
         }
+        perflog.end();
 
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to select using rules: ${ended - started} ms`);
         // console.log(ctx.getOutput());
         console.log('Selected candidates:', ctx.getSelected());
 
@@ -394,7 +390,8 @@ describe('Selection tests', () => {
         });
         space.buildWorkspace();
 
-        started = Date.now().valueOf();
+        perflog = new PerformanceLogger('error', 'Selection using native functions');
+
         let eligible: any[] = [];
         let scored: any[] = [];
         let selected: any[] = [];
@@ -404,8 +401,7 @@ describe('Selection tests', () => {
             selected = scored.sort((a, b) => b.score - a.score);
         }
 
-        ended = Date.now().valueOf();
-        console.log(`Time taken to select using native functions: ${ended - started} ms`);
+        perflog.end();
         console.debug('Selected candidates (native):', selected);
 
         // ===========================================
@@ -428,7 +424,7 @@ describe('Selection tests', () => {
         garbageCollect(); // Force garbage collection before starting the test to get a cleaner memory profile
         let peakHeap = 0;
         let initialHeap = process.memoryUsage().heapUsed;
-        started = Date.now().valueOf();
+        perflog = new PerformanceLogger('error', `Selection from pool with ${candidates.length} candidates ${poolIterations} times using workspace functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             ctx = space.loadContext(largeTask);
@@ -441,10 +437,9 @@ describe('Selection tests', () => {
                 }
             }
         }
-        ended = Date.now().valueOf();
-        let finalHeap = process.memoryUsage().heapUsed;
+        perflog.end();
 
-        console.log(`Time taken to select from pool with ${largeCandidates.length} candidates ${poolIterations} times using special workspace: ${ended - started} ms`);
+        let finalHeap = process.memoryUsage().heapUsed;
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);
         console.debug('Selected candidates (workspace):', ctx.getSelected().length);
         garbageCollect();
@@ -455,7 +450,7 @@ describe('Selection tests', () => {
         garbageCollect();
         peakHeap = 0;
         initialHeap = process.memoryUsage().heapUsed;
-        started = Date.now().valueOf();
+        perflog = new PerformanceLogger('error', `Selection from pool with ${candidates.length} candidates ${poolIterations} times using native functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             eligible = largeCandidates.filter(candidate => space.isEligible(candidate, largeTask));
@@ -471,8 +466,9 @@ describe('Selection tests', () => {
         }
         finalHeap = process.memoryUsage().heapUsed;
 
-        ended = Date.now().valueOf();
-        console.log(`Time taken to select from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions: ${ended - started} ms`);
+        perflog.end();
+
+        // console.log(`Time taken to select from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions: ${ended - started} ms`);
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);
         console.debug('Selected candidates (native):', selected.length);
 
@@ -514,12 +510,11 @@ describe('Selection tests', () => {
         const ctx = space.loadContext({ a: 4, b: 5 });
         const iterations = 100_000;
 
-        let started = Date.now().valueOf();
+        let perflog = new PerformanceLogger('error', `Executing functions in rules ${iterations} times`);
         for (let i = 0; i < iterations; i++) {
             space.process(ctx);
         }
-        let ended = Date.now().valueOf();
-        console.log(`Time taken to execute function in rules ${iterations} times: ${ended - started} ms`);
+        perflog.end();
 
         const spaceResult = space.evaluate('x', ctx);
 
@@ -539,12 +534,12 @@ describe('Selection tests', () => {
         // console.debug('Result of multiline function:', result2);
         expect(result2).toEqual(4 * 2);
 
-        started = Date.now().valueOf();
+        perflog = new PerformanceLogger('error', `Execution of compiled multiline function ${iterations} times`);
+
         for (let i = 0; i < iterations; i++) {
             funclines(4, 5);
         }
-        ended = Date.now().valueOf();
-        console.log(`Time taken to execute compiled multiline function ${iterations} times: ${ended - started} ms`);
+        perflog.end();
 
         // Stop recording and save the physical profile directly to disk
         session.post('Profiler.stop', (err, { profile }) => {
