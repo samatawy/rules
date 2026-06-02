@@ -5,23 +5,35 @@ import type { FunctionProvider } from "../interfaces";
 import { FunctionCompiler } from "./function.compiler";
 import { ParserError } from "../rules/exception";
 
-import { ArrayInspectionFunctionProvider } from "../functions/array.inspection.functions";
+import { ArrayAnalyticalFunctionProvider } from "../functions/array.analytical.functions";
 import { ArrayCollectionFunctionProvider } from "../functions/array.collection.functions";
+import { ArrayComparisonFunctionProvider } from "../functions/array.comparison.functions";
+import { ArrayInspectionFunctionProvider } from "../functions/array.inspection.functions";
 import { ArrayLambdaFunctionProvider } from "../functions/array.lambda.functions";
+import { ArraySetFunctionProvider } from "../functions/array.set.functions";
+import { ArrayStatisticalFunctionProvider } from "../functions/array.statistical.functions";
+
 import { BooleanFunctionProvider } from "../functions/boolean.functions";
+
 import { DateTimeComparisonFunctionProvider } from "../functions/datetime.comparison.functions";
 import { DateTimeInspectionFunctionProvider } from "../functions/datetime.inspection.functions";
 import { DateTimeManipulationFunctionProvider } from "../functions/datetime.manipulation.functions";
-import { ConstantDatesProvider, ConstantNumbersProvider } from "../functions/constant.functions";
+
 import { NumericComparisonFunctionProvider } from "../functions/numeric.comparison.functions";
 import { NumericManipulationFunctionProvider } from "../functions/numeric.manipulation.functions";
+import { RandomFunctionProvider } from "../functions/numeric.random.functions";
 import { TrigonometricFunctionProvider } from "../functions/numeric.trigonometric.functions";
+
 import { StringComparisonFunctionProvider } from "../functions/string.comparison.functions";
 import { StringInspectionFunctionProvider } from "../functions/string.inspection.functions";
 import { StringManipulationFunctionProvider } from "../functions/string.manipulation.functions";
+
 import { CustomFunctionExpression } from "../functions/custom.function";
-import { RandomFunctionProvider } from "../functions/numeric.random.functions";
-import { ArrayComparisonFunctionProvider } from "../functions/array.comparison.functions";
+
+import { ConstantDatesProvider } from "../functions/constant.date.functions";
+import { ConstantNumbersProvider } from "../functions/constant.number.functions";
+import { PhysicsConstantsProvider } from "../functions/special/constant.physics.functions";
+import { CommonChemistryFunctionsProvider } from "../functions/special/common.chemistry.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -85,22 +97,34 @@ export class FunctionFactory {
 
     static {
         this.registerProvider(ArrayCollectionFunctionProvider);
-        this.registerProvider(ArrayInspectionFunctionProvider);
         this.registerProvider(ArrayComparisonFunctionProvider);
+        this.registerProvider(ArrayInspectionFunctionProvider);
         this.registerProvider(ArrayLambdaFunctionProvider);
+        this.registerProvider(ArraySetFunctionProvider);
+        this.registerProvider(ArrayStatisticalFunctionProvider);
+
         this.registerProvider(BooleanFunctionProvider);
+
         this.registerProvider(ConstantDatesProvider);
         this.registerProvider(ConstantNumbersProvider);
+
         this.registerProvider(DateTimeComparisonFunctionProvider);
         this.registerProvider(DateTimeInspectionFunctionProvider);
         this.registerProvider(DateTimeManipulationFunctionProvider);
+
         this.registerProvider(NumericComparisonFunctionProvider);
         this.registerProvider(NumericManipulationFunctionProvider);
         this.registerProvider(RandomFunctionProvider);
         this.registerProvider(TrigonometricFunctionProvider);
+
         this.registerProvider(StringComparisonFunctionProvider);
         this.registerProvider(StringInspectionFunctionProvider);
         this.registerProvider(StringManipulationFunctionProvider);
+
+        // Special
+        this.registerProvider(ArrayAnalyticalFunctionProvider);
+        this.registerProvider(CommonChemistryFunctionsProvider);
+        this.registerProvider(PhysicsConstantsProvider);
     }
 
     public static registerProvider(provider: FunctionProvider): void {
@@ -127,6 +151,9 @@ export class FunctionFactory {
         this.providers = this.providers.filter(p => p !== provider);
         for (const name of provider.names()) {
             this.reserved_names.delete(name);
+            if (typeof (globalThis as any)[name] === 'function') {
+                delete (globalThis as any)[name];
+            }
         }
     }
 
@@ -134,6 +161,9 @@ export class FunctionFactory {
         this.providers.forEach(provider => {
             for (const name of provider.names()) {
                 this.reserved_names.delete(name);
+                if (typeof (globalThis as any)[name] === 'function') {
+                    delete (globalThis as any)[name];
+                }
             }
         });
         this.providers = [];

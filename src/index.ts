@@ -49,21 +49,7 @@ export * from './syntax/ternary.expression';
 export * from './syntax/variable.expression';
 
 export * from './syntax/function.expression';
-export * from './functions/array.inspection.functions';
-export * from './functions/array.collection.functions';
-export * from './functions/array.lambda.functions';
-export * from './functions/constant.functions';
-export * from './functions/custom.function';
-export * from './functions/datetime.comparison.functions';
-export * from './functions/datetime.inspection.functions';
-export * from './functions/datetime.manipulation.functions';
-export * from './functions/numeric.comparison.functions';
-export * from './functions/numeric.manipulation.functions';
-export * from './functions/numeric.random.functions';
-export * from './functions/numeric.trigonometric.functions';
-export * from './functions/string.comparison.functions';
-export * from './functions/string.manipulation.functions';
-export * from './functions/string.inspection.functions';
+export * from './functions/index';
 
 // Command components
 export * from './commands/types';

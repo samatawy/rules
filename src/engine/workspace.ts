@@ -557,7 +557,6 @@ export class Workspace implements Clonable<Workspace> {
 
                 const evaluateLogged = withLogger(logger, rule.evaluate.bind(rule));
                 const executor = evaluateLogged(context);
-                // const executor = rule.evaluate(context);
 
                 if (executor) {
                     satisfied.push(rule);
@@ -576,7 +575,6 @@ export class Workspace implements Clonable<Workspace> {
 
                 const executeLogged = withLogger(logger, executor.execute.bind(executor));
                 const effect = executeLogged(context);
-                // const effect = executor.execute(context);
 
                 // Log the rule being executed
                 if (satisfied[idx]) context.addToLog(satisfied[idx], effect);

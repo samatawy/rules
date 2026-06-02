@@ -32,7 +32,7 @@ Returns `true` when every array item satisfies the lambda condition.
 if every(Person.family, member : member.age >= 18) then Person.allAdults = true
 ```
 
-### `any(array, item : predicate)`
+### `any(array, item : predicate)` or `some(array, item: predicate)`
 Returns `true` when at least one item satisfies the lambda condition.
 
 ```

@@ -65,6 +65,8 @@ export class OutputRule extends AbstractRule {
         this.willChange({ [this.outputKey]: getReturnType(this.expression, checker) as AtomicType | ArrayType });
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.expression)) {
                 WorkLogger.warn(`Cannot compile OutputRule for key '${this.outputKey}' due to missing function dependencies in the expression`);
             } else {

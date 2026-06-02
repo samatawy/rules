@@ -6,6 +6,7 @@ import type { WorkspaceOptions } from "./workspace";
 import { ParserError } from "../rules/exception";
 import { FunctionFactory } from "../parser/function.factory";
 import { FunctionCompiler } from "../parser/function.compiler";
+import { WorkLogger } from "../logging/work.logger";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
@@ -71,11 +72,12 @@ export class FunctionRegistry {
         this.functions.set(func.name, func);
 
         if (FunctionCompiler.enabled) {
-            // TODO: Is this required? Since its a definition we may not need it.
-            // if (FunctionCompiler.missingFunctions(func.expression)) {
-            //     WorkLogger.warn(`Cannot compile function ${func.name} due to missing dependencies`);
-            //     return;
-            // }
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
+            if (FunctionCompiler.missingFunctions(func.expression)) {
+                WorkLogger.warn(`Cannot compile function ${func.name} due to missing dependencies`);
+                return;
+            }
             const compiled = FunctionCompiler.compileDefinition(func);
             if (compiled) {
                 (globalThis as any)[func.name] = compiled;

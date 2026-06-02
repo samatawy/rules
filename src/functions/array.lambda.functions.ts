@@ -75,6 +75,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
         switch (this.name) {
             case 'every':
             case 'any':
+            case 'some':
                 return 'boolean';
 
             case 'sort':
@@ -129,6 +130,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
         switch (this.name) {
             case 'every':
             case 'any':
+            case 'some':
                 if (lambdaReturns && lambdaReturns !== 'boolean') {
                     checks.push({
                         valid: false,
@@ -185,15 +187,11 @@ export class ArrayLambdaFunction extends FunctionExpression {
         const values: unknown[] = [];
         const scope = new ScopeContext(context);
         for (const item of targetArray) {
+            // Unlike compiled functions, we need to isolate the scope for each item.
             scope.setData(this.lambda_arg.getVariableName(), item);
             values.push(this.lambda_arg.evaluate(scope));
             scope.clearCache();
         }
-        // const values = targetArray.map((item: any) => {
-        //     const scope = new ScopeContext(context);
-        //     scope.setData(this.lambda_arg.getVariableName(), item);
-        //     return this.lambda_arg.evaluate(scope);
-        // });
 
         switch (this.name) {
             case 'every':
@@ -206,6 +204,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
             // Alternatively:
             // return values.reduce((acc, val) => acc && !!val, true);
             case 'any':
+            case 'some':
                 for (const val of values) {
                     if (val) {
                         return true;
@@ -257,7 +256,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
 
 export class ArrayLambdaFunctionProvider {
 
-    private static _names = ['every', 'any', 'sort', 'filter', 'map'];
+    private static _names = ['every', 'any', 'some', 'sort', 'filter', 'map'];
 
     public static names(): string[] {
         return this._names;
@@ -285,6 +284,7 @@ export class ArrayLambdaFunctionProvider {
             case 'every':
                 return { args: ['array', 'lambda'], body: 'return array.every(item => lambda(item, context));' };
             case 'any':
+            case 'some':
                 return { args: ['array', 'lambda'], body: 'return array.some(item => lambda(item, context));' };
             case 'filter':
                 return { args: ['array', 'lambda'], body: 'return array.filter(item => lambda(item, context));' };

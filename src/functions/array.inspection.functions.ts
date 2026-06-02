@@ -83,14 +83,7 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
             case 'mean':
                 return targetValue.reduce((acc, val) => acc + val, 0) / targetValue.length;
             case 'median':
-                if (targetValue.length === 0) return 0;
-                const sorted = [...targetValue].sort((a, b) => a - b);
-                const mid = Math.floor(sorted.length / 2);
-                if (sorted.length % 2 === 0) {
-                    return (sorted[mid - 1] + sorted[mid]) / 2;
-                } else {
-                    return sorted[mid];
-                }
+                return this.median(targetValue);
 
             case 'min':
                 return Math.min(...targetValue);
@@ -101,6 +94,17 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
 
             default:
                 throw new EvaluationError(`Unknown array inspection function: ${this.name}`);
+        }
+    }
+
+    private median(arr: number[]): number {
+        if (arr.length === 0) return 0;
+        const sorted = [...arr].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        if (sorted.length % 2 === 0) {
+            return (sorted[mid - 1]! + sorted[mid]!) / 2;
+        } else {
+            return sorted[mid]!;
         }
     }
 }

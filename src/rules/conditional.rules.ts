@@ -55,6 +55,8 @@ export class IfThenRule extends AbstractRule {
         this.willChange(this.consequence.typedChanges(checker));
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
                 WorkLogger.warn(`Cannot compile IfThenRule condition due to missing function dependencies in the condition expression`);
             } else {
@@ -158,6 +160,8 @@ export class IfThenElseRule extends AbstractRule {
         this.willChange({ ...this.consequence.typedChanges(checker), ...this.alternative.typedChanges(checker) });
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
                 WorkLogger.warn(`Cannot compile IfThenElseRule condition due to missing function dependencies in the condition expression`);
             } else {
@@ -254,6 +258,8 @@ export class IfThrowRule extends AbstractRule {
         this.require(...this.condition.required(), ...this.consequence.required());
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
                 WorkLogger.warn(`Cannot compile IfThrowRule condition due to missing function dependencies in the condition expression`);
             } else {

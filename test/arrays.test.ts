@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
+import { FunctionFactory } from '../src';
+import { ArrayAnalyticalFunctionProvider } from '../src/functions/array.analytical.functions';
 
 describe('Engine tests', () => {
 
@@ -206,7 +208,17 @@ describe('Engine tests', () => {
     let catA = ['S', 'M', 'L'];
     let catB = ['M', 'L', 'XL'];
 
-    // numeric array comparison rules
+    // boolean array comparison rules
+    space.addRule('if numA and numB then set sameArray = sameArray(numA, numB)');
+    space.addRule('if numA and numB then set sameSet = sameSet(numA, numB)');
+    space.addRule('if numA and numB then set subsetOf = subsetOf(numA, numB)');
+    space.addRule('if numA and numB then set subArrayOf = subArrayOf(numA, numB)');
+    space.addRule('if numA and numB then set supersetOf = supersetOf(numA, numB)');
+    space.addRule('if numA and numB then set superArrayOf = superArrayOf(numA, numB)');
+    space.addRule('if numA and numB then set overlapsWith = overlapsWith(numA, numB)');
+    space.addRule('if numA and numB then set disjointFrom = disjointFrom(numA, numB)');
+
+    // numeric array analytical rules
     space.addRule('if numA and numB then set EuclideanDistance = euclidean_distance(numA, numB)');
     space.addRule('if numA and numB then set ManhattanDistance = manhattan_distance(numA, numB)');
     space.addRule('if numA and numB then set ChebyshevDistance = chebyshev_distance(numA, numB)');
@@ -230,6 +242,8 @@ describe('Engine tests', () => {
     space.addRule('@salience(2) if catA and catB then set SpearmanRankCorrelation = spearman_rank_correlation(catA, catB)');
     space.addRule('@salience(2) if catA and catB then set JaccardDistance = jaccard_distance(catA, catB)');
     space.addRule('@salience(2) if catA and catB then set HammingDistance = hamming_distance(catA, catB)');
+
+    // Analytical array comparisons
 
     let ctx = space.loadContext({
       numA: numA,
@@ -257,6 +271,7 @@ describe('Engine tests', () => {
     expect(ctx.getOutput('WassersteinDistance')).toBeCloseTo(3); // Same as Earth Mover's Distance for 1D distributions
     expect(ctx.getOutput('JensenShannonDivergence')).toBeCloseTo(0.008); // Symmetric and bounded version of KL divergence
 
+    // String array comparisons
 
     let ctx2 = space.loadContext({
       catA: catA,
@@ -270,6 +285,126 @@ describe('Engine tests', () => {
     expect(ctx2.getOutput('SpearmanRankCorrelation')).toBeCloseTo(1);
     expect(ctx2.getOutput('JaccardDistance')).toEqual(0.5); // 2 shared elements out of 4 unique elements
     expect(ctx2.getOutput('HammingDistance')).toEqual(3);
+
+    // Boolean array comparisons
+
+    let ctx3 = space.loadContext({
+      numA: [1, 2, 3],
+      numB: [1, 2, 3],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(true);
+    expect(ctx3.getOutput('sameSet')).toBe(true);
+    expect(ctx3.getOutput('subsetOf')).toBe(true);
+    expect(ctx3.getOutput('subArrayOf')).toBe(true);
+    expect(ctx3.getOutput('supersetOf')).toBe(true);
+    expect(ctx3.getOutput('superArrayOf')).toBe(true);
+    expect(ctx3.getOutput('overlapsWith')).toBe(true);
+    expect(ctx3.getOutput('disjointFrom')).toBe(false);
+
+    ctx3 = space.loadContext({
+      numA: [1, 2],
+      numB: [2, 1],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(false);
+    expect(ctx3.getOutput('sameSet')).toBe(true);
+    expect(ctx3.getOutput('subsetOf')).toBe(true);
+    expect(ctx3.getOutput('subArrayOf')).toBe(false);
+    expect(ctx3.getOutput('supersetOf')).toBe(true);
+    expect(ctx3.getOutput('superArrayOf')).toBe(false);
+    expect(ctx3.getOutput('overlapsWith')).toBe(true);
+    expect(ctx3.getOutput('disjointFrom')).toBe(false);
+
+    ctx3 = space.loadContext({
+      numA: [1, 2, 2],
+      numB: [1, 2],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(false);
+    expect(ctx3.getOutput('sameSet')).toBe(true);
+    expect(ctx3.getOutput('subsetOf')).toBe(true);
+    expect(ctx3.getOutput('subArrayOf')).toBe(false);
+    expect(ctx3.getOutput('supersetOf')).toBe(true);
+    expect(ctx3.getOutput('superArrayOf')).toBe(true);
+    expect(ctx3.getOutput('overlapsWith')).toBe(true);
+    expect(ctx3.getOutput('disjointFrom')).toBe(false);
+
+    ctx3 = space.loadContext({
+      numA: [1, 2],
+      numB: [1, 2, 3],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(false);
+    expect(ctx3.getOutput('sameSet')).toBe(false);
+    expect(ctx3.getOutput('subsetOf')).toBe(true);
+    expect(ctx3.getOutput('subArrayOf')).toBe(true);
+    expect(ctx3.getOutput('supersetOf')).toBe(false);
+    expect(ctx3.getOutput('superArrayOf')).toBe(false);
+    expect(ctx3.getOutput('overlapsWith')).toBe(true);
+    expect(ctx3.getOutput('disjointFrom')).toBe(false);
+
+    ctx3 = space.loadContext({
+      numA: [1, 2, 4],
+      numB: [1, 2, 3],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(false);
+    expect(ctx3.getOutput('sameSet')).toBe(false);
+    expect(ctx3.getOutput('subsetOf')).toBe(false);
+    expect(ctx3.getOutput('subArrayOf')).toBe(false);
+    expect(ctx3.getOutput('supersetOf')).toBe(false);
+    expect(ctx3.getOutput('superArrayOf')).toBe(false);
+    expect(ctx3.getOutput('overlapsWith')).toBe(true);
+    expect(ctx3.getOutput('disjointFrom')).toBe(false);
+
+    ctx3 = space.loadContext({
+      numA: [1, 2, 3],
+      numB: [4, 5, 6],
+    });
+    space.process(ctx3);
+    expect(ctx3.getOutput('sameArray')).toBe(false);
+    expect(ctx3.getOutput('sameSet')).toBe(false);
+    expect(ctx3.getOutput('subsetOf')).toBe(false);
+    expect(ctx3.getOutput('subArrayOf')).toBe(false);
+    expect(ctx3.getOutput('supersetOf')).toBe(false);
+    expect(ctx3.getOutput('superArrayOf')).toBe(false);
+    expect(ctx3.getOutput('overlapsWith')).toBe(false);
+    expect(ctx3.getOutput('disjointFrom')).toBe(true);
+  });
+
+  it('test function factory adding/removing providers', async () => {
+    const space = new Workspace({ strict_syntax: true, strict_inputs: false, strict_outputs: false });
+
+    space.addRule('if numA and numB then set EuclideanDistance = euclidean_distance(numA, numB)');
+
+    let ctx = space.loadContext({
+      numA: [1, 2, 3],
+      numB: [4, 5, 6],
+    });
+
+    let ok = space.process(ctx);
+    expect(ok).toBe(true);
+    expect(ctx.getOutput('EuclideanDistance')).toBeCloseTo(5.196, 3);
+
+    FunctionFactory.unregisterProvider(ArrayAnalyticalFunctionProvider);
+
+    space.clearRules();
+    expect(() => {
+      space.addRule('if numA and numB then set EuclideanDistance = euclidean_distance(numA, numB)');
+    }).toThrow();
+
+    FunctionFactory.registerProvider(ArrayAnalyticalFunctionProvider);
+
+    space.addRule('if numA and numB then set EuclideanDistance = euclidean_distance(numA, numB)');
+    ctx = space.loadContext({
+      numA: [1, 2, 3],
+      numB: [4, 5, 6],
+    });
+    ok = space.process(ctx);
+    expect(ok).toBe(true);
+    expect(ctx.getOutput('EuclideanDistance')).toBeCloseTo(5.196, 3);
+
   });
 
 });

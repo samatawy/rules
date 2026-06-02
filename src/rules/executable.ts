@@ -74,6 +74,8 @@ export class OutputAction extends ExecutableAction {
         this.value = value;
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.value)) {
                 WorkLogger.warn(`Cannot compile OutputAction for key '${this.key}' due to missing function dependencies`);
             } else {

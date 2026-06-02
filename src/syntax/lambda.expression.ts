@@ -38,6 +38,8 @@ export class LambdaExpression extends Expression {
         this.syntax = this.toString();
 
         if (FunctionCompiler.enabled) {
+            // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
+            // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.expression)) {
                 WorkLogger.warn(`Cannot compile LambdaExpression due to missing function dependencies in the expression body`);
             } else {
