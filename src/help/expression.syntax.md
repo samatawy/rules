@@ -167,8 +167,8 @@ Logical expressions combine comparisons and other truthy values.
 
 Supported operators are:
 
-- `and` or `&&`
-- `or` or `||`
+- `AND` or `and` or `&&`
+- `OR` or `or` or `||`
 
 Examples:
 
@@ -317,8 +317,11 @@ SWITCH(value) CASE case1: expr1, CASE case2: expr2, DEFAULT: fallback
 Example:
 
 ```
-if status == "A" or status == "B" or status == "C" 
-then result = SWITCH(status) CASE "A": "one", CASE "B": "two", DEFAULT: "other" 
+if status IN ["A", "B", "C"] 
+then result = SWITCH(status) 
+  CASE "A": "one", 
+  CASE "B": "two", 
+  DEFAULT: "other" 
 else result = "unknown"
 ```
 

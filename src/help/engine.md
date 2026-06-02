@@ -6,6 +6,42 @@ title: Engine Components
 
 This Rule Engine implementation is composed of basic classes that manage rules and process inputs. This is an overview of the system design.
 
+The diagram below shows the main ownership relationships between the top-level engine classes.
+
+```mermaid
+flowchart TD
+    engine["RulesEngine\nGlobal workspace registry"]
+    workspace["Workspace\nOwns & invokes components"]
+        direction TD
+        subgraph registries["&nbsp;"]
+            direction LR
+            rules["RuleRegistry\nStores rules"]
+            functions["FunctionRegistry\nCustom functions"]
+            commands["CommandRegistry\nCustom commands"]
+            types["TypeRegistry\nDeclared types"]
+        end
+        subgraph tools["&nbsp;"]
+            direction LR
+            dependency["DependencyGraph\nRule dependency ordering"]
+            rete["ReteGraph\nConditional selection graph"]
+            checker["WorkingTypeChecker\nValidation and coercion"]
+        end
+    subgraph contexts["&nbsp;"]
+        direction TD
+        ctx1["WorkingMemory\nInvocation 1"]
+        ctx2["WorkingMemory\nInvocation 2"]
+        ctx3["WorkingMemory\nInvocation N"]
+    end
+    engine --> workspace
+    workspace -- on startup --> registries    
+    workspace -- on startup --> tools
+    workspace -- on invocation --> contexts
+    types --> checker
+    checker -- checks --> contexts
+```
+
+At runtime, a workspace acts as the main composition root. It owns one long-lived set of registries, graph structures, and a standalone type-checking service, while creating a new `WorkingMemory` context for each invocation.
+
 ## RulesEngine
 
 The top-level manager of the rules engine is a manager of workspaces. 
@@ -73,6 +109,37 @@ const newSpace = new Workspace({
 ```
 
 - A workspace can create a context to hold input data, then processes that context. After processing, the context contains its inputs, outputs, any errors encountered, and an audit trail of the rules used.
+
+### Execution flow
+
+The next diagram shows the usual runtime path from declarations to a processed context.
+
+```mermaid
+flowchart TD
+    declarations["Rules, functions,\ntypes, constants"]
+    load["Workspace\nloads declarations"]
+    validate["Registries and type checker\nvalidate declarations"]
+    input["Application provides data"]
+    ctx["WorkingMemory\ncreates a Context"]
+    subgraph process["Workspace processes the context"]
+        direction LR
+        select["Select candidate rules\nDependencyGraph and ReteGraph"]
+        eval["Evaluate conditions\nand execute consequences"]
+        update["Update outputs, cache,\nlog, and exceptions"]
+    end
+    result["Application reads output,\naudit trail, and exceptions"]
+    declarations -- read --> load
+    load -- on startup --> validate
+    load -- on invocation --> ctx
+    input -- process(input) --> ctx
+    ctx --> process
+    select --> eval
+    eval --> update
+    process --> result
+    update -. repeats while changes remain .-> select
+```
+
+Forward chaining repeats the `select -> evaluate -> update` cycle until the context stabilizes or the iteration limit is reached. Backward chaining follows the same services, but starts from a requested target and resolves only the rules needed for that target.
 
 ### Forward chaining
 

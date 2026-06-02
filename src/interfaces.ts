@@ -38,12 +38,20 @@ export interface ICache {
 export interface WorkingContext extends ICache, HasLogger {
 
     /**
-     * Read data from the context using the given key or path. 
+     * Read data from the context using the given key or path.
+     * This method will first attempt to retrieve the value from the context's data.
+     * If the value is not found in the data, it will then attempt to retrieve it from the context's constants.
      * Nested keys can be accessed using dot notation (e.g., "user.name").
      * @param key the key to look up in the context.
      * @returns the value associated with the key, or undefined if the key is not found.
      */
-    getData(key: string): any;
+    get(key: string): any;
+
+    /**
+     * Get all data from the context, excluding any shared data.
+     * @returns an object containing all data in the context.
+     */
+    getData(): any;
 
     /**
      * Check if the context contains data for the given key or path.
@@ -90,7 +98,9 @@ export interface WorkingContext extends ICache, HasLogger {
     setOutput(key: string, value: any): void;
 
     /**
-     * Get an output value from the context using the given key.
+     * Get an output value from the context using the given key, excluding any shared data.
+     * Nested keys can be accessed using dot notation (e.g., "result.value").
+     * If no key is provided, all output data will be returned.
      * @param key the key to look up in the outputs.
      * @returns the output value associated with the key, or undefined if the key is not found.
      */

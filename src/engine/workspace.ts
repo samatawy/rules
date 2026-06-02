@@ -448,7 +448,7 @@ export class Workspace implements Clonable<Workspace> {
      * @returns an array of applicable rules that can be evaluated against the given context.
      */
     public executableRules(context: WorkingContext): AbstractRule[] {
-        const keyset = this.flattenKeys(context.getOutput());
+        const keyset = this.flattenKeys(context.getData());
         const ruleset = this.findReteRules(Array.from(keyset), context);
         return Array.from(ruleset);
     }
@@ -488,9 +488,10 @@ export class Workspace implements Clonable<Workspace> {
      */
     protected isValidContext(context: WorkingContext): boolean {
         const logger = context.logger();
+        const data = context.getData();
 
         const checkDataLogged = withLogger(logger, this.type_checker.checkData.bind(this.type_checker));
-        const typeCheck = checkDataLogged(context.getOutput());
+        const typeCheck = checkDataLogged(data);
 
         if (typeCheck.valid) {
             logger.debug('Input data passed type validation.');
@@ -533,7 +534,7 @@ export class Workspace implements Clonable<Workspace> {
         }
 
         let satisfied: AbstractRule[] = [];
-        let rootKeys = this.flattenKeys(context.getOutput());
+        let rootKeys = this.flattenKeys(context.getData());
         let applicable = this.findReteRules(Array.from(rootKeys), context);
         let iterate = (applicable.size > 0), iteration = 0;
         let executors: Executor[] = [];
@@ -592,7 +593,7 @@ export class Workspace implements Clonable<Workspace> {
                         changes.push(...vars);
                     } else {
                         changes.push(effect.changed);
-                        logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.getOutput(effect.changed)}`);
+                        logger.debug(`Executor changed output key: ${effect.changed} to value: ${context.get(effect.changed)}`);
                     }
                     iterate = true;
                 }
@@ -632,10 +633,10 @@ export class Workspace implements Clonable<Workspace> {
         } else {
             logger.info(`Evaluation completed in a single iteration.`);
         }
-        // if (logger.canLog('info')) {
-        // logger.info('Final output after evaluation:', JSON.stringify(context.getCleanOutput(), null, '  '));
-        logger.info('Cache metrics', context.getCacheMetrics());
-        // }
+        if (logger.canLog('info')) {
+            logger.info('Final output after evaluation:', JSON.stringify(context.getOutput(), null, '  '));
+            logger.info('Cache metrics', context.getCacheMetrics());
+        }
 
         performanceLogger.end();
 
@@ -725,7 +726,7 @@ export class Workspace implements Clonable<Workspace> {
 
             // For sanity, we can still iterate if the value was not set
             iterate = (context.getExceptions().length === 0)
-                && context.getOutput(variable) === undefined;
+                && context.get(variable) === undefined;
         }
 
         // After processing, optionally log results
@@ -737,10 +738,10 @@ export class Workspace implements Clonable<Workspace> {
             logger.info(`Evaluation completed in a single iteration.`);
         }
 
-        // if (logger.canLog('info')) {
-        //     logger.info('Final output after evaluation:', JSON.stringify(context.getCleanOutput(), null, ' '));
-        logger.info('Cache metrics', context.getCacheMetrics());
-        // }
+        if (logger.canLog('info')) {
+            logger.info('Final output after evaluation:', JSON.stringify(context.getOutput(), null, ' '));
+            logger.info('Cache metrics', context.getCacheMetrics());
+        }
 
         performanceLogger.end();
 

@@ -72,9 +72,13 @@ export class LogicalExpression extends BooleanExpression {
         const rightValue = this.right.evaluate(context);
 
         switch (this.operator.toUpperCase()) {
+            case 'and':
             case 'AND':
+            case '&&':
                 return leftValue && rightValue;
+            case 'or':
             case 'OR':
+            case '||':
                 return leftValue || rightValue;
             default:
                 throw new EvaluationError(`Unsupported logical operator: ${this.operator}`);

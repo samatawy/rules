@@ -178,7 +178,7 @@ export class CustomFunctionExpression extends FunctionExpression {
                     scope.addException(new RuleException(effect.exception, { function: this.name }));
                     break;
                 } else if (effect.changed) {
-                    const newValue = scope.getOutput(effect.changed);
+                    const newValue = scope.get(effect.changed);
                     this.localChecker?.setType(effect.changed, getLiteralType(newValue));
                 }
             }

@@ -81,9 +81,11 @@ console.log(context.getOutput('invoice.review'));
 
 ## Version History
 
+- Since version `0.3.5`
+  - performance optimizations.
 - Since version `0.3.0`:
   - rendering and visualization of rules and expressions to HTML and Mermaid are available.
-  - experimental dynamic compilation is available for faster evaluation of large data loads.
+  - experimental dynamic compilation added for faster evaluation of large data loads.
 - Since version `0.2.0`:
   - backward-chaining goal-oriented tasks are supported.
   - cyclic dependency detection is available.

@@ -28,9 +28,9 @@ export class WorkingMemory implements WorkingContext {
 
     private shared_data: any;
 
-    private exceptions: AbstractException[];
+    private data: any;
 
-    private output: any;
+    private exceptions: AbstractException[];
 
     private command_handler: CommandHandler;
 
@@ -56,12 +56,12 @@ export class WorkingMemory implements WorkingContext {
         // this.output = cloneDeep(this.input);
         const typeChecker = workspace.typeChecker();
         const coerceDataLogged = withLogger(this.logImpl, typeChecker.coerceData.bind(typeChecker));
-        this.output = coerceDataLogged(this.input);
+        this.data = coerceDataLogged(this.input);
 
         this.shared_data = sharedData;
         if (sharedData) {
             for (const key of Object.keys(sharedData)) {
-                this.output[key] = sharedData[key];
+                this.data[key] = sharedData[key];
             }
         }
 
@@ -78,19 +78,57 @@ export class WorkingMemory implements WorkingContext {
     }
 
     public hasData(key: string): boolean {
-        return pathExists(this.output, key);
+        return pathExists(this.data, key);
     }
 
-    public getData(key: string): any {
-        return getPathValue(this.output, key);
+    public getData(): any {
+        return this.data;
+    }
+
+    public get(key: string): any {
+        const dataValue = getPathValue(this.data, key);
+        if (dataValue === undefined) {
+            return this.getConstant(key);
+        } else {
+            return dataValue;
+        }
     }
 
     public rootKeys(): string[] {
         const keys = new Set<string>();
-        for (const key of Object.keys(this.output)) {
+        for (const key of Object.keys(this.data)) {
             keys.add(key);
         }
         return Array.from(keys);
+    }
+
+    public setOutput(key: string, value: any): void {
+        setPathValue(this.data, key, value);
+    }
+
+    public getOutput(key?: string): any {
+        if (key === undefined) {
+            return this.getCleanOutput();
+        }
+        return getPathValue(this.data, key);
+    }
+
+    private getCleanOutput(): any {
+        if (this.shared_data) {
+            const shared_keys = Object.keys(this.shared_data);
+            if (shared_keys.length === 0) {
+                return this.data;
+            }
+            const result: any = {};
+            for (const key of Object.keys(this.data)) {
+                if (!shared_keys.includes(key)) {
+                    result[key] = this.data[key];
+                }
+            }
+            return result;
+        } else {
+            return this.data;
+        }
     }
 
     protected cache: Map<string, any> = new Map<string, any>();
@@ -162,35 +200,6 @@ export class WorkingMemory implements WorkingContext {
      */
     public getLog(): LoggedRule[] {
         return new Array(...this.auditLog);
-    }
-
-    public setOutput(key: string, value: any): void {
-        setPathValue(this.output, key, value);
-    }
-
-    public getOutput(key?: string): any {
-        if (key === undefined) {
-            return this.output;
-        }
-        return getPathValue(this.output, key);
-    }
-
-    /**
-     * Get output with only the keys that are present in the shared data, if shared data is provided. This is useful for cases where the context is used to compute some output based on the input and constants, but only a subset of the output (the one defined in shared data) should be returned or further processed, while the rest is considered intermediate data that should not be exposed.
-     * @returns 
-     */
-    public getCleanOutput(): void {
-        if (this.shared_data) {
-            const result: any = {};
-            for (const key of Object.keys(this.output)) {
-                if (!this.shared_data.hasOwnProperty(key)) {
-                    result[key] = this.output[key];
-                }
-            }
-            return result;
-        } else {
-            return this.output;
-        }
     }
 
     public logger(): ILogger {

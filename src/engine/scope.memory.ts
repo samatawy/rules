@@ -34,15 +34,22 @@ export class ScopeContext implements WorkingContext {
         setPathValue(this.variables, key, value);
     }
 
-    public getData(key: string): any {
+    public get(key: string): any {
+        if (key === undefined) {
+            return this.variables;
+        }
         const value = getPathValue(this.variables, key);
         if (value !== undefined) {
             return value;
         } else if (this.parent) {
-            return this.parent.getConstant(key) || this.parent.getData(key);
+            return this.parent.getConstant(key) || this.parent.get(key);
         } else {
             throw new EvaluationError(`Undefined variable: ${key}`);
         }
+    }
+
+    public getData(): any {
+        return this.variables;
     }
 
     public hasData(key: string): boolean {
@@ -57,11 +64,11 @@ export class ScopeContext implements WorkingContext {
     }
 
     public getConstant(key: string): any {
-        return this.parent ? this.parent.getConstant(key) : this.getData(key);
+        return this.parent ? this.parent.getConstant(key) : undefined;
     }
 
     public hasConstant(key: string): boolean {
-        return this.parent ? this.parent.hasConstant(key) : this.hasData(key);
+        return this.parent ? this.parent.hasConstant(key) : false;
     }
 
     public rootKeys(): string[] {
@@ -110,7 +117,7 @@ export class ScopeContext implements WorkingContext {
 
     public getOutput(key?: string): any {
         if (key) {
-            return this.getData(key);
+            return getPathValue(this.variables, key);
         } else {
             return { ...this.variables };
         }

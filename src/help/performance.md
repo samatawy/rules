@@ -35,72 +35,102 @@ The measurements below show the main scaling behavior first, before the single-s
 
 > These Mermaid charts compare sampled doubling steps as categories. The even spacing is a good fit for comparative checkpoints, but it still does not represent a geometrically exact numeric x-axis.
 
-### Backward Chaining Scalability — Candidate Count
+### Data-Load Scaling — Candidate Count
 
 These measurements use a backward-chaining request and vary only the candidate pool size. The charts below show per-iteration time, while the table keeps both time and heap-change reference values.
 
-| Candidates | Compiler OFF per iteration | Compiler OFF heap | Compiler ON per iteration | Compiler ON heap | Speedup |
+| Candidates | Compiler OFF per iteration | Compiler OFF heap | Compiler ON per iteration | Compiler ON heap | Relative speed (OFF/ON) |
 | --- | --- | --- | --- | --- | --- |
-| 40 | 0.271 ms | +1.40 MB | 0.182 ms | +0.62 MB | 1.5× |
-| 80 | 0.272 ms | +2.50 MB | 0.129 ms | +6.14 MB | 2.1× |
-| 160 | 0.468 ms | −4.04 MB | 0.196 ms | −7.25 MB | 2.4× |
-| 320 | 0.896 ms | +3.41 MB | 0.323 ms | +7.09 MB | 2.8× |
-| 640 | 1.786 ms | −3.97 MB | 0.623 ms | −5.26 MB | 2.9× |
-| 1 280 | 3.509 ms | +4.97 MB | 1.210 ms | +3.38 MB | 2.9× |
-| 2 560 | 6.946 ms | +8.87 MB | 2.339 ms | +3.75 MB | 3.0× |
-| 5 120 | 14.094 ms | +0.67 MB | 4.579 ms | +4.65 MB | 3.1× |
-| 10 240 | 28.217 ms | +10.78 MB | 9.203 ms | +5.73 MB | 3.1× |
+| 40 | 0.192 ms | −0.54 MB | 0.070 ms | −1.81 MB | 2.7× |
+| 80 | 0.176 ms | +0.53 MB | 0.039 ms | +4.31 MB | 4.5× |
+| 160 | 0.270 ms | +1.48 MB | 0.041 ms | −2.21 MB | 6.6× |
+| 320 | 0.508 ms | +2.96 MB | 0.053 ms | +0.78 MB | 9.6× |
+| 640 | 0.978 ms | +3.38 MB | 0.089 ms | −1.03 MB | 11.0× |
+| 1 280 | 1.919 ms | +2.72 MB | 0.161 ms | +3.81 MB | 11.9× |
+| 2 560 | 3.816 ms | +4.45 MB | 0.315 ms | −3.68 MB | 12.1× |
+| 5 120 | 7.725 ms | +8.02 MB | 0.583 ms | +6.66 MB | 13.2× |
+| 10 240 | 15.194 ms | +4.21 MB | 1.122 ms | −6.08 MB | 13.5× |
 
 Blue line = **Compiler OFF**. Green line = **Compiler ON**.
 
 ```mermaid
 %%{init: {'xyChart': {'height': 240}, 'themeVariables': {'xyChart': {'plotColorPalette': '#2563eb, #16a34a'}}}}%%
 xychart-beta
-    title "Candidate Scaling (Backward)"
+    title "Candidate Count Scaling"
     x-axis [40, 80, 160, 320, 640, 1280, 2560, 5120, 10240]
-    y-axis "ms / iteration" 0 --> 30
-    line [0.271, 0.272, 0.468, 0.896, 1.786, 3.509, 6.946, 14.094, 28.217]
-    line [0.182, 0.129, 0.196, 0.323, 0.623, 1.21, 2.339, 4.579, 9.203]
+    y-axis "ms / iteration" 0 --> 16
+    line [0.192, 0.176, 0.27, 0.508, 0.978, 1.919, 3.816, 7.725, 15.194]
+    line [0.07, 0.039, 0.041, 0.053, 0.089, 0.161, 0.315, 0.583, 1.122]
 ```
 
-Time growth is close to linear in candidate count for both modes, which is what you want in a selector workload. In the combined line view the separation between the two series is easier to read: the compiler advantage rises from about **1.5×** at 40 candidates to roughly **3×** once the pool reaches a few thousand candidates.
+Time growth is close to linear in candidate count for both modes, which is what you want in a selector workload. In this latest run the compiler is dramatically faster, and the gap widens as the pool grows: it starts around **2.7×** at 40 candidates and grows to roughly **13×** by 10 240 candidates.
 
 Heap change is included in the comparison table for reference, but not charted here because garbage collection timing dominates the sign and size of short-run allocation deltas.
 
-### Forward Chaining Scalability — Rule Count
+### Rule-Count Scaling — Dense Activation
 
 These measurements use a forward-chaining request and vary only the number of loaded rules. The charts below show per-iteration time, while the table keeps both time and heap-change reference values.
 
-| Rules | Compiler OFF per iteration | Compiler OFF heap | Compiler ON per iteration | Compiler ON heap | Speedup |
+| Rules | Compiler OFF per iteration | Compiler OFF heap | Compiler ON per iteration | Compiler ON heap | Relative speed (OFF/ON) |
 | --- | --- | --- | --- | --- | --- |
-| 40 | 0.081 ms | +6.26 MB | 0.080 ms | +7.18 MB | 1.0× |
-| 80 | 0.107 ms | +7.12 MB | 0.098 ms | +7.19 MB | 1.1× |
-| 160 | 0.177 ms | +13.09 MB | 0.162 ms | +13.06 MB | 1.1× |
-| 320 | 0.354 ms | −4.56 MB | 0.328 ms | −3.97 MB | 1.1× |
-| 640 | 0.686 ms | +4.57 MB | 0.664 ms | +5.88 MB | 1.0× |
-| 1 280 | 1.393 ms | +6.04 MB | 1.267 ms | +5.60 MB | 1.1× |
-| 2 560 | 2.999 ms | +5.15 MB | 2.993 ms | +21.47 MB | 1.0× |
-| 5 120 | 6.920 ms | +18.43 MB | 6.550 ms | +6.81 MB | 1.1× |
-| 10 240 | 14.707 ms | +69.85 MB | 13.780 ms | +17.72 MB | 1.1× |
+| 40 | 0.074 ms | +5.94 MB | 0.083 ms | +7.17 MB | 0.9× |
+| 80 | 0.100 ms | −9.28 MB | 0.098 ms | +7.18 MB | 1.0× |
+| 160 | 0.181 ms | −2.83 MB | 0.163 ms | +13.12 MB | 1.1× |
+| 320 | 0.348 ms | −4.77 MB | 0.327 ms | −4.20 MB | 1.1× |
+| 640 | 0.664 ms | +3.41 MB | 0.663 ms | +5.26 MB | 1.0× |
+| 1 280 | 1.337 ms | −8.29 MB | 1.352 ms | +5.60 MB | 1.0× |
+| 2 560 | 2.908 ms | +3.46 MB | 3.442 ms | +19.64 MB | 0.8× |
+| 5 120 | 6.801 ms | +27.95 MB | 6.853 ms | −5.49 MB | 1.0× |
+| 10 240 | 13.798 ms | +34.56 MB | 14.261 ms | −18.72 MB | 1.0× |
 
 Blue line = **Compiler OFF**. Green line = **Compiler ON**.
 
 ```mermaid
 %%{init: {'xyChart': {'height': 240}, 'themeVariables': {'xyChart': {'plotColorPalette': '#2563eb, #16a34a'}}}}%%
 xychart-beta
-    title "Rule Scaling (Forward)"
+    title "Rule Count Scaling, Dense Activation"
     x-axis [40, 80, 160, 320, 640, 1280, 2560, 5120, 10240]
     y-axis "ms / iteration" 0 --> 15
-    line [0.081, 0.107, 0.177, 0.354, 0.686, 1.393, 2.999, 6.92, 14.707]
-    line [0.08, 0.098, 0.162, 0.328, 0.664, 1.267, 2.993, 6.55, 13.78]
+    line [0.074, 0.1, 0.181, 0.348, 0.664, 1.337, 2.908, 6.801, 13.798]
+    line [0.083, 0.098, 0.163, 0.327, 0.663, 1.352, 3.442, 6.853, 14.261]
 ```
 
-Engine performance scales roughly linearly with rule count. Unlike scaling with data load, the compiler advantage stays modest and fairly flat at around **1.0× to 1.1×**. That suggests the dominant cost when scaling rules is not only expression evaluation, but also rule scheduling, context mutation, conflict handling, and repeated iteration through the active rule set.
+Engine performance still scales roughly linearly with rule count. In this denser benchmark the two modes are effectively near parity across most of the range, with small wins alternating between them. That suggests the dominant cost when many rules remain active is not only expression evaluation, but also rule scheduling, context mutation, conflict handling, and repeated iteration through the active rule set.
+
+### Rule-Count Scaling — Selective Activation
+
+The following benchmark models a more common production shape where only about 25% of loaded rules are selected and executed on a given request. That is where the engine's rule-selection strategy has more room to help.
+
+| Rules | Compiler OFF per iteration | Compiler OFF heap | Compiler ON per iteration | Compiler ON heap | Relative speed (OFF/ON) |
+| --- | --- | --- | --- | --- | --- |
+| 40 | 0.068 ms | +6.59 MB | 0.074 ms | -9.30 MB | 0.9x |
+| 80 | 0.067 ms | -6.72 MB | 0.064 ms | +9.80 MB | 1.1x |
+| 160 | 0.103 ms | +0.36 MB | 0.105 ms | +0.17 MB | 1.0x |
+| 320 | 0.180 ms | -2.00 MB | 0.182 ms | -1.46 MB | 1.0x |
+| 640 | 0.357 ms | -7.78 MB | 0.340 ms | -5.50 MB | 1.0x |
+| 1 280 | 0.646 ms | +6.18 MB | 0.623 ms | +10.06 MB | 1.0x |
+| 2 560 | 1.440 ms | -4.84 MB | 1.326 ms | -10.91 MB | 1.1x |
+| 5 120 | 3.441 ms | +4.63 MB | 3.415 ms | +9.28 MB | 1.0x |
+| 10 240 | 8.947 ms | +11.48 MB | 7.733 ms | +13.92 MB | 1.2x |
+
+Blue line = **Compiler OFF**. Green line = **Compiler ON**.
+
+```mermaid
+%%{init: {'xyChart': {'height': 240}, 'themeVariables': {'xyChart': {'plotColorPalette': '#2563eb, #16a34a'}}}}%%
+xychart-beta
+    title "Rule Count Scaling, 25% Active"
+    x-axis [40, 80, 160, 320, 640, 1280, 2560, 5120, 10240]
+    y-axis "ms / iteration" 0 --> 9.5
+    line [0.068, 0.067, 0.103, 0.18, 0.357, 0.646, 1.44, 3.441, 8.947]
+    line [0.074, 0.064, 0.105, 0.182, 0.34, 0.623, 1.326, 3.415, 7.733]
+```
+
+This selective-activation scenario scales better than the denser benchmark above, especially at larger rule counts. That is consistent with the expectation that rule selection and Rete-style discrimination help most when many loaded rules are irrelevant to a particular request. In this case the effect is more visible in forward-chaining requests, because selective rule activation reduces the amount of work done across the active rule set. The compiler effect is still smaller than in data-load scaling, but the compiled path regains a modest edge at larger rule counts.
 
 **Takeaway:**
 
-- Large workloads benefit strongly and consistently from compilation as load grows.
-- Large rule sets scale acceptably with rule count, but compilation delivers only modest end-to-end gains across the measured range.
+- Large candidate-pool workloads benefit very strongly from compilation in this run, with the advantage widening from roughly **2.7×** to **13.5×** as load grows.
+- Large rule sets still scale acceptably with rule count. In dense activation the two modes are close to parity, while in the more selective 25%-active scenario the engine benefits more from rule selection and the compiled path regains a modest advantage at larger scales.
 
 ---
 

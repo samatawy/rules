@@ -35,7 +35,7 @@ export class SelectionContext<C, T> extends WorkingMemory {
     }
 
     public getTask(): T {
-        return this.getData('Task');
+        return this.get('Task');
     }
 
     public getSelected(): C[] {

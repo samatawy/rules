@@ -13,7 +13,7 @@ When passed a variable or a non-boolean argument, it checks if the argument has 
 - `is(person)` return `true` if the person was any object and `false` if the person was `null` or `undefined`.
 
 ```
-set isAdult = not(isMinor)
+set roomReady = is(roomClean AND roomEmpty)
 ```
 
 ### `not(value)`

@@ -42,7 +42,7 @@ export class VariableExpression extends Expression {
     }
 
     public evaluate(context: WorkingContext): any {
-        const variable = context.getData(this.variableName);
+        const variable = context.get(this.variableName);
         if (variable === undefined) {
             return context.getConstant(this.variableName);
         } else {
@@ -55,7 +55,7 @@ export class VariableExpression extends Expression {
     }
 
     public toJS(): string {
-        return `context.getData('${this.variableName}')`;
+        return `context.get('${this.variableName}')`;
     }
 
     public toJson(): Renderable {

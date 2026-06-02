@@ -71,7 +71,7 @@ export class FunctionCompiler {
         for (const param of params) {
             // Capture whatever is requested from context.getData for this parameter, including any dot notation for sub-properties
             // Replace with the parameter name followed by the captured sub-property access if it exists, otherwise just the parameter name
-            const regex = new RegExp(`\\bcontext\.getData\\(['"](${param}(?:|\\..+?))['"]\\)`, 'g');
+            const regex = new RegExp(`\\bcontext\.get\\(['"](${param}(?:|\\..+?))['"]\\)`, 'g');
             target = target.replace(regex, '$1');
         }
         return target;

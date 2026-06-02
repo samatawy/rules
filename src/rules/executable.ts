@@ -141,7 +141,7 @@ export class OutputAction extends ExecutableAction {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        const oldValue = context.getOutput(this.key);
+        const oldValue = context.get(this.key);
         const newValue = (this.compiled && FunctionCompiler.enabled)
             ? this.compiled(context)
             : this.value.evaluate(context);

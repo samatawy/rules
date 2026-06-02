@@ -225,7 +225,7 @@ export class DependencyGraph {
                 continue;
             }
             if (root) {
-                let currentContext = context.getData(key);
+                let currentContext = context.get(key);
                 let currentNode: AbstractNode = root;
                 const found = this.readRulesFromNode(currentNode, currentContext);
                 for (const rule of found) {

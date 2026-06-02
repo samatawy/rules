@@ -119,7 +119,7 @@ export class OutputRule extends AbstractRule {
     }
 
     public evaluate(context: WorkingContext): Executor | null {
-        const oldValue = context.getOutput(this.outputKey);
+        const oldValue = context.get(this.outputKey);
         const newValue = this.compiled_exec && FunctionCompiler.enabled
             ? this.compiled_exec(context)
             : this.expression.evaluate(context);
@@ -132,7 +132,7 @@ export class OutputRule extends AbstractRule {
     }
 
     public execute(context: WorkingContext): RuleEffect {
-        const oldValue = context.getOutput(this.outputKey);
+        const oldValue = context.get(this.outputKey);
         const newValue = this.compiled_exec && FunctionCompiler.enabled
             ? this.compiled_exec(context)
             : this.expression.evaluate(context);

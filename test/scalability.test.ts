@@ -69,7 +69,7 @@ describe('Scalability tests', () => {
     space.addFunction({
       name: 'isEligible',
       parameters: [
-        { name: 'candidates', type: candidatesType.items! },
+        { name: 'candidate', type: candidatesType.items! },
         { name: 'Task', type: taskType.properties! },
       ],
       expression: expressionParser.parse('candidate.skills.any(skill: skill IN Task.required_skills) AND candidate.location == Task.location'),
@@ -134,7 +134,10 @@ describe('Scalability tests', () => {
     for (const ruleCount of [40, 80, 160, 320, 640, 1280, 2560, 5120, 10240]) {
       // for (const ruleCount of [10, 50, 100, 500, 1000, 2500, 5000, 10000]) {
       space.clearRules();
-      for (let i = 0; i < ruleCount; i++) {
+      for (let i = 0; i < ruleCount / 4; i++) {
+        space.addRule(`IF Task AND Task.required_skills.every(skill: skill.endsWith("6")) THEN Filtered = Filter`);
+        space.addRule(`IF Task2 AND Filter THEN Filtered2 = Filter2`);
+        space.addRule(`IF Task.required_skills.any(skill: skill == "Skill1") THEN tax_rate = 0.14`);
         space.addRule(`IF Task AND Task.location.contains("${i}") THEN Location${i} = Task.location.contains("${i}")`);
       }
 
@@ -145,13 +148,15 @@ describe('Scalability tests', () => {
           Task: {
             title: 'Software Engineer',
             required_skills: ['Skill1', 'Skill5'],
-            location: 'Location2',
+            location: `Location${i % 5}`,
           },
+          // Filter: i % 2 === 0,
+          // InEgypt: i % 3 === 0,
         });
         space.process(ctx);
       }
       console.debug(perflog.checkpoint().message);
-      // console.debug(ctx.getCleanOutput());
+      // console.debug(ctx.getOutput());
     }
 
   });
