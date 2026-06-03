@@ -30,8 +30,6 @@ export class PhysicsConstants extends NumericFunctionExpression {
                 return 299792458;
             case 'g':
                 return 9.80665;
-            case 'golden_ratio':
-                return (1 + Math.sqrt(5)) / 2;
             case 'avogadro':
                 return 6.02214076e23;
             case 'planck':
@@ -70,7 +68,7 @@ export class PhysicsConstants extends NumericFunctionExpression {
 
 export class PhysicsConstantsProvider {
 
-    private static _names = ['c', 'speed_of_light', 'g', 'golden_ratio', 'avogadro', 'planck', 'electron_mass', 'proton_mass', 'neutron_mass', 'boltzmann', 'gas_constant', 'faraday', 'gravitational_constant', 'molecular_mass_unit', 'bohr_radius', 'rydberg_constant', 'stefan_boltzmann_constant', 'elementary_charge'];
+    private static _names = ['c', 'speed_of_light', 'g', 'avogadro', 'planck', 'electron_mass', 'proton_mass', 'neutron_mass', 'boltzmann', 'gas_constant', 'faraday', 'gravitational_constant', 'molecular_mass_unit', 'bohr_radius', 'rydberg_constant', 'stefan_boltzmann_constant', 'elementary_charge'];
 
     public static names(): string[] {
         return this._names;
@@ -95,14 +93,6 @@ export class PhysicsConstantsProvider {
 
     public static toJS(name: string): { args: string[], body: string } {
         switch (name) {
-            case 'pi':
-                return { args: [], body: 'return Math.PI;' };
-            case 'e':
-                return { args: [], body: 'return Math.E;' };
-            case 'phi':
-                return { args: [], body: 'return (1 + Math.sqrt(5)) / 2;' };
-            case 'tau':
-                return { args: [], body: 'return 2 * Math.PI;' };
             case 'c':
             case 'speed_of_light':
                 return { args: [], body: 'return 299792458;' };

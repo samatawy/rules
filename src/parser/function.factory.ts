@@ -34,6 +34,7 @@ import { ConstantDatesProvider } from "../functions/constant.date.functions";
 import { ConstantNumbersProvider } from "../functions/constant.number.functions";
 import { PhysicsConstantsProvider } from "../functions/special/constant.physics.functions";
 import { CommonChemistryFunctionsProvider } from "../functions/special/common.chemistry.functions";
+import { UnitConversionFunctionsProvider } from "../functions/special/unit.conversion.functions";
 
 /**
  * Factory class for creating FunctionExpression instances based on function name and arguments.
@@ -123,8 +124,9 @@ export class FunctionFactory {
 
         // Special
         this.registerProvider(ArrayAnalyticalFunctionProvider);
-        this.registerProvider(CommonChemistryFunctionsProvider);
-        this.registerProvider(PhysicsConstantsProvider);
+        this.registerProvider(UnitConversionFunctionsProvider);
+        // this.registerProvider(CommonChemistryFunctionsProvider);
+        // this.registerProvider(PhysicsConstantsProvider);
     }
 
     public static registerProvider(provider: FunctionProvider): void {

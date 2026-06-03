@@ -45,6 +45,9 @@ describe('Parsers Tests', () => {
     expect(expr10).toBeInstanceOf(ComparisonExpression);
     const expr11 = parser.parse('x in ["1", "2", "3"]');
     expect(expr11).toBeInstanceOf(ComparisonExpression);
+
+    const expr12 = parser.parse('x > 10_000 ? -2.5 : 0.56_001');
+    expect(expr12).toBeInstanceOf(TernaryExpression);
   });
 
 
@@ -52,7 +55,7 @@ describe('Parsers Tests', () => {
     const space = new Workspace();
     const graph = space.dependencyGraph();
 
-    space.addRule('if x < avogadro() then approx = floor(pi())');
+    space.addRule('if x > phi() then approx = floor(pi())');
     space.addRule('if x > max(1, 2, 3) then year = year(now())');
     space.addRule('if x >= 10 then calc = max(5, 10, 15) else result = min(5, 10)');
 

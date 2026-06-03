@@ -115,25 +115,25 @@ export class RuleParser {
         }
 
         if (given.syntax.startsWith('@name(')) {
-            const match = given.syntax.match(/^@name\((.+?)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@name\((.+?)\)\s*(.*)$/ms);
             if (match) {
                 given.name = match[1]!;
                 given.syntax = match[2]!;
             }
         } else if (given.syntax.startsWith('@hint(')) {
-            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/m);
             if (match) {
                 given.hint = match[1]!;
                 given.syntax = match[2]!;
             }
         } else if (given.syntax.startsWith('@disabled(')) {
-            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/ms);
             if (match) {
                 given.disabled = true;
                 given.syntax = match[2]!;
             }
         } else if (given.syntax.startsWith('@salience(')) {
-            const match = given.syntax.match(/^@salience\((\d+)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@salience\((\d+)\)\s*(.*)$/ms);
             if (match) {
                 given.salience = parseInt(match[1]!, 10);
                 given.syntax = match[2]!;

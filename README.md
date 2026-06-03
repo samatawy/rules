@@ -81,6 +81,9 @@ console.log(context.getOutput('invoice.review'));
 
 ## Version History
 
+- Since version `0.4.0`
+  - automated testing capability with saved test cases
+  - additional functions
 - Since version `0.3.5`
   - performance optimizations.
 - Since version `0.3.0`:

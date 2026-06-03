@@ -164,13 +164,13 @@ export class FunctionParser {
         }
 
         if (given.syntax.startsWith('@hint(')) {
-            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/ms);
             if (match) {
                 given.hint = match[1]!;
                 given.syntax = match[2]!;
             }
         } else if (given.syntax.startsWith('@disabled(')) {
-            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/);
+            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/ms);
             if (match) {
                 given.disabled = true;
                 given.syntax = match[2]!;

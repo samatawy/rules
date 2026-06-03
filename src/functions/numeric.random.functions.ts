@@ -24,8 +24,9 @@ export class RandomFunction extends NumericFunctionExpression {
     }
 
     public evaluate(context: WorkingContext): number {
-        const cached = context.getCached(this.syntax);
-        if (cached !== undefined) return cached;
+        // NEVER used for random functions, since they should not be cached.
+        // const cached = context.getCached(this.syntax);
+        // if (cached !== undefined) return cached;
 
         const evaluatedArgs = this.args.map(arg => arg.evaluate(context));
         evaluatedArgs.forEach((arg, index) => {

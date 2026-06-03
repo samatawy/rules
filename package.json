@@ -20,6 +20,11 @@
             "import": "./dist/browser/index.js",
             "require": "./dist/browser/index.cjs"
         },
+        "./testing": {
+            "types": "./dist/testing/index.d.ts",
+            "import": "./dist/testing/index.js",
+            "require": "./dist/testing/index.cjs"
+        },
         "./autocomplete": {
             "types": "./dist/autocomplete/index.d.ts",
             "import": "./dist/autocomplete/index.js",

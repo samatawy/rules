@@ -32,6 +32,10 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'ceil':
             case 'floor':
             case 'round':
+            case 'deg_to_rad':
+            case 'rad_to_deg':
+            case 'normalize_deg':
+            case 'normalize_rad':
                 return [{ type: 'number' }];
 
             case 'roundTo':
@@ -96,6 +100,16 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
             case 'root':
                 return Math.pow(targetValue, 1 / evaluatedArgs[0]);
 
+            case 'deg_to_rad':
+                return targetValue * (Math.PI / 180);
+            case 'rad_to_deg':
+                return targetValue * (180 / Math.PI);
+            case 'normalize_deg':
+                return ((targetValue % 360) + 360) % 360;
+            case 'normalize_rad':
+                const twoPi = 2 * Math.PI;
+                return ((targetValue % twoPi) + twoPi) % twoPi;
+
             default:
                 throw new EvaluationError(`Unknown numeric manipulation function: ${this.name}`);
         }
@@ -104,7 +118,8 @@ export class NumericManipulationFunction extends NumericFunctionExpression {
 
 export class NumericManipulationFunctionProvider {
 
-    private static _names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'pow', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp'];
+    private static _names = ['neg', 'negative', 'ceil', 'floor', 'round', 'roundTo', 'pow', 'power', 'root', 'abs', 'sign', 'sqrt', 'log', 'log10', 'log2', 'exp',
+        'deg_to_rad', 'rad_to_deg', 'normalize_deg', 'normalize_rad'];
 
     public static names(): string[] {
         return this._names;
@@ -164,6 +179,21 @@ export class NumericManipulationFunctionProvider {
                 return { args: ['x', 'y'], body: 'return Math.pow(x, y);' };
             case 'root':
                 return { args: ['x', 'n'], body: 'return Math.pow(x, 1 / n);' };
+
+            case 'deg_to_rad':
+                return { args: ['x'], body: 'return x * (Math.PI / 180);' };
+            case 'rad_to_deg':
+                return { args: ['x'], body: 'return x * (180 / Math.PI);' };
+            case 'normalize_deg':
+                return { args: ['x'], body: 'return ((x % 360) + 360) % 360;' };
+            case 'normalize_rad':
+                return {
+                    args: ['x'],
+                    body: `
+                        const twoPi = 2 * Math.PI;
+                        return ((x % twoPi) + twoPi) % twoPi;
+                    `};
+
             default:
                 throw new TypeCheckError(`Unknown numeric manipulation function: ${name}`);
         }

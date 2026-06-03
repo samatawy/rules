@@ -512,8 +512,8 @@ export class ExpressionParser {
         }
         const syntax = tokens[0];
         // match numbers (integer and floating point), booleans, null, and quoted strings
-        if (/^\d+(\.\d+)?$/.test(syntax)) {
-            return new LiteralExpression(parseFloat(syntax));
+        if (/^-?\d[\d_]*(?:\.[\d_]*\d)?$/.test(syntax)) {
+            return new LiteralExpression(parseFloat(syntax.replace(/_/g, '')));
         } else if (/^true$/i.test(syntax)) {
             return new LiteralExpression(true);
         } else if (/^false$/i.test(syntax)) {

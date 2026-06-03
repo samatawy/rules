@@ -1,9 +1,30 @@
 import type { ArrayType, AtomicType, ObjectArrayType, ObjectType, TypedParameter } from "../../types";
-import type { Expression } from "../../syntax/expression";
 import type { TypeChecker, ValidationResult, WorkingContext } from "../../interfaces";
+import type { Expression } from "../../syntax/expression";
 import { FunctionExpression } from "../../syntax/function.expression";
 import { EvaluationError, TypeCheckError } from "../../rules/exception";
-import { PeriodicTable } from "./periodic.table";
+import { ElementSymbols, PeriodicTable } from "./periodic.table";
+
+const ZERO_ARG_CHEMISTRY_FUNCTIONS = new Set(['element_symbols']);
+
+const ONE_ARG_CHEMISTRY_FUNCTIONS = new Set([
+    'short_formula', 'molecular_weight',
+    'atomic_number', 'atomic_weight', 'element_name', 'electron_configuration',
+    'valence_electrons', 'common_oxidation_states', 'electronegativity', 'atomic_radius_pm',
+    'ionization_energy_kj_mol', 'electron_affinity_kj_mol',
+    'phase_at_stp', 'melting_point_k', 'boiling_point_k', 'density_g_cm3',
+]);
+
+const TWO_ARG_CHEMISTRY_FUNCTIONS = new Set([
+    'fractional_weight_of_element', 'atoms_of_element',
+]);
+
+function chemistryFunctionArity(name: string): number {
+    if (ZERO_ARG_CHEMISTRY_FUNCTIONS.has(name)) return 0;
+    if (ONE_ARG_CHEMISTRY_FUNCTIONS.has(name)) return 1;
+    if (TWO_ARG_CHEMISTRY_FUNCTIONS.has(name)) return 2;
+    throw new TypeCheckError(`Unknown chemistry function: ${name}`);
+}
 
 export class CommonChemistryFunction extends FunctionExpression {
 
@@ -12,13 +33,13 @@ export class CommonChemistryFunction extends FunctionExpression {
     }
 
     public expectsParameters(): TypedParameter[] {
-        if (['short_formula', 'molecular_weight',
-            'atomic_number', 'atomic_weight', 'element_name', 'electron_configuration',
-            'valence_electrons', 'common_oxidation_states', 'electronegativity', 'atomic_radius_pm',
-            'ionization_energy_kj_mol', 'electron_affinity_kj_mol',
-            'phase_at_stp', 'melting_point_k', 'boiling_point_k', 'density_g_cm3'].includes(this.name)) {
+        if (ZERO_ARG_CHEMISTRY_FUNCTIONS.has(this.name)) {
+            return [];
+        }
+        if (ONE_ARG_CHEMISTRY_FUNCTIONS.has(this.name)) {
             return [{ type: 'string' }];
-        } else if (['fractional_weight_of_element', 'atoms_of_element'].includes(this.name)) {
+        }
+        if (TWO_ARG_CHEMISTRY_FUNCTIONS.has(this.name)) {
             return [{ type: 'string' }, { type: 'string' }];
         }
 
@@ -35,9 +56,11 @@ export class CommonChemistryFunction extends FunctionExpression {
             case 'element_symbols':
                 return { type: 'string[]' };
 
+            case 'atoms_of_element':
+            case 'fractional_weight_of_element':
             case 'atomic_number':
             case 'atomic_weight':
-            case 'molecular_wt':
+            case 'molecular_weight':
             case 'valence_electrons':
             case 'electronegativity':
             case 'atomic_radius_pm':
@@ -50,24 +73,18 @@ export class CommonChemistryFunction extends FunctionExpression {
             case 'common_oxidation_states':
                 return { type: 'number[]' };
 
-            case 'molecular_mass_unit':
-            case 'bohr_radius':
-            case 'rydberg_constant':
-            case 'stefan_boltzmann_constant':
-            case 'elementary_charge':
-                return { type: 'number' };
-
             default:
                 throw new TypeCheckError(`Unknown chemistry function: ${this.name}`);
         }
     }
 
     public checkTypes(checker?: TypeChecker): ValidationResult {
-        return (this.args.length === 1) ? {
+        const expectedArgs = chemistryFunctionArity(this.name);
+        return (this.args.length === expectedArgs) ? {
             valid: true,
         } : {
             valid: false,
-            errors: [`Chemical constant functions expect one argument, but got ${this.args.length}`],
+            errors: [`Chemical functions expect ${expectedArgs} arguments, but got ${this.args.length}`],
         };
     }
 
@@ -75,12 +92,12 @@ export class CommonChemistryFunction extends FunctionExpression {
         const cached = context.getCached(this.syntax);
         if (cached !== undefined) return cached;
 
-        const expectedArgs = this.expectsParameters();
-        if (this.args.length !== expectedArgs.length) {
-            throw new EvaluationError(`Function ${this.name} expects ${expectedArgs.length} arguments, but got ${this.args.length}`);
+        const expectedArgs = chemistryFunctionArity(this.name);
+        if (this.args.length !== expectedArgs) {
+            throw new EvaluationError(`Function ${this.name} expects ${expectedArgs} arguments, but got ${this.args.length}`);
         }
-        const arg = this.args[0]!.evaluate(context);
-        if (typeof arg !== 'string') {
+        const arg = this.args[0]?.evaluate(context);
+        if (expectedArgs > 0 && typeof arg !== 'string') {
             throw new EvaluationError(`Argument for function ${this.name} must evaluate to a string, but got ${typeof arg}`);
         }
         const extra_args = this.args.slice(1).map(a => a.evaluate(context));
@@ -89,50 +106,56 @@ export class CommonChemistryFunction extends FunctionExpression {
         switch (this.name) {
             // Lookups
             case 'element_symbols':
-                return Array.from(Object.keys(PeriodicTable));
+                return ElementSymbols;
             case 'atomic_number':
-                return PeriodicTable[arg]?.atomicNumber || NaN;
+                return PeriodicTable[arg!]?.atomicNumber || NaN;
             case 'atomic_weight':
-                return PeriodicTable[arg]?.atomicWeight || NaN;
+                return PeriodicTable[arg!]?.atomicWeight || NaN;
             case 'element_name':
-                return PeriodicTable[arg]?.name || 'Unknown element';
+                return PeriodicTable[arg!]?.name || 'Unknown element';
             case 'electron_configuration':
-                return PeriodicTable[arg]?.electronConfiguration || 'Unknown configuration';
+                return PeriodicTable[arg!]?.electronConfiguration || 'Unknown configuration';
             case 'valence_electrons':
-                return PeriodicTable[arg]?.valenceElectrons || NaN;
+                return PeriodicTable[arg!]?.valenceElectrons || NaN;
             case 'common_oxidation_states':
-                return PeriodicTable[arg]?.commonOxidationStates || [];
+                return PeriodicTable[arg!]?.commonOxidationStates || [];
             case 'electronegativity':
-                return PeriodicTable[arg]?.electronegativity || NaN;
+                return PeriodicTable[arg!]?.electronegativity || NaN;
             case 'atomic_radius_pm':
-                return PeriodicTable[arg]?.atomicRadiusPm || NaN;
+                return PeriodicTable[arg!]?.atomicRadiusPm || NaN;
             case 'ionization_energy_kj_mol':
-                return PeriodicTable[arg]?.ionizationEnergy1kJMol || NaN;
+                return PeriodicTable[arg!]?.ionizationEnergy1kJMol || NaN;
             case 'electron_affinity_kj_mol':
-                return PeriodicTable[arg]?.electronAffinitykJMol || NaN;
+                return PeriodicTable[arg!]?.electronAffinitykJMol || NaN;
             case 'phase_at_stp':
-                return PeriodicTable[arg]?.phaseAtSTP || 'unknown';
+                return PeriodicTable[arg!]?.phaseAtSTP || 'unknown';
             case 'melting_point_k':
-                return PeriodicTable[arg]?.meltingPointK || NaN;
+                return PeriodicTable[arg!]?.meltingPointK || NaN;
             case 'boiling_point_k':
-                return PeriodicTable[arg]?.boilingPointK || NaN;
+                return PeriodicTable[arg!]?.boilingPointK || NaN;
             case 'density_g_cm3':
-                return PeriodicTable[arg]?.densityGcm3 || NaN;
+                return PeriodicTable[arg!]?.densityGcm3 || NaN;
 
             // Calculations
             case 'short_formula':
-                return this.short_formula(arg);
+                return this.short_formula(arg!);
 
             case 'molecular_weight':
-                return this.molecular_weight(arg);
+                return this.molecular_weight(arg!);
 
             case 'atoms_of_element':
-                return this.atoms_of_element(second_arg, arg);
+                if (typeof second_arg !== 'string') {
+                    throw new EvaluationError(`Second argument for function ${this.name} must evaluate to a string, but got ${typeof second_arg}`);
+                }
+                return this.atoms_of_element(second_arg, arg!);
             case 'fractional_weight_of_element':
-                const total_atoms = this.atoms_of_element(second_arg, arg);
-                const atomic_wt = PeriodicTable[arg]?.atomicWeight || NaN;
+                if (typeof second_arg !== 'string') {
+                    throw new EvaluationError(`Second argument for function ${this.name} must evaluate to a string, but got ${typeof second_arg}`);
+                }
+                const total_atoms = this.atoms_of_element(second_arg, arg!);
+                const atomic_weight = PeriodicTable[arg!]?.atomicWeight || NaN;
                 const molecular_weight = this.molecular_weight(second_arg);
-                return total_atoms * atomic_wt / molecular_weight;
+                return total_atoms * atomic_weight / molecular_weight;
 
             default:
                 throw new EvaluationError(`Unknown chemistry function: ${this.name}`);
@@ -144,8 +167,7 @@ export class CommonChemistryFunction extends FunctionExpression {
     // A formula can have the same element multiple times, e.g. C2H4O6 is the same as CH3COOH, etc.
     private short_formula(formula: string): string {
         const element_counts: { [key: string]: number } = {};
-        const element_symbols = Object.keys(PeriodicTable);
-        element_symbols.map(el => {
+        ElementSymbols.map(el => {
             const regex = new RegExp(`${el}(\\d*)`, 'g');
             let match;
             while ((match = regex.exec(formula)) !== null) {
@@ -162,13 +184,12 @@ export class CommonChemistryFunction extends FunctionExpression {
     // A formula can have the same element multiple times, e.g. C2H4O6 is the same as CH3COOH, etc.
     private molecular_weight(formula: string): number {
         let formula_weight = 0;
-        const element_wts = Object.keys(PeriodicTable).map(el => ({ symbol: el, aw: PeriodicTable[el]?.atomicWeight }));
-        element_wts.map(el => {
-            const regex = new RegExp(`${el.symbol}(\\d*)`, 'g');
+        ElementSymbols.map(el => {
+            const regex = new RegExp(`${el}(\\d*)`, 'g');
             let match;
             while ((match = regex.exec(formula)) !== null) {
                 const count = match[1] ? parseInt(match[1]) : 1;
-                formula_weight += (el.aw || 0) * count;
+                formula_weight += (PeriodicTable[el]?.atomicWeight || 0) * count;
             }
         });
         return formula_weight;
@@ -192,6 +213,7 @@ export class CommonChemistryFunction extends FunctionExpression {
 export class CommonChemistryFunctionsProvider {
 
     private static _names = [
+        'element_symbols',
         'short_formula', 'molecular_weight', 'fractional_weight_of_element', 'atoms_of_element',
         'atomic_number', 'atomic_weight', 'element_name', 'electron_configuration',
         'valence_electrons', 'common_oxidation_states', 'electronegativity', 'atomic_radius_pm',
@@ -207,8 +229,9 @@ export class CommonChemistryFunctionsProvider {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        if (args.length !== 1) {
-            throw new TypeCheckError(`Function ${name} expects one argument, but got ${args.length}`);
+        const expectedArgs = chemistryFunctionArity(name);
+        if (args.length !== expectedArgs) {
+            throw new TypeCheckError(`Function ${name} expects ${expectedArgs} arguments, but got ${args.length}`);
         }
         return new CommonChemistryFunction(name, args);
     }
@@ -217,7 +240,7 @@ export class CommonChemistryFunctionsProvider {
         if (!this._names.includes(name)) {
             return undefined;
         }
-        return new CommonChemistryFunction(name, []);
+        return new CommonChemistryFunction(name, args);
     }
 
     public static toJS(name: string): { args: string[], body: string } {

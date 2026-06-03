@@ -102,35 +102,35 @@ export function getSplitPathValue(context: any, keys: string[]): any {
 export const hasOwn = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 
-export function getPathValue2(context: any, key: string): any {
-    if (context == null || typeof context !== 'object') {
-        return undefined;
-    }
-    if (typeof key !== 'string') {
-        throw new Error(`Key must be a string, but got ${typeof key}`);
-    }
+// export function getPathValue2(context: any, key: string): any {
+//     if (context == null || typeof context !== 'object') {
+//         return undefined;
+//     }
+//     if (typeof key !== 'string') {
+//         throw new Error(`Key must be a string, but got ${typeof key}`);
+//     }
 
-    if (key.includes('.')) {
-        const keys = key.split('.');
-        let currentContext = context;
-        for (const k of keys) {
-            if (currentContext && typeof currentContext === 'object' && k in currentContext) {
-                currentContext = currentContext[k];
-            } else if (currentContext && Array.isArray(currentContext)) {
-                // follow all items in the array and check if the key exists in any of the items, if so we return an array of the values at that key for each item
-                const items = currentContext.map(item => getPathValue(item, k));
+//     if (key.includes('.')) {
+//         const keys = key.split('.');
+//         let currentContext = context;
+//         for (const k of keys) {
+//             if (currentContext && typeof currentContext === 'object' && k in currentContext) {
+//                 currentContext = currentContext[k];
+//             } else if (currentContext && Array.isArray(currentContext)) {
+//                 // follow all items in the array and check if the key exists in any of the items, if so we return an array of the values at that key for each item
+//                 const items = currentContext.map(item => getPathValue(item, k));
 
-                currentContext = items.filter(item => item !== undefined);
+//                 currentContext = items.filter(item => item !== undefined);
 
-            } else {
-                return undefined;
-            }
-        }
-        return currentContext;
-    } else {
-        return context[key];
-    }
-}
+//             } else {
+//                 return undefined;
+//             }
+//         }
+//         return currentContext;
+//     } else {
+//         return context[key];
+//     }
+// }
 
 /**
  * Write a value to a context using a key that can be a nested path with dot notation.
@@ -203,6 +203,39 @@ export function cloneDeep(obj: any): any {
         }
     }
     return clonedObj;
+}
+
+export function compareDeep(value: any, expected: any): boolean {
+    if (typeof value !== typeof expected) {
+        return false;
+    }
+    if (typeof value === 'object' && value !== null && expected !== null) {
+        for (const key in expected) {
+            if (!(key in value)) {
+                return false;
+            }
+            const result = compareDeep(value[key], expected[key]);
+            if (result !== true) {
+                return false;
+            }
+        }
+        return true;
+
+    } else if (Array.isArray(value) && Array.isArray(expected)) {
+        if (value.length !== expected.length) {
+            return false;
+        }
+        for (let i = 0; i < value.length; i++) {
+            const result = compareDeep(value[i], expected[i]);
+            if (result !== true) {
+                return false;
+            }
+        }
+        return true;
+
+    } else {
+        return value === expected;
+    }
 }
 
 /**

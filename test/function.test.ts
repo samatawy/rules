@@ -69,5 +69,36 @@ describe('Function tests', () => {
 
   });
 
+  it('handle unit conversion functions with canonical and alias names', async () => {
+
+    const space = new Workspace({});
+    space.addRule('if kph then speed_si = km_per_hour_to_meter_per_second(kph)');
+    space.addRule('if kph then speed_alias = kph_to_mps(kph)');
+    space.addRule('if sqm then area_si = square_m_to_square_ft(sqm)');
+    space.addRule('if sqm then area_alias = sqm_to_sqft(sqm)');
+    space.addRule('if hp then power = hp_to_btu_per_hour(hp)');
+    space.addRule('if hp then power_alias = hp_to_btu(hp)');
+    space.addRule('if j then charge_energy = j_to_ev(j)');
+    space.addRule('if j then charge_energy_alias = j_to_eV(j)');
+
+    const ctx = space.loadContext({
+      kph: 36,
+      sqm: 10,
+      hp: 1,
+      j: 1.60218e-19,
+    });
+    space.process(ctx);
+
+    expect(ctx.getOutput('speed_si')).toBeCloseTo(10, 6);
+    expect(ctx.getOutput('speed_alias')).toBeCloseTo(10, 6);
+    expect(ctx.getOutput('area_si')).toBeCloseTo(107.639, 3);
+    expect(ctx.getOutput('area_alias')).toBeCloseTo(107.639, 3);
+    expect(ctx.getOutput('power')).toBeCloseTo(2544.43, 2);
+    expect(ctx.getOutput('power_alias')).toBeCloseTo(2544.43, 2);
+    expect(ctx.getOutput('charge_energy')).toBeCloseTo(1);
+    expect(ctx.getOutput('charge_energy_alias')).toBeCloseTo(1);
+
+  });
+
 
 });

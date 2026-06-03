@@ -6,6 +6,8 @@ children:
   - ./date.functions.md
   - ./boolean.functions.md
   - ./array.functions.md
+  - ./conversion.functions.md
+  - ./science.functions.md
   - ./custom.functions.md
 ---
 
@@ -19,7 +21,7 @@ Please note that there is no overloading of functions, so no two functions can h
 
 ## Numeric Functions
 
-These compare, inspect, and manipulate numbers. They include functions commonly used in algebra and trigonometry. They also provide some frequently used physical constants.
+These compare, inspect, and manipulate numbers. They include functions commonly used in algebra and trigonometry.
 
 [Full list](numeric.functions.md)
 
@@ -46,6 +48,18 @@ These make using conditions more expressive in your syntax.
 These enable working with arrays, whether literals or variables. You can inspect or manipulate arrays. Lambda functions provide a way to apply logic to each element of an array.
 
 [Full list](array.functions.md)
+
+## Conversion Functions
+
+These convert numeric values from one unit to another. When there is no direct function for a specific pair, conversions can be chained through a shared unit.
+
+[Full list](conversion.functions.md)
+
+## Science Functions
+
+Physics and chemistry functions are available from the separate `@samatawy/rules-science` package rather than the core package.
+
+[Full list](science.functions.md)
 
 ## Custom Functions
 

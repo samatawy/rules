@@ -30,6 +30,7 @@ export class ConstantNumbers extends NumericFunctionExpression {
             case 'e':
                 return Math.E;
             case 'phi':
+            case 'golden_ratio':
                 return (1 + Math.sqrt(5)) / 2;
             case 'tau':
                 return 2 * Math.PI;

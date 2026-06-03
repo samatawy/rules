@@ -157,6 +157,36 @@ Returns $e^x$.
 set growthFactor = exp(rate)
 ```
 
+## Angle Functions
+
+### `deg_to_rad(number)`
+Converts an angle in degrees to radians.
+
+```
+set angle_rad = deg_to_rad(angle_deg)
+```
+
+### `rad_to_deg(number)`
+Converts an angle in radians to degrees.
+
+```
+set angle_deg = rad_to_deg(angle_rad)
+```
+
+### `normalize_deg(number)`
+Normalizes an angle in degrees to the range `[0, 360)`. Any negative angles will be represented in the required range.
+
+```
+set heading = normalize_deg(raw_heading)
+```
+
+### `normalize_rad(number)`
+Normalizes an angle in radians to the range `[0, 2 * pi())`. Any negative angles will be represented in the required range.
+
+```
+set phase = normalize_rad(raw_phase)
+```
+
 ## Randomization Functions
 
 ### `random()`
@@ -243,7 +273,7 @@ Returns Euler's number.
 set naturalBase = e()
 ```
 
-### `phi()`
+### `phi()` or `golden_ratio()`
 Returns the golden ratio.
 
 ```
@@ -255,95 +285,4 @@ Returns $2\pi$.
 
 ```
 set turn = tau()
-```
-
-### `c()`
-Returns the speed of light in meters per second.
-
-```
-set lightSpeed = c()
-```
-
-### `speedOfLight()`
-Alias for `c()`.
-
-```
-set lightSpeed = speedOfLight()
-```
-
-### `g()`
-Returns standard gravity.
-
-```
-set gravity = g()
-```
-
-### `goldenRatio()`
-Alias for `phi()`.
-
-```
-set ratio = goldenRatio()
-```
-
-### `avogadro()`
-Returns Avogadro's constant.
-
-```
-set particlesPerMole = avogadro()
-```
-
-### `planck()`
-Returns Planck's constant.
-
-```
-set planckValue = planck()
-```
-
-### `electronMass()`
-Returns the electron rest mass.
-
-```
-set mass = electronMass()
-```
-
-### `protonMass()`
-Returns the proton rest mass.
-
-```
-set mass = protonMass()
-```
-
-### `neutronMass()`
-Returns the neutron rest mass.
-
-```
-set mass = neutronMass()
-```
-
-### `boltzmann()`
-Returns the Boltzmann constant.
-
-```
-set k = boltzmann()
-```
-
-### `gasConstant()`
-Returns the universal gas constant.
-
-```
-set r = gasConstant()
-```
-
-### `faraday()`
-Returns the Faraday constant.
-
-```
-set chargePerMole = faraday()
-```
-
-### `gravitationalConstant()`
-Returns the gravitational constant.
-
-```
-set gConst = gravitationalConstant()
 ```
