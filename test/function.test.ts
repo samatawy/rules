@@ -58,14 +58,14 @@ describe('Function tests', () => {
     space.addRule('if A and B then union = A.union(B)');
     space.addRule('if A and B then intersection = A.intersection(B)');
     space.addRule('if A and B then difference = A.difference(B)');
-    space.addRule('if A and B then symmetricDifference = A.symmetricDifference(B)');
+    space.addRule('if A and B then symmetric_difference = A.symmetric_difference(B)');
 
     let ctx = space.loadContext({ A: [1, 2, 3, 4], B: [3, 4, 5] });
     space.process(ctx);
     expect(ctx.getOutput('union').sort()).toEqual([1, 2, 3, 4, 5]);
     expect(ctx.getOutput('intersection')).toEqual([3, 4]);
     expect(ctx.getOutput('difference')).toEqual([1, 2]);
-    expect(ctx.getOutput('symmetricDifference').sort()).toEqual([1, 2, 5]);
+    expect(ctx.getOutput('symmetric_difference').sort()).toEqual([1, 2, 5]);
 
   });
 

@@ -16,7 +16,9 @@ export class RandomFunction extends NumericFunctionExpression {
             case 'random':
                 return [];
             case 'randomBetween':
+            case 'random_between':
             case 'randomInteger':
+            case 'random_integer':
                 return [{ type: 'number' }, { type: 'number' }];
             default:
                 throw new TypeCheckError(`Unknown random function: ${this.name}`);
@@ -46,10 +48,12 @@ export class RandomFunction extends NumericFunctionExpression {
             case 'random':
                 return Math.random();
             case 'randomBetween':
+            case 'random_between':
                 const min = Math.min(evaluatedArgs[0], evaluatedArgs[1]);
                 const max = Math.max(evaluatedArgs[0], evaluatedArgs[1]);
                 return min + (Math.random() * (max - min + 1));
             case 'randomInteger':
+            case 'random_integer':
                 const intMin = Math.ceil(Math.min(evaluatedArgs[0], evaluatedArgs[1]));
                 const intMax = Math.floor(Math.max(evaluatedArgs[0], evaluatedArgs[1]));
                 return Math.floor(intMin + (Math.random() * (intMax - intMin + 1)));
@@ -61,7 +65,7 @@ export class RandomFunction extends NumericFunctionExpression {
 
 export class RandomFunctionProvider {
 
-    private static _names = ['random', 'randomBetween', 'randomInteger'];
+    private static _names = ['random', 'randomBetween', 'random_between', 'randomInteger', 'random_integer'];
 
     public static names(): string[] {
         return this._names;
@@ -86,11 +90,13 @@ export class RandomFunctionProvider {
             case 'random':
                 return { args: [], body: 'return Math.random();' };
             case 'randomBetween':
+            case 'random_between':
                 return {
                     args: ['min', 'max'],
                     body: 'return Math.random() * (max - min) + min;'
                 };
             case 'randomInteger':
+            case 'random_integer':
                 return {
                     args: ['min', 'max'],
                     body: 'return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);'

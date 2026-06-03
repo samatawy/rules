@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
 import { FunctionFactory } from '../src';
-import { ArrayAnalyticalFunctionProvider } from '../src/functions/array.analytical.functions';
+import { ArrayAnalyticalFunctionProvider } from '../src/functions/special/array.analytical.functions';
 
 describe('Engine tests', () => {
 

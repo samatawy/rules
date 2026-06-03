@@ -22,8 +22,11 @@ export class StringInspectionFunction extends NumericFunctionExpression {
             case 'length':
                 return [{ type: 'string' }];
             case 'countOf':
+            case 'count_of':
             case 'indexOf':
+            case 'index_of':
             case 'lastIndexOf':
+            case 'last_index_of':
                 return [{ type: 'string' }, { type: 'string' }];
             default:
                 throw new TypeCheckError(`Unknown string inspection function: ${this.name}`);
@@ -51,10 +54,13 @@ export class StringInspectionFunction extends NumericFunctionExpression {
             case 'length':
                 return targetValue.length;
             case 'countOf':
+            case 'count_of':
                 return targetValue.split(evaluatedArgs[0]).length - 1;
             case 'indexOf':
+            case 'index_of':
                 return targetValue.indexOf(evaluatedArgs[0]);
             case 'lastIndexOf':
+            case 'last_index_of':
                 return targetValue.lastIndexOf(evaluatedArgs[0]);
             default:
                 throw new EvaluationError(`Unknown string inspection function: ${this.name}`);
@@ -64,7 +70,7 @@ export class StringInspectionFunction extends NumericFunctionExpression {
 
 export class StringInspectionFunctionProvider {
 
-    private static _names = ['length', 'countOf', 'indexOf', 'lastIndexOf'];
+    private static _names = ['length', 'countOf', 'count_of', 'indexOf', 'index_of', 'lastIndexOf', 'last_index_of'];
 
     public static names(): string[] {
         return this._names;
@@ -92,10 +98,13 @@ export class StringInspectionFunctionProvider {
             case 'length':
                 return { args: ['str'], body: 'return str.length;' };
             case 'countOf':
+            case 'count_of':
                 return { args: ['str', 'substr'], body: 'return str.split(substr).length - 1;' };
             case 'indexOf':
+            case 'index_of':
                 return { args: ['str', 'substr'], body: 'return str.indexOf(substr);' };
             case 'lastIndexOf':
+            case 'last_index_of':
                 return { args: ['str', 'substr'], body: 'return str.lastIndexOf(substr);' };
             default:
                 throw new TypeCheckError(`Unknown string inspection function: ${name}`);

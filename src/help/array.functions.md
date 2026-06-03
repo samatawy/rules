@@ -4,6 +4,8 @@ title: Array Functions
 
 # Array Functions
 
+Use snake_case names in new rules. Where a camelCase compatibility alias exists, it is listed below the heading.
+
 ## Array Inspection
 
 ### `count(array)`
@@ -13,14 +15,14 @@ Returns the number of items in an array.
 set childCount = count(Person.children)
 ```
 
-### `sum(numbers)` or `total(numbers)`
+### `sum(numbers) ... total(numbers)`
 Returns the sum of a numeric array.
 
 ```
 set totalSales = sum(Order.amounts)
 ```
 
-### `avg(numbers)` or `average(numbers)` or `mean(numbers)`
+### `avg(numbers) ... average(numbers) ... mean(numbers)`
 Returns the arithmetic mean of a numeric array.
 
 ```
@@ -68,7 +70,7 @@ set fullName = concat(firstName, " ", lastName)
 Joins string items using the provided separator.
 
 ```
-set csv = join(tags, ", ")
+set csv = tags.join(", ")
 ```
 
 ## Array Lambda Operations
@@ -80,11 +82,11 @@ Returns `true` when every array item satisfies the lambda condition.
 if every(Person.family, member : member.age >= 18) then Person.allAdults = true
 ```
 
-### `any(array, item : predicate)` or `some(array, item: predicate)`
+### `any(array, item : predicate) ... some(array, item: predicate)`
 Returns `true` when at least one item satisfies the lambda condition.
 
 ```
-if any(Person.family, member : member.age < 18) then Person.hasMinor = true
+if Person.family.any(member : member.age < 18) then Person.hasMinor = true
 ```
 
 ### `sort(array, item : predicate)`
@@ -93,14 +95,14 @@ Returns a sorted array sorted by the expression returned by each item.
 ```
 set youngest_to_oldest = sort(Person.family, member : member.age)
 
-set mostExpensive = sort(Store.products, product: neg(product.price));
+set mostExpensive = Store.products.sort(product: neg(product.price));
 ```
 
 ### `filter(array, item : predicate)`
 Returns a filtered array containing only matching items.
 
 ```
-set adultFamily = filter(Person.family, member : member.age >= 18)
+set adultFamily = Person.family.filter(member : member.age >= 18)
 ```
 
 ### `map(array, item : expression)`
@@ -116,21 +118,21 @@ set familyNames = map(Person.family, member : member.name)
 Returns the requested percentile from a numeric array. The second argument should be a number between `0` and `100`.
 
 ```
-set p90Latency = percentile(Api.response_times, 90)
+set p90Latency = Api.response_times.percentile(90)
 ```
 
-### `stdev(numbers)` or `standard_deviation(numbers)`
+### `stdev(numbers) | standard_deviation(numbers)`
 Returns the standard deviation of a numeric array.
 
 ```
-set scoreSpread = stdev(Exam.scores)
+set scoreSpread = Exam.scores.stdev()
 ```
 
 ### `variance(numbers)`
 Returns the variance of a numeric array.
 
 ```
-set scoreVariance = variance(Exam.scores)
+set scoreVariance = Exam.scores.variance()
 ```
 
 ### `gini_coefficient(numbers)`
@@ -158,60 +160,76 @@ set compoundGrowth = geometric_mean(Portfolio.growth_factors)
 
 These functions compare one array against another.
 
-### `sameArray(arrayA, arrayB)`
+### `same_array(arrayA, arrayB)`
+Alternative syntax: `sameArray(arrayA, arrayB)`.
+
 Returns `true` when both arrays have the same items in the same order.
 
 ```
-if sameArray(Order.requested_skus, Order.packed_skus) then Order.is_exact_match = true
+if Order.requested_skus.same_array(Order.packed_skus) then Order.is_exact_match = true
 ```
 
-### `sameSet(arrayA, arrayB)`
+### `same_set(arrayA, arrayB)`
+Alternative syntax: `sameSet(arrayA, arrayB)`.
+
 Returns `true` when both arrays contain the same values regardless of order.
 
 ```
-if sameSet(User.roles, Access.required_roles) then Access.role_match = true
+if User.roles.same_set(Access.required_roles) then Access.role_match = true
 ```
 
-### `subsetOf(arrayA, arrayB)`
+### `subset_of(arrayA, arrayB)`
+Alternative syntax: `subsetOf(arrayA, arrayB)`.
+
 Returns `true` when every item in the first array appears in the second array.
 
 ```
-if subsetOf(User.permissions, Role.permissions) then User.permissions_valid = true
+if User.permissions.subset_of(Role.permissions) then User.permissions_valid = true
 ```
 
-### `subArrayOf(arrayA, arrayB)`
+### `sub_array_of(arrayA, arrayB)`
+Alternative syntax: `subArrayOf(arrayA, arrayB)`.
+
 Returns `true` when the first array appears as a contiguous slice inside the second array.
 
 ```
-if subArrayOf(["VIP", "PRIORITY"], Ticket.tags) then Ticket.fast_track = true
+if ["VIP", "PRIORITY"].sub_array_of(Ticket.tags) then Ticket.fast_track = true
 ```
 
-### `supersetOf(arrayA, arrayB)`
+### `superset_of(arrayA, arrayB)`
+Alternative syntax: `supersetOf(arrayA, arrayB)`.
+
 Returns `true` when the first array contains every item from the second array.
 
 ```
-if supersetOf(User.permissions, Role.minimum_permissions) then User.can_administer = true
+if User.permissions.superset_of(Role.minimum_permissions) then User.can_administer = true
 ```
 
-### `superArrayOf(arrayA, arrayB)`
+### `super_array_of(arrayA, arrayB)`
+Alternative syntax: `superArrayOf(arrayA, arrayB)`.
+
 Returns `true` when the second array appears as a contiguous slice inside the first array.
 
 ```
-if superArrayOf(Log.event_codes, [500, 501]) then Log.has_known_error_sequence = true
+if Log.event_codes.super_array_of([500, 501]) then Log.has_known_error_sequence = true
 ```
 
-### `overlapsWith(arrayA, arrayB)`
+### `overlaps_with(arrayA, arrayB)`
+Alternative syntax: `overlapsWith(arrayA, arrayB)`.
+
 Returns `true` when the two arrays share at least one value.
 
 ```
-if overlapsWith(User.groups, Feature.allowed_groups) then Feature.is_visible = true
+if User.groups.overlaps_with(Feature.allowed_groups) then Feature.is_visible = true
 ```
 
-### `disjointFrom(arrayA, arrayB)`
+### `disjoint_from(arrayA, arrayB)`
+Alternative syntax: `disjointFrom(arrayA, arrayB)`.
+
 Returns `true` when the two arrays share no values.
 
 ```
-if disjointFrom(User.groups, Feature.blocked_groups) then Feature.is_eligible = true
+if User.groups.disjoint_from(Feature.blocked_groups) then Feature.is_eligible = true
 ```
 
 ## Array Set Operations
@@ -225,7 +243,7 @@ Returns one array containing values from both arrays.
 set allTags = union(Order.tags, Customer.tags)
 ```
 
-### `intersect(arrayA, arrayB)` or `intersection(arrayA, arrayB)`
+### `intersect(arrayA, arrayB) | intersection(arrayA, arrayB)`
 Returns the values that appear in both arrays.
 
 ```
@@ -241,11 +259,11 @@ Returns the values from the first array that do not appear in the second array.
 set remainingPermissions = difference(User.permissions, Revoked.permissions)
 ```
 
-### `symmetricDifference(arrayA, arrayB)`
+### `symmetric_difference(arrayA, arrayB)`
 Returns the values that appear in only one of the two arrays.
 
 ```
-set changedFields = symmetricDifference(Record.previous_keys, Record.current_keys)
+set changedFields = symmetric_difference(Record.previous_keys, Record.current_keys)
 ```
 
 ## Array Analytical Functions
@@ -349,7 +367,7 @@ Returns the Kullback-Leibler divergence between two numeric distributions.
 set divergence = kullback_leibler_divergence(Model.expected_distribution, Model.observed_distribution)
 ```
 
-### `earth_movers_distance(numbersA, numbersB)` or `wasserstein_distance(numbersA, numbersB)`
+### `earth_movers_distance(numbersA, numbersB) | wasserstein_distance(numbersA, numbersB)`
 Returns the Wasserstein distance between two numeric distributions.
 
 ```

@@ -23,7 +23,7 @@ export class ArraySetFunction extends FunctionExpression {
             case 'intersect':
             case 'intersection':
             case 'difference':
-            case 'symmetricDifference':
+            case 'symmetric_difference':
                 return [{ type: 'array' }, { type: 'string' }];
             default:
                 throw new TypeCheckError(`Unknown array set function: ${this.name}`);
@@ -74,7 +74,7 @@ export class ArraySetFunction extends FunctionExpression {
             case 'difference':
                 return targetValue.filter((item: any) => !secondArray.includes(item));
 
-            case 'symmetricDifference':
+            case 'symmetric_difference':
                 const leftOnly = targetValue.filter((item: any) => !secondArray.includes(item));
                 const rightOnly = secondArray.filter((item: any) => !targetValue.includes(item));
                 const result = new Array<any>(leftOnly.length + rightOnly.length);
@@ -94,7 +94,7 @@ export class ArraySetFunction extends FunctionExpression {
 
 export class ArraySetFunctionProvider {
 
-    private static _names = ['union', 'intersect', 'intersection', 'difference', 'symmetricDifference'];
+    private static _names = ['union', 'intersect', 'intersection', 'difference', 'symmetric_difference'];
 
     public static names(): string[] {
         return this._names;
@@ -135,7 +135,7 @@ export class ArraySetFunctionProvider {
                     args: ['arr1', 'arr2'],
                     body: 'return arr1.filter(item => !arr2.includes(item));'
                 };
-            case 'symmetricDifference':
+            case 'symmetric_difference':
                 return {
                     args: ['arr1', 'arr2'],
                     body: 'const allValues = [arr1, arr2]; const flatValues = allValues.flat(); return flatValues.filter(item => flatValues.filter(i => i === item).length === 1);'

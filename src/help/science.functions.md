@@ -37,7 +37,8 @@ registerScienceProviders();
 
 These currently expose physical constants.
 
-### `c()` or `speed_of_light()`
+### `c()`
+Alternative syntax: `speed_of_light()`. 
 Returns the speed of light in meters per second.
 
 ```

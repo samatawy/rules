@@ -1,8 +1,8 @@
-import type { TypedParameter } from "../types";
-import type { WorkingContext } from "../interfaces";
-import type { Expression } from "../syntax/expression";
-import { FunctionExpression, NumericFunctionExpression } from "../syntax/function.expression";
-import { EvaluationError, TypeCheckError, TypeException } from "../rules/exception";
+import type { TypedParameter } from "../../types";
+import type { WorkingContext } from "../../interfaces";
+import type { Expression } from "../../syntax/expression";
+import { FunctionExpression, NumericFunctionExpression } from "../../syntax/function.expression";
+import { EvaluationError, TypeCheckError, TypeException } from "../../rules/exception";
 
 export class ArrayAnalyticalFunction extends NumericFunctionExpression {
 

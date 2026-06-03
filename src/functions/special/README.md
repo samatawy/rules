@@ -1,116 +1,105 @@
 # Special Function Providers
 
-This folder is intended as the basis for an optional plugin package for the core rules engine.
+This folder contains non-basic function providers that are either built into the core package or used as a staging area before being split into optional plugin packages.
 
 Core package:
 
 - [@samatawy/rules](https://www.npmjs.com/package/@samatawy/rules)
 - [GitHub repository](https://github.com/samatawy/rules)
 
-The goal is to keep the core rules package focused while allowing domain-oriented providers to be published separately and registered only when needed.
+## Current Folder Contents
 
-Current providers in this folder:
+Files currently in this folder:
 
-- `CommonChemistryFunctionsProvider`
-- `PhysicsConstantsProvider`
+- `array.analytical.functions.ts`
+- `unit.conversion.functions.ts`
 
-Possible future additions:
+Current export surface from [index.ts](./index.ts):
 
-- array analytical functions
-- array statistical functions
-- other science or engineering oriented providers
+- `ArrayAnalyticalFunctionProvider`
 
-## How It Plugs In
+`UnitConversionFunctionsProvider` exists in this folder and is registered directly by the core `FunctionFactory`, but it is not currently re-exported from this folder's `index.ts`.
 
-Providers integrate through the core package `FunctionFactory`.
+## Built-In Providers In This Folder
 
-Once a provider is registered, its functions become available to rule parsing and evaluation across all workspaces.
+### Array Analytical Functions
 
-```ts
-import { FunctionFactory } from '@samatawy/rules';
-import {
-	CommonChemistryFunctionsProvider,
-	PhysicsConstantsProvider,
-} from '@samatawy/rules-special';
+`ArrayAnalyticalFunctionProvider` provides numerical comparison and similarity metrics for arrays.
 
-FunctionFactory.registerProvider(CommonChemistryFunctionsProvider);
-FunctionFactory.registerProvider(PhysicsConstantsProvider);
-```
+Available functions include:
 
-If the package is published under a different name, replace `@samatawy/rules-special` with that package name.
+- `euclidean_distance(a, b)`
+- `manhattan_distance(a, b)`
+- `chebyshev_distance(a, b)`
+- `minkowski_distance(a, b)`
+- `cosine_distance(a, b)`
+- `jaccard_distance(a, b)`
+- `hamming_distance(a, b)`
+- `pearson_correlation(a, b)`
+- `spearman_rank_correlation(a, b)`
+- `cross_correlation(a, b)`
+- `kendall_tau_correlation(a, b)`
+- `kolmogorov_smirnov_distance(a, b)`
+- `kullback_leibler_divergence(a, b)`
+- `earth_movers_distance(a, b)`
+- `wasserstein_distance(a, b)`
+- `jensen_shannon_divergence(a, b)`
 
-You can register one provider or several, depending on the functions you want to expose.
-
-## Simple Example
+Example:
 
 ```ts
 import { FunctionFactory, Workspace } from '@samatawy/rules';
-import {
-	CommonChemistryFunctionsProvider,
-	PhysicsConstantsProvider,
-} from '@samatawy/rules-special';
+import { ArrayAnalyticalFunctionProvider } from '@samatawy/rules/src/functions/special';
 
-FunctionFactory.registerProvider(CommonChemistryFunctionsProvider);
-FunctionFactory.registerProvider(PhysicsConstantsProvider);
+FunctionFactory.registerProvider(ArrayAnalyticalFunctionProvider);
 
 const workspace = new Workspace();
-
-workspace.addRule(`IF molecular_weight("H2O") > 18 THEN sample.kind = "waterlike"`);
-workspace.addRule(`IF electronegativity("O") > electronegativity("H") THEN bond.is_polar = true`);
-workspace.addRule(`IF avogadro() > 1e23 THEN constants.ready = true`);
+workspace.addRule('if cosine_distance(vecA, vecB) < 0.1 then result.similar = true');
 ```
 
-The main idea is:
+### Unit Conversion Functions
 
-- import the provider from the plugin package
-- register it once on startup
-- use the functions in rules exactly like built-in functions
+`UnitConversionFunctionsProvider` contains built-in numeric conversions for:
 
-## Available Functions
+- mass and weight
+- distance
+- area
+- volume
+- speed
+- temperature
+- pressure
+- energy and power
 
-### Common Chemistry Functions
+Examples include:
 
-- `short_formula(formula)`
-- `molecular_weight(formula)`
-- `atoms_of_element(element, formula)`
-- `fractional_weight_of_element(element, formula)`
-- `atomic_number(symbol)`
-- `atomic_weight(symbol)`
-- `element_name(symbol)`
-- `electron_configuration(symbol)`
-- `valence_electrons(symbol)`
-- `common_oxidation_states(symbol)`
-- `electronegativity(symbol)`
-- `atomic_radius_pm(symbol)`
-- `ionization_energy_kj_mol(symbol)`
-- `electron_affinity_kj_mol(symbol)`
-- `phase_at_stp(symbol)`
-- `melting_point_k(symbol)`
-- `boiling_point_k(symbol)`
-- `density_g_cm3(symbol)`
+- `kg_to_lb(x)` / `lb_to_kg(x)`
+- `km_to_mile(x)` / `mile_to_km(x)`
+- `square_m_to_square_ft(x)` / `square_ft_to_square_m(x)`
+- `liter_to_gallon(x)` / `gallon_to_liter(x)`
+- `km_per_hour_to_meter_per_second(x)` / `meter_per_second_to_km_per_hour(x)`
+- `c_to_f(x)` / `f_to_c(x)`
+- `pa_to_psi(x)` / `psi_to_pa(x)`
+- `j_to_ev(x)` / `ev_to_j(x)`
 
-### Physics Constants
+Alias names are also supported for some conversions, for example:
 
-- `c()` or `speed_of_light()`
-- `g()`
-- `golden_ratio()`
-- `avogadro()`
-- `planck()`
-- `electron_mass()`
-- `proton_mass()`
-- `neutron_mass()`
-- `boltzmann()`
-- `gas_constant()`
-- `faraday()`
-- `gravitational_constant()`
-- `molecular_mass_unit()`
-- `bohr_radius()`
-- `rydberg_constant()`
-- `stefan_boltzmann_constant()`
-- `elementary_charge()`
+- `kph_to_mps(x)`
+- `sqm_to_sqft(x)`
+- `j_to_eV(x)`
+
+## Plugin Split
+
+Science and geography providers are no longer represented by this folder.
+
+They now live in separate packages:
+
+- `@samatawy/rules-science`
+- `@samatawy/rules-world`
+
+That keeps the core package focused while allowing larger domain datasets and domain-specific helpers to evolve independently.
 
 ## Notes
 
-- These providers are intended for optional registration, not automatic inclusion in the core package.
-- The README is intentionally concise so the plugin can stay self-contained.
-- If more providers are added later, they can follow the same registration pattern and be listed here without needing a separate documentation site.
+- Not every file in this folder is necessarily re-exported from `index.ts`.
+- Some providers here are built into the core package through `FunctionFactory` registration.
+- Larger domain packages should generally move out of this folder into their own publishable plugin package.

@@ -46,8 +46,10 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
             case 'contains':
                 return leftValue.includes(rightValue);
             case 'startsWith':
+            case 'starts_with':
                 return leftValue.startsWith(rightValue);
             case 'endsWith':
+            case 'ends_with':
                 return leftValue.endsWith(rightValue);
             case 'matches':
                 return new RegExp(rightValue).test(leftValue);
@@ -57,20 +59,27 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
                 const regexPattern = this.getWildcardRegexPattern(rightValue);
                 return new RegExp(`^${regexPattern}$`).test(leftValue);
             case 'likeIgnoreCase':
+            case 'like_ignore_case':
                 // Support wildcards with case-insensitive matching
                 const regexPatternIgnoreCase = this.getWildcardRegexPattern(rightValue);
                 return new RegExp(`^${regexPatternIgnoreCase}$`, 'i').test(leftValue);
 
             case 'equalsIgnoreCase':
+            case 'equals_ignore_case':
                 return leftValue.toLowerCase() === rightValue.toLowerCase();
             case 'includesIgnoreCase':
+            case 'includes_ignore_case':
             case 'containsIgnoreCase':
+            case 'contains_ignore_case':
                 return leftValue.toLowerCase().includes(rightValue.toLowerCase());
             case 'startsWithIgnoreCase':
+            case 'starts_with_ignore_case':
                 return leftValue.toLowerCase().startsWith(rightValue.toLowerCase());
             case 'endsWithIgnoreCase':
+            case 'ends_with_ignore_case':
                 return leftValue.toLowerCase().endsWith(rightValue.toLowerCase());
             case 'matchesIgnoreCase':
+            case 'matches_ignore_case':
                 return new RegExp(rightValue, 'i').test(leftValue);
 
             // case 'levenshtein_distance':
@@ -128,8 +137,14 @@ export class StringComparisonFunction extends BooleanFunctionExpression {
 export class StringComparisonFunctionProvider {
 
     private static _names = [
-        'equals', 'equalsIgnoreCase', 'includes', 'includesIgnoreCase', 'contains', 'containsIgnoreCase', 'startsWith', 'startsWithIgnoreCase', 'endsWith', 'endsWithIgnoreCase',
-        'like', 'likeIgnoreCase', 'matches', 'matchesIgnoreCase',
+        'equals', 'equalsIgnoreCase', 'equals_ignore_case',
+        'includes', 'includesIgnoreCase', 'includes_ignore_case',
+        'contains', 'containsIgnoreCase', 'contains_ignore_case',
+        'startsWith', 'startsWithIgnoreCase', 'starts_with', 'starts_with_ignore_case',
+        'endsWith', 'endsWithIgnoreCase', 'ends_with', 'ends_with_ignore_case',
+        'like', 'likeIgnoreCase', 'like_ignore_case',
+        'matches', 'matchesIgnoreCase', 'matches_ignore_case',
+
         // 'levenshtein_distance', 'damerau_levenshtein_distance', 'jaccard_similarity', 'jaro_winkler_distance', 'soundex_match', 'metaphone_match', 'nysiis_match',
         // 'caverphone_match', 'sorensen_dice_coefficient', 'overlap_coefficient', 'cosine_similarity',
         // 'porter_stem_match', 'snowball_stem_match', 'double_metaphone_match', 'colloquial_match', 'abbreviation_match', 'acronym_match'
@@ -161,24 +176,32 @@ export class StringComparisonFunctionProvider {
             case 'equals':
                 return { args: ['str1', 'str2'], body: 'return str1 === str2;' };
             case 'equalsIgnoreCase':
+            case 'equals_ignore_case':
                 return { args: ['str1', 'str2'], body: 'return str1.toLowerCase() === str2.toLowerCase();' };
             case 'includes':
             case 'contains':
                 return { args: ['str1', 'str2'], body: 'return str1.includes(str2);' };
             case 'includesIgnoreCase':
+            case 'includes_ignore_case':
             case 'containsIgnoreCase':
+            case 'contains_ignore_case':
                 return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().includes(str2.toLowerCase());' };
             case 'startsWith':
+            case 'starts_with':
                 return { args: ['str1', 'str2'], body: 'return str1.startsWith(str2);' };
             case 'startsWithIgnoreCase':
+            case 'starts_with_ignore_case':
                 return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().startsWith(str2.toLowerCase());' };
             case 'endsWith':
+            case 'ends_with':
                 return { args: ['str1', 'str2'], body: 'return str1.endsWith(str2);' };
             case 'endsWithIgnoreCase':
+            case 'ends_with_ignore_case':
                 return { args: ['str1', 'str2'], body: 'return str1.toLowerCase().endsWith(str2.toLowerCase());' };
             case 'matches':
                 return { args: ['str', 'regex'], body: 'return new RegExp(regex).test(str);' };
             case 'matchesIgnoreCase':
+            case 'matches_ignore_case':
                 return { args: ['str', 'regex'], body: 'return new RegExp(regex, "i").test(str);' };
             case 'like':
                 const regex = /([.+?^=!:${}()|[\]\/\\])/g;
@@ -193,6 +216,7 @@ export class StringComparisonFunctionProvider {
                     `
                 };
             case 'likeIgnoreCase':
+            case 'like_ignore_case':
                 const regex_i = /([.+?^=!:${}()|[\]\/\\])/g;
                 return {
                     args: ['str', 'pattern'],

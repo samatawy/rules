@@ -4,75 +4,113 @@ title: String Functions
 
 # String Functions
 
+Use snake_case names in new rules. Where a camelCase compatibility alias exists, it is listed below the heading.
+
 ## String Comparison
 
 ### `equals(left, right)`
 Returns `true` when two strings are exactly equal.
 
 ```
-if equals(status, "OPEN") then active = true
+if status.equals("OPEN") then active = true
 ```
 
-### `equalsIgnoreCase(left, right)`
+### `equals_ignore_case(left, right)`
+Alternative syntax: `equalsIgnoreCase(left, right)`.
+
 Returns `true` when two strings are the same, ignoring upper/lower case differences.
 
 ```
-if equalsIgnoreCase(country, "US") then isAmerican = true
+if country.equals_ignore_case("US") then is_american = true
 ```
 
-### `includes(text, part)` or `contains(text, part)`
+### `includes(text, part) | contains(text, part)`
 Returns `true` when the left string contains the right string.
 
 ```
-if contains(email, "@") then validShape = true
+if email.contains("@") then valid_shape = true
 ```
 
-### `includesIgnoreCase(text, part)` or `containsIgnoreCase(text, part)`
+### `includes_ignore_case(text, part) | contains_ignore_case(text, part)`
+Alternative syntax: `includesIgnoreCase(text, part)` or `containsIgnoreCase(text, part)`.
+
 Returns `true` when the left string contains the right string, ignoring upper/lower case differences.
 
-### `startsWith(text, prefix)`
+```
+if email.contains_ignore_case("@example.com") then internal_email = true
+```
+
+### `starts_with(text, prefix)`
+Alternative syntax: `startsWith(text, prefix)`.
+
 Returns `true` when the string starts with the given prefix.
 
 ```
-if startsWith(accountId, "VIP-") then priority = true
+if account_id.starts_with("VIP-") then priority = true
 ```
 
-### `startsWithIgnoreCase(text, prefix)`
+### `starts_with_ignore_case(text, prefix)`
+Alternative syntax: `startsWithIgnoreCase(text, prefix)`.
+
 Returns `true` when the string starts with the given prefix, ignoring upper/lower case differences.
 
-### `endsWith(text, suffix)`
+```
+if product_code.starts_with_ignore_case("sku-") then normalized = true
+```
+
+### `ends_with(text, suffix)`
+Alternative syntax: `endsWith(text, suffix)`.
+
 Returns `true` when the string ends with the given suffix.
 
 ```
-if endsWith(fileName, ".pdf") then isPdf = true
+if file_name.ends_with(".pdf") then is_pdf = true
 ```
 
-### `endsWithIgnoreCase(text, suffix)`
+### `ends_with_ignore_case(text, suffix)`
+Alternative syntax: `endsWithIgnoreCase(text, suffix)`.
+
 Returns `true` when the string ends with the given suffix, ignoring upper/lower case differences.
+
+```
+if file_name.ends_with_ignore_case(".pdf") then is_pdf = true
+```
 
 ### `like(text, pattern)`
 Returns `true` when the string matches the wildcard pattern.
 
 ```
-if like(mobile_number, "010*") then mobile_operator = "Vodafone"
+if mobile_number.like("010*") then mobile_operator = "Vodafone"
 ```
 
 - Wildcards include `_` representing a single character, and `%` representing zero or more characters. Regex patterns using `matches()` offer more powerful control.
 
-### `likeIgnoreCase(text, pattern)`
+### `like_ignore_case(text, pattern)`
+Alternative syntax: `likeIgnoreCase(text, pattern)`.
+
 Returns `true` when the string matches the wildcard pattern, ignoring upper/lower case differences.
+
+```
+if mobile_number.like_ignore_case("010*") then mobile_operator = "Vodafone"
+```
 
 ### `matches(text, pattern)`
 Returns `true` when the string matches the regular expression pattern.
 
 ```
-if matches(zipCode, "^[0-9]{5}$") then zipValid = true
+if zip_code.matches("^[0-9]{5}$") then zip_valid = true
 ```
 
 - See `extract()` for more regex functionality.
 
-### `matchesIgnoreCase(text, pattern)`
+### `matches_ignore_case(text, pattern)`
+Alternative syntax: `matchesIgnoreCase(text, pattern)`.
+
 Returns `true` when the string matches the regular expression pattern, ignoring upper/lower case differences.
+
+```
+if zip_code.matches_ignore_case("^[a-z]{2}[0-9]{2}$") then zip_valid = true
+```
 
 ## String Inspection
 
@@ -80,28 +118,33 @@ Returns `true` when the string matches the regular expression pattern, ignoring 
 Returns the number of characters in the string.
 
 ```
-set size = length(description)
+set size = description.length()
 ```
 
-### `countOf(text, part)`
+### `count_of(text, part)`
+Alternative syntax: `countOf(text, part)`.
 Counts how many times a substring appears.
 
 ```
-set commaCount = countOf(csv, ",")
+set comma_count = csv.count_of(",")
 ```
 
-### `indexOf(text, part)`
+### `index_of(text, part)`
+Alternative syntax: `indexOf(text, part)`.
+
 Returns the first index of the substring, or `-1` if missing.
 
 ```
-set atPos = indexOf(email, "@")
+set at_pos = email.index_of("@")
 ```
 
-### `lastIndexOf(text, part)`
+### `last_index_of(text, part)`
+Alternative syntax: `lastIndexOf(text, part)`.
+
 Returns the last index of the substring, or `-1` if missing.
 
 ```
-set slashPos = lastIndexOf(path, "/")
+set slash_pos = path.last_index_of("/")
 ```
 
 ## String Manipulation
@@ -110,63 +153,69 @@ set slashPos = lastIndexOf(path, "/")
 Returns the substring between the start and optional end positions.
 
 ```
-set prefix = substring(accountId, 0, 3)
+set prefix = account_id.substring(0, 3)
 ```
 
-### `firstChars(text, count)`
+### `first_chars(text, count)`
+Alternative syntax: `firstChars(text, count)`.
 Returns the first `count` characters.
 
 ```
-set initials = firstChars(name, 2)
+set initials = name.first_chars(2)
 ```
 
-### `lastChars(text, count)`
+### `last_chars(text, count)`
+Alternative syntax: `lastChars(text, count)`.
 Returns the last `count` characters.
 
 ```
-set suffix = lastChars(accountId, 4)
+set suffix = account_id.last_chars(4)
 ```
 
 ### `append(text, suffix)`
 Appends one string to another.
 
 ```
-set label = append(code, "-archived")
+set label = code.append("-archived")
 ```
 
 ### `replace(text, search, replacement)`
 Replaces the first matching substring.
 
 ```
-set normalized = replace(phone, "-", " ")
+set normalized = phone.replace("-", " ")
 ```
 
-### `upperCase(text)`
+### `upper_case(text)`
+Alternative syntax: `upperCase(text)`.
 Converts text to uppercase.
 
 ```
-set code = upperCase(country)
+set code = country.upper_case()
 ```
 
-### `lowerCase(text)`
+### `lower_case(text)`
+Alternative syntax: `lowerCase(text)`.
 Converts text to lowercase.
 
 ```
-set emailKey = lowerCase(email)
+set email_key = email.lower_case()
 ```
 
 ### `capitalize(text)`
 Turns the first letter only to capital (upperCase), and the rest to small (lowerCase).
 
 ```
-set title = capitalize(Person.job_title);
+set title = Person.job_title.capitalize()
 ```
 
-### `capitalizeWords(text)`
+### `capitalize_words(text)`
+Alternative syntax: `capitalizeWords(text)`.
+
 Turns the first letter of every word to capital (upperCase), and the rest of every word to small (lowerCase).
 
 ```
-set display_name = capitalizeWords(Person.full_name);
+set display_name = Person.full_name.capitalize_words()
 ```
 
 ### `extract(text, pattern)`
@@ -177,7 +226,7 @@ Extract a required part of a string matching a regex capture group.
 if Formula.includes("C") then carbon_atoms = extract(Formula, ".*C(\\d+).*")
 
 // We can do this:
-const ctx = space.loadContext({ Formula: "C6H12O6"});
+const ctx = space.loadContext({ Formula: "C6H12O6" })
 
 space.process(ctx);
 ctx.getOutput('carbon_atoms');      // This should be 6, extracted from the formula.

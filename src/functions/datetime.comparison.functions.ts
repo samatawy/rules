@@ -22,13 +22,21 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
             case 'before':
             case 'after':
             case 'sameYear':
+            case 'same_year':
             case 'sameMonth':
+            case 'same_month':
             case 'sameWeek':
+            case 'same_week':
             case 'sameDay':
+            case 'same_day':
             case 'sameHour':
+            case 'same_hour':
             case 'sameMinute':
+            case 'same_minute':
             case 'sameSecond':
+            case 'same_second':
             case 'sameInstant':
+            case 'same_instant':
                 return [{ type: 'date' }, { type: 'date' }];
             default:
                 throw new TypeCheckError(`Unknown date/time comparison function: ${this.name}`);
@@ -59,10 +67,13 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
             case 'after':
                 return leftValue.getTime() > rightValue.getTime();
             case 'sameYear':
+            case 'same_year':
                 return leftValue.getFullYear() === rightValue.getFullYear();
             case 'sameMonth':
+            case 'same_month':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth();
             case 'sameWeek':
+            case 'same_week':
                 const leftWeekStart = new Date(leftValue);
                 leftWeekStart.setDate(leftWeekStart.getDate() - leftWeekStart.getDay());
                 leftWeekStart.setHours(0, 0, 0, 0);
@@ -73,14 +84,19 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
                 return leftWeekStart.getTime() === rightWeekStart.getTime();
             case 'sameDay':
+            case 'same_day':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate();
             case 'sameHour':
+            case 'same_hour':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate() && leftValue.getHours() === rightValue.getHours();
             case 'sameMinute':
+            case 'same_minute':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate() && leftValue.getHours() === rightValue.getHours() && leftValue.getMinutes() === rightValue.getMinutes();
             case 'sameSecond':
+            case 'same_second':
                 return leftValue.getFullYear() === rightValue.getFullYear() && leftValue.getMonth() === rightValue.getMonth() && leftValue.getDate() === rightValue.getDate() && leftValue.getHours() === rightValue.getHours() && leftValue.getMinutes() === rightValue.getMinutes() && leftValue.getSeconds() === rightValue.getSeconds();
             case 'sameInstant':
+            case 'same_instant':
                 return leftValue.getTime() === rightValue.getTime();
 
             default:
@@ -91,7 +107,9 @@ export class DateTimeComparisonFunction extends BooleanFunctionExpression {
 
 export class DateTimeComparisonFunctionProvider {
 
-    private static _names = ['before', 'after', 'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant'];
+    private static _names = ['before', 'after',
+        'sameYear', 'sameMonth', 'sameWeek', 'sameDay', 'sameHour', 'sameMinute', 'sameSecond', 'sameInstant',
+        'same_year', 'same_month', 'same_week', 'same_day', 'same_hour', 'same_minute', 'same_second', 'same_instant'];
 
     public static names(): string[] {
         return this._names;
@@ -121,10 +139,13 @@ export class DateTimeComparisonFunctionProvider {
             case 'after':
                 return { args: ['date1', 'date2'], body: 'return date1.getTime() > date2.getTime();' };
             case 'sameYear':
+            case 'same_year':
                 return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear();' };
             case 'sameMonth':
+            case 'same_month':
                 return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth();' };
             case 'sameWeek':
+            case 'same_week':
                 return {
                     args: ['date1', 'date2'],
                     body: `
@@ -140,23 +161,28 @@ export class DateTimeComparisonFunctionProvider {
                         `
                 };
             case 'sameDay':
+            case 'same_day':
                 return { args: ['date1', 'date2'], body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();' };
             case 'sameHour':
+            case 'same_hour':
                 return {
                     args: ['date1', 'date2'],
                     body: 'return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate() && date1.getHours() === date2.getHours();'
                 };
             case 'sameMinute':
+            case 'same_minute':
                 return {
                     args: ['date1', 'date2'],
                     body: 'const diff = Math.abs(date1.getTime() - date2.getTime()); return diff < 60 * 1000'
                 };
             case 'sameSecond':
+            case 'same_second':
                 return {
                     args: ['date1', 'date2'],
                     body: 'const diff = Math.abs(date1.getTime() - date2.getTime()); return diff < 1000'
                 };
             case 'sameInstant':
+            case 'same_instant':
                 return {
                     args: ['date1', 'date2'],
                     body: 'return date1.getTime() === date2.getTime();'

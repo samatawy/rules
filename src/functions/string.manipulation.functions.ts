@@ -22,15 +22,20 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'substring':
                 return [{ type: 'string' }, { type: 'number' }, { type: 'number', optional: true }];
             case 'firstChars':
+            case 'first_chars':
             case 'lastChars':
+            case 'last_chars':
                 return [{ type: 'string' }, { type: 'number' }];
             case 'append':
             case 'replace':
                 return [{ type: 'string' }, { type: 'string' }];
             case 'upperCase':
+            case 'upper_case':
             case 'lowerCase':
+            case 'lower_case':
             case 'capitalize':
             case 'capitalizeWords':
+            case 'capitalize_words':
                 return [{ type: 'string' }];
             case 'extract':
                 return [{ type: 'string' }, { type: 'string' }];
@@ -61,20 +66,25 @@ export class StringManipulationFunction extends StringFunctionExpression {
             case 'substring':
                 return targetValue.substring(evaluatedArgs[0], evaluatedArgs[1]);
             case 'firstChars':
+            case 'first_chars':
                 return targetValue.substring(0, evaluatedArgs[0]);
             case 'lastChars':
+            case 'last_chars':
                 return targetValue.substring(targetValue.length - evaluatedArgs[0]);
             case 'append':
                 return targetValue + evaluatedArgs[0];
             case 'replace':
                 return targetValue.replace(evaluatedArgs[0], evaluatedArgs[1]);
             case 'upperCase':
+            case 'upper_case':
                 return targetValue.toUpperCase();
             case 'lowerCase':
+            case 'lower_case':
                 return targetValue.toLowerCase();
             case 'capitalize':
                 return targetValue.charAt(0).toUpperCase() + targetValue.slice(1).toLowerCase();
             case 'capitalizeWords':
+            case 'capitalize_words':
                 const words = targetValue.split(' ');
                 return words.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 
@@ -91,7 +101,9 @@ export class StringManipulationFunction extends StringFunctionExpression {
 
 export class StringManipulationFunctionProvider {
 
-    private static _names = ['substring', 'firstChars', 'lastChars', 'append', 'replace', 'upperCase', 'lowerCase', 'capitalize', 'capitalizeWords', 'extract'];
+    private static _names = ['substring', 'firstChars', 'first_chars', 'lastChars', 'last_chars',
+        'append', 'replace', 'upperCase', 'upper_case', 'lowerCase', 'lower_case',
+        'capitalize', 'capitalizeWords', 'capitalize_words', 'extract'];
 
     public static names(): string[] {
         return this._names;
@@ -119,20 +131,25 @@ export class StringManipulationFunctionProvider {
             case 'substring':
                 return { args: ['target', 'from', 'to'], body: `return target.substring(from, to)` };
             case 'firstChars':
+            case 'first_chars':
                 return { args: ['target', 'count'], body: `return target.substring(0, count)` };
             case 'lastChars':
+            case 'last_chars':
                 return { args: ['target', 'count'], body: `return target.substring(target.length - count)` };
             case 'append':
                 return { args: ['target', 'value'], body: `return target + value` };
             case 'replace':
                 return { args: ['target', 'search', 'replace'], body: `return target.replace(search, replace)` };
             case 'upperCase':
+            case 'upper_case':
                 return { args: ['target'], body: `return target.toUpperCase()` };
             case 'lowerCase':
+            case 'lower_case':
                 return { args: ['target'], body: `return target.toLowerCase()` };
             case 'capitalize':
                 return { args: ['target'], body: `return target.charAt(0).toUpperCase() + target.slice(1).toLowerCase()` };
             case 'capitalizeWords':
+            case 'capitalize_words':
                 return { args: ['target'], body: `return target.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')` };
             case 'extract':
                 return { args: ['target', 'pattern'], body: `const regex = new RegExp(pattern); const match = target.match(regex); return match && match.length > 0 ? match[1] || '' : '';` };

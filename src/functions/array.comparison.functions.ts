@@ -19,14 +19,23 @@ export class ArrayComparisonFunction extends BooleanFunctionExpression {
     public expectsParameters(): TypedParameter[] {
         switch (this.name) {
             case 'sameArray':
+            case 'same_array':
             case 'sameSet':
+            case 'same_set':
             case 'subsetOf':
+            case 'subset_of':
             case 'subArrayOf':
+            case 'sub_array_of':
             case 'supersetOf':
+            case 'superset_of':
             case 'superArrayOf':
+            case 'super_array_of':
             case 'containsAll':
+            case 'contains_all':
             case 'overlapsWith':
+            case 'overlaps_with':
             case 'disjointFrom':
+            case 'disjoint_from':
                 return [{ type: 'array' }, { type: 'array' }];
             default:
                 throw new TypeCheckError(`Unknown array comparison function: ${this.name}`);
@@ -105,7 +114,8 @@ export class ArrayComparisonFunction extends BooleanFunctionExpression {
 
 export class ArrayComparisonFunctionProvider {
 
-    private static _names = ['sameArray', 'sameSet', 'subsetOf', 'subArrayOf', 'supersetOf', 'superArrayOf', 'overlapsWith', 'disjointFrom'];
+    private static _names = ['sameArray', 'sameSet', 'subsetOf', 'subArrayOf', 'supersetOf', 'superArrayOf', 'overlapsWith', 'disjointFrom',
+        'same_array', 'same_set', 'subset_of', 'sub_array_of', 'superset_of', 'super_array_of', 'overlaps_with', 'disjoint_from'];
 
     public static names(): string[] {
         return this._names;

@@ -5,7 +5,7 @@ import type { FunctionProvider } from "../interfaces";
 import { FunctionCompiler } from "./function.compiler";
 import { ParserError } from "../rules/exception";
 
-import { ArrayAnalyticalFunctionProvider } from "../functions/array.analytical.functions";
+import { ArrayAnalyticalFunctionProvider } from "../functions/special/array.analytical.functions";
 import { ArrayCollectionFunctionProvider } from "../functions/array.collection.functions";
 import { ArrayComparisonFunctionProvider } from "../functions/array.comparison.functions";
 import { ArrayInspectionFunctionProvider } from "../functions/array.inspection.functions";
@@ -32,8 +32,8 @@ import { CustomFunctionExpression } from "../functions/custom.function";
 
 import { ConstantDatesProvider } from "../functions/constant.date.functions";
 import { ConstantNumbersProvider } from "../functions/constant.number.functions";
-import { PhysicsConstantsProvider } from "../functions/special/constant.physics.functions";
-import { CommonChemistryFunctionsProvider } from "../functions/special/common.chemistry.functions";
+// import { PhysicsConstantsProvider } from "../functions/special/constant.physics.functions";
+// import { CommonChemistryFunctionsProvider } from "../functions/special/common.chemistry.functions";
 import { UnitConversionFunctionsProvider } from "../functions/special/unit.conversion.functions";
 
 /**
@@ -49,10 +49,51 @@ export class FunctionFactory {
 
     private static reserved_names = new Map<string, FunctionProvider>();
 
+    private static defaults_initialized = false;
+
     protected options: ParserOptions;
 
     constructor(options: ParserOptions) {
+        FunctionFactory.ensureDefaultProvidersRegistered();
         this.options = options;
+    }
+
+    private static ensureDefaultProvidersRegistered(): void {
+        if (this.defaults_initialized) {
+            return;
+        }
+        this.defaults_initialized = true;
+
+        this.registerProviderInternal(ArrayCollectionFunctionProvider);
+        this.registerProviderInternal(ArrayComparisonFunctionProvider);
+        this.registerProviderInternal(ArrayInspectionFunctionProvider);
+        this.registerProviderInternal(ArrayLambdaFunctionProvider);
+        this.registerProviderInternal(ArraySetFunctionProvider);
+        this.registerProviderInternal(ArrayStatisticalFunctionProvider);
+
+        this.registerProviderInternal(BooleanFunctionProvider);
+
+        this.registerProviderInternal(ConstantDatesProvider);
+        this.registerProviderInternal(ConstantNumbersProvider);
+
+        this.registerProviderInternal(DateTimeComparisonFunctionProvider);
+        this.registerProviderInternal(DateTimeInspectionFunctionProvider);
+        this.registerProviderInternal(DateTimeManipulationFunctionProvider);
+
+        this.registerProviderInternal(NumericComparisonFunctionProvider);
+        this.registerProviderInternal(NumericManipulationFunctionProvider);
+        this.registerProviderInternal(RandomFunctionProvider);
+        this.registerProviderInternal(TrigonometricFunctionProvider);
+
+        this.registerProviderInternal(StringComparisonFunctionProvider);
+        this.registerProviderInternal(StringInspectionFunctionProvider);
+        this.registerProviderInternal(StringManipulationFunctionProvider);
+
+        // Special
+        this.registerProviderInternal(ArrayAnalyticalFunctionProvider);
+        this.registerProviderInternal(UnitConversionFunctionsProvider);
+        // this.registerProviderInternal(CommonChemistryFunctionsProvider);
+        // this.registerProviderInternal(PhysicsConstantsProvider);
     }
 
     /**
@@ -96,40 +137,20 @@ export class FunctionFactory {
         }
     }
 
-    static {
-        this.registerProvider(ArrayCollectionFunctionProvider);
-        this.registerProvider(ArrayComparisonFunctionProvider);
-        this.registerProvider(ArrayInspectionFunctionProvider);
-        this.registerProvider(ArrayLambdaFunctionProvider);
-        this.registerProvider(ArraySetFunctionProvider);
-        this.registerProvider(ArrayStatisticalFunctionProvider);
-
-        this.registerProvider(BooleanFunctionProvider);
-
-        this.registerProvider(ConstantDatesProvider);
-        this.registerProvider(ConstantNumbersProvider);
-
-        this.registerProvider(DateTimeComparisonFunctionProvider);
-        this.registerProvider(DateTimeInspectionFunctionProvider);
-        this.registerProvider(DateTimeManipulationFunctionProvider);
-
-        this.registerProvider(NumericComparisonFunctionProvider);
-        this.registerProvider(NumericManipulationFunctionProvider);
-        this.registerProvider(RandomFunctionProvider);
-        this.registerProvider(TrigonometricFunctionProvider);
-
-        this.registerProvider(StringComparisonFunctionProvider);
-        this.registerProvider(StringInspectionFunctionProvider);
-        this.registerProvider(StringManipulationFunctionProvider);
-
-        // Special
-        this.registerProvider(ArrayAnalyticalFunctionProvider);
-        this.registerProvider(UnitConversionFunctionsProvider);
-        // this.registerProvider(CommonChemistryFunctionsProvider);
-        // this.registerProvider(PhysicsConstantsProvider);
+    public static registerProvider(provider: FunctionProvider): void {
+        this.ensureDefaultProvidersRegistered();
+        this.registerProviderInternal(provider);
     }
 
-    public static registerProvider(provider: FunctionProvider): void {
+    private static registerProviderInternal(provider: FunctionProvider): void {
+        if (!provider) {
+            console.error('Attempted to register an undefined provider.');
+            return;
+        }
+        if (this.providers.includes(provider)) {
+            return;
+        }
+
         this.providers.push(provider);
         for (const name of provider.names()) {
             if (this.reserved_names.has(name)) {
@@ -150,6 +171,7 @@ export class FunctionFactory {
     }
 
     public static unregisterProvider(provider: FunctionProvider): void {
+        this.ensureDefaultProvidersRegistered();
         this.providers = this.providers.filter(p => p !== provider);
         for (const name of provider.names()) {
             this.reserved_names.delete(name);
@@ -160,6 +182,7 @@ export class FunctionFactory {
     }
 
     public static clearProviders(): void {
+        this.defaults_initialized = true;
         this.providers.forEach(provider => {
             for (const name of provider.names()) {
                 this.reserved_names.delete(name);
@@ -172,14 +195,17 @@ export class FunctionFactory {
     }
 
     public static isReservedName(name: string): boolean {
+        this.ensureDefaultProvidersRegistered();
         return this.reserved_names.has(name);
     }
 
     public static getReservedNames(): Set<string> {
+        this.ensureDefaultProvidersRegistered();
         return new Set(this.reserved_names.keys());
     }
 
     private static getProvider(name: string): FunctionProvider | undefined {
+        this.ensureDefaultProvidersRegistered();
         return this.reserved_names.get(name);
     }
 

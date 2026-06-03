@@ -8,6 +8,7 @@ children:
   - ./array.functions.md
   - ./conversion.functions.md
   - ./science.functions.md
+  - ./world.functions.md
   - ./custom.functions.md
 ---
 
@@ -18,6 +19,8 @@ Built-in functions are grouped below by what they operate on.
 You can always declare your own functions if these lack what you need. 
 
 Please note that there is no overloading of functions, so no two functions can have the same name.
+
+Use snake_case names whenever possible. Many functions may offer a camelCase alternative name to suit common styles, but snake_case allows more clarity in longer names so it is recommended as the default.
 
 ## Numeric Functions
 
@@ -60,6 +63,12 @@ These convert numeric values from one unit to another. When there is no direct f
 Physics and chemistry functions are available from the separate `@samatawy/rules-science` package rather than the core package.
 
 [Full list](science.functions.md)
+
+## World Functions
+
+Geography and country-data functions are available from the separate `@samatawy/rules-world` package rather than the core package.
+
+[Full list](world.functions.md)
 
 ## Custom Functions
 

@@ -4,20 +4,24 @@ title: Date/Time Functions
 
 # Date/Time Functions
 
+Use snake_case names in new rules. Where a camelCase compatibility alias exists, it is listed below the heading.
+
 ## Date and Time Comparison
 
-### `sameInstant(left, right)`
+### `same_instant(left, right)`
+Alternative syntax: `sameInstant(left, right)`.
+
 Returns `true` when two dates represent the same instant.
 
 ```
-if sameInstant(sentAt, receivedAt) then synced = true
+if sent_at.same_instant(received_at) then synced = true
 ```
 
 ### `before(left, right)`
 Returns `true` when the first date is earlier than the second.
 
 ```
-if before(now(), dueDate) then stillOpen = true
+if now().before(due_date) then still_open = true
 ```
 
 - This can be confusing, so using the syntax `date1 BEFORE date2` is highly advisable.
@@ -26,54 +30,68 @@ if before(now(), dueDate) then stillOpen = true
 Returns `true` when the first date is later than the second.
 
 ```
-if after(now(), expiryDate) then expired = true
+if now().after(expiry_date) then expired = true
 ```
 
 - This can be confusing, so using the syntax `date2 AFTER date1` is highly advisable.
 
-### `sameYear(left, right)`
+### `same_year(left, right)`
+Alternative syntax: `sameYear(left, right)`.
+
 Returns `true` when both dates are in the same year.
 
 ```
 if sameYear(createdAt, now()) then currentYear = true
 ```
 
-### `sameMonth(left, right)`
+### `same_month(left, right)`
+Alternative syntax: `sameMonth(left, right)`.
+
 Returns `true` when both dates are in the same month of the same year.
 
 ```
 if sameMonth(invoiceDate, today()) then currentMonth = true
 ```
 
-### `sameWeek(left, right)`
+### `same_week(left, right)`
+Alternative syntax: `sameWeek(left, right)`.
+
 Returns `true` when both dates fall in the same week.
 
 ```
 if sameWeek(orderDate, today()) then recentOrder = true
 ```
 
-### `sameDay(left, right)`
+### `same_day(left, right)`
+Alternative syntax: `sameDay(left, right)`.
+
 Returns `true` when both dates fall on the same calendar day.
 
 ```
 if sameDay(createdAt, today()) then newToday = true
 ```
 
-### `sameHour(left, right)`
+### `same_hour(left, right)`
+Alternative syntax: `sameHour(left, right)`.
+
 Returns `true` when both dates fall in the same hour.
 
 ```
 if sameHour(startedAt, now()) then currentHour = true
 ```
 
-### `sameMinute(left, right)`
+### `same_minute(left, right)`
+Alternative syntax: `sameMinute(left, right)`.
+
 Returns `true` when both dates fall in the same minute.
 
 ```
 if sameMinute(sentAt, now()) then justSent = true
 ```
 
-### `sameSecond(left, right)`
+### `same_second(left, right)`
+Alternative syntax: `sameSecond(left, right)`.
+
 Returns `true` when both dates fall in the same second.
 
 ```
@@ -86,7 +104,7 @@ if sameSecond(updatedAt, now()) then instantMatch = true
 Returns the four-digit year.
 
 ```
-set yyyy = year(orderDate)
+set yyyy = order_date.year()
 ```
 
 ### `month(date)`
@@ -101,7 +119,7 @@ IF month(today()) IN [JAN, FEB, NOV, DEC] THEN season = 'winter'
 Returns the week number within the year.
 
 ```
-set ww = week(orderDate)
+set ww = order_date.week()
 ```
 
 ### `day(date)`
@@ -123,128 +141,142 @@ IF weekday(today()) IN [SAT, SUN] THEN weekend = TRUE
 Returns the hour of the day.
 
 ```
-set hh = hour(createdAt)
+set hh = created_at.hour()
 ```
 
 ### `minute(date)`
 Returns the minute component.
 
 ```
-set mi = minute(createdAt)
+set mi = created_at.minute()
 ```
 
 ### `second(date)`
 Returns the second component.
 
 ```
-set ss = second(createdAt)
+set ss = created_at.second()
 ```
 
-### `instant(date)` or `timestamp(date)`
+### `instant(date) | timestamp(date)`
 Return the UNIX timestamp, i.e. milliseconds that have passed since the Unix Epoch (January 1, 1970, 00:00:00 UTC).
 
 ```
-set exactly_when = instant(createdAt)
+set exactly_when = created_at.instant()
 ```
 
 ## Date and Time Manipulation
 
-### `addYears(date, years)`
+### `add_years(date, years)`
+Alternative syntax: `addYears(date, years)`.
 Adds years to a date.
 
 ```
-set renewalDate = addYears(startDate, 1)
+set renewal_date = start_date.add_years(1)
 ```
 
-### `addMonths(date, months)`
+### `add_months(date, months)`
+Alternative syntax: `addMonths(date, months)`.
 Adds months to a date.
 
 ```
-set dueDate = addMonths(invoiceDate, 1)
+set due_date = invoice_date.add_months(1)
 ```
 
-### `addWeeks(date, weeks)`
+### `add_weeks(date, weeks)`
+Alternative syntax: `addWeeks(date, weeks)`.
 Adds weeks to a date.
 
 ```
-set followUp = addWeeks(today(), 2)
+set follow_up = today().add_weeks(2)
 ```
 
-### `addDays(date, days)`
+### `add_days(date, days)`
+Alternative syntax: `addDays(date, days)`.
 Adds days to a date.
 
 ```
-set deadline = addDays(createdAt, 7)
+set deadline = created_at.add_days(7)
 ```
 
-### `addHours(date, hours)`
+### `add_hours(date, hours)`
+Alternative syntax: `addHours(date, hours)`.
 Adds hours to a date.
 
 ```
-set expiresAt = addHours(now(), 4)
+set expires_at = now().add_hours(4)
 ```
 
-### `addMinutes(date, minutes)`
+### `add_minutes(date, minutes)`
+Alternative syntax: `addMinutes(date, minutes)`.
 Adds minutes to a date.
 
 ```
-set reminderAt = addMinutes(now(), 30)
+set reminder_at = now().add_minutes(30)
 ```
 
-### `addSeconds(date, seconds)`
+### `add_seconds(date, seconds)`
+Alternative syntax: `addSeconds(date, seconds)`.
 Adds seconds to a date.
 
 ```
-set timeoutAt = addSeconds(now(), 45)
+set timeout_at = now().add_seconds(45)
 ```
 
-### `subtractYears(date, years)`
+### `subtract_years(date, years)`
+Alternative syntax: `subtractYears(date, years)`.
 Subtracts years from a date.
 
 ```
-set lookback = subtractYears(today(), 5)
+set lookback = today().subtract_years(5)
 ```
 
-### `subtractMonths(date, months)`
+### `subtract_months(date, months)`
+Alternative syntax: `subtractMonths(date, months)`.
 Subtracts months from a date.
 
 ```
-set previousQuarter = subtractMonths(today(), 3)
+set previous_quarter = today().subtract_months(3)
 ```
 
-### `subtractWeeks(date, weeks)`
+### `subtract_weeks(date, weeks)`
+Alternative syntax: `subtractWeeks(date, weeks)`.
 Subtracts weeks from a date.
 
 ```
-set priorReview = subtractWeeks(today(), 2)
+set prior_review = today().subtract_weeks(2)
 ```
 
-### `subtractDays(date, days)`
+### `subtract_days(date, days)`
+Alternative syntax: `subtractDays(date, days)`.
 Subtracts days from a date.
 
 ```
-set graceStart = subtractDays(dueDate, 10)
+set grace_start = due_date.subtract_days(10)
 ```
 
-### `subtractHours(date, hours)`
+### `subtract_hours(date, hours)`
+Alternative syntax: `subtractHours(date, hours)`.
 Subtracts hours from a date.
 
 ```
-set openedAt = subtractHours(now(), 1)
+set opened_at = now().subtract_hours(1)
 ```
 
-### `subtractMinutes(date, minutes)`
+### `subtract_minutes(date, minutes)`
+Alternative syntax: `subtractMinutes(date, minutes)`.
 Subtracts minutes from a date.
 
 ```
-set warmupStart = subtractMinutes(now(), 15)
+set warmup_start = now().subtract_minutes(15)
 ```
 
-### `subtractSeconds(date, seconds)`
+### `subtract_seconds(date, seconds)`
+Alternative syntax: `subtractSeconds(date, seconds)`.
 Subtracts seconds from a date.
 
 ```
-set retryAt = subtractSeconds(now(), 10)
+set retry_at = now().subtract_seconds(10)
 ```
 
 ## Date Constants

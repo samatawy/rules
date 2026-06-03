@@ -4,65 +4,77 @@ title: Numeric Functions
 
 # Numeric Functions
 
+Use snake_case names in new rules. Where a camelCase compatibility alias exists, it is listed below the heading.
+
 ## Numeric Comparison
 
 ### `equal(left, right)`
 Returns `true` when two numbers are equal.
 
 ```
-if equals(score, 100) then perfect = true
+if score.equal(100) then perfect = true
 ```
 
-### `closeTo(left, right, difference)`
+### `close_to(left, right, difference)`
+Alternative syntax: `closeTo(left, right, difference)`.
+
 Returns `true` when two numbers differ by a value smaller than a given difference.
 
 ```
-if closeTo(temperature, 37, 0.5) then healthy_temperature = true
+if temperature.close_to(37, 0.5) then healthy_temperature = true
 ```
 
-### `greaterThan(left, right)`
+### `greater_than(left, right)`
+Alternative syntax: `greaterThan(left, right)`.
+
 Returns `true` when the first number is greater than the second.
 
 ```
-if greaterThan(balance, limit) then alert = true
+if balance.greater_than(limit) then alert = true
 ```
 
-### `lessThan(left, right)`
+### `less_than(left, right)`
+Alternative syntax: `lessThan(left, right)`.
+
 Returns `true` when the first number is less than the second.
 
 ```
-if lessThan(stock, reorderPoint) then reorder = true
+if stock.less_than(reorder_point) then reorder = true
 ```
 
-### `greaterThanOrEqual(left, right)`
+### `greater_than_or_equal(left, right)`
+Alternative syntax: `greaterThanOrEqual(left, right)`.
+
 Returns `true` when the first number is greater than or equal to the second.
 
 ```
-if greaterThanOrEqual(score, passingScore) then passed = true
+if score.greater_than_or_equal(passing_score) then passed = true
 ```
 
-### `lessThanOrEqual(left, right)`
+### `less_than_or_equal(left, right)`
+Alternative syntax: `lessThanOrEqual(left, right)`.
+
 Returns `true` when the first number is less than or equal to the second.
 
 ```
-if lessThanOrEqual(discount, maxDiscount) then approved = true
+if discount.less_than_or_equal(max_discount) then approved = true
 ```
 
 ### `between(value, min, max)`
 Returns `true` when the value is within the inclusive range.
 
 ```
-if between(age, 18, 65) then eligible = true
+if age.between(18, 65) then eligible = true
 ```
 
 ## Numeric Manipulation
 
 
-### `neg(number)` or `negative(number)`
+### `neg(number) | negative(number)`
 Returns the additive inverse of the number. A positive value becomes negative.
 
 ```
-set negative_value = negative(positive_value)
+set negative_value = positive_value.negative()
 ```
 - The purpose of this function is to avoid using the minus sign in front of variables to invert them. This common practice make expressions less clear and more error-prone. 
 
@@ -70,42 +82,44 @@ set negative_value = negative(positive_value)
 Rounds a number up to the next integer.
 
 ```
-set roundedUp = ceil(price)
+set rounded_up = price.ceil()
 ```
 
 ### `floor(number)`
 Rounds a number down to the previous integer.
 
 ```
-set roundedDown = floor(price)
+set rounded_down = price.floor()
 ```
 
 ### `round(number)`
 Rounds a number to the nearest integer.
 
 ```
-set rounded = round(price)
+set rounded = price.round()
 ```
 
-### `roundTo(number, digits)`
+### `round_to(number, digits)`
+Alternative syntax: `roundTo(number, digits)`.
+
 Rounds a number to a fixed number of decimal places.
 
 ```
-set tax = roundTo(invoiceTotal, 2)
+set tax = invoice_total.round_to(2)
 ```
 
-### `pow(number, exponent)` or `power(number, exponent)`
+### `pow(number, exponent) | power(number, exponent)`
 Raises a number to the given exponent.
 
 ```
-set squared = power(value, 2)
+set squared = value.power(2)
 ```
 
 ### `root(number, degree)`
 Returns the given root of a number.
 
 ```
-set cubeRoot = root(value, 3)
+set cube_root = value.root(3)
 ```
 
 ### `abs(number)`
@@ -163,28 +177,28 @@ set growthFactor = exp(rate)
 Converts an angle in degrees to radians.
 
 ```
-set angle_rad = deg_to_rad(angle_deg)
+set angle_rad = angle_deg.deg_to_rad()
 ```
 
 ### `rad_to_deg(number)`
 Converts an angle in radians to degrees.
 
 ```
-set angle_deg = rad_to_deg(angle_rad)
+set angle_deg = angle_rad.rad_to_deg()
 ```
 
 ### `normalize_deg(number)`
 Normalizes an angle in degrees to the range `[0, 360)`. Any negative angles will be represented in the required range.
 
 ```
-set heading = normalize_deg(raw_heading)
+set heading = raw_heading.normalize_deg()
 ```
 
 ### `normalize_rad(number)`
 Normalizes an angle in radians to the range `[0, 2 * pi())`. Any negative angles will be represented in the required range.
 
 ```
-set phase = normalize_rad(raw_phase)
+set phase = raw_phase.normalize_rad()
 ```
 
 ## Randomization Functions
@@ -192,18 +206,22 @@ set phase = normalize_rad(raw_phase)
 ### `random()`
 Returns a pseudo-random value between 0 and 1.
 
-### `randomBetween(min, max)`
+### `random_between(min, max)`
+Alternative syntax: `randomBetween(min, max)`.
+
 Returns a pseudo-random value between min and max arguments.
 
 ```
-set random_pass_grade = randomBetween(50, 100)
+set random_pass_grade = random_between(50, 100)
 ```
 
-### `randomInteger(min, max)`
+### `random_integer(min, max)`
+Alternative syntax: `randomInteger(min, max)`.
+
 Returns a pseudo-random integer value between min and max arguments.
 
 ```
-set random_year = randomInteger(1990, 2026)
+set random_year = random_integer(1990, 2026)
 ```
 
 ## Trigonometric Functions
@@ -273,7 +291,7 @@ Returns Euler's number.
 set naturalBase = e()
 ```
 
-### `phi()` or `golden_ratio()`
+### `phi() | golden_ratio()`
 Returns the golden ratio.
 
 ```

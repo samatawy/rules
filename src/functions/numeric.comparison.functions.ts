@@ -21,10 +21,15 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
         switch (this.name) {
             case 'equal':
             case 'closeTo':
+            case 'close_to':
             case 'greaterThan':
+            case 'greater_than':
             case 'lessThan':
+            case 'less_than':
             case 'greaterThanOrEqual':
+            case 'greater_than_or_equal':
             case 'lessThanOrEqual':
+            case 'less_than_or_equal':
                 return [{ type: 'number' }, { type: 'number' }];
             case 'between':
                 return [{ type: 'number' }, { type: 'number' }, { type: 'number' }];
@@ -59,17 +64,22 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
             case 'equal':
                 return targetValue === evaluatedArgs[0];
             case 'closeTo':
+            case 'close_to':
                 if (evaluatedArgs.length < 2) {
                     throw new EvaluationError(`Function ${this.name} requires two arguments for the target value and tolerance`);
                 }
                 return Math.abs(targetValue - evaluatedArgs[0]) <= Math.abs(evaluatedArgs[1]);
             case 'greaterThan':
+            case 'greater_than':
                 return targetValue > evaluatedArgs[0];
             case 'lessThan':
+            case 'less_than':
                 return targetValue < evaluatedArgs[0];
             case 'greaterThanOrEqual':
+            case 'greater_than_or_equal':
                 return targetValue >= evaluatedArgs[0];
             case 'lessThanOrEqual':
+            case 'less_than_or_equal':
                 return targetValue <= evaluatedArgs[0];
             case 'between':
                 if (evaluatedArgs.length < 2) {
@@ -87,7 +97,10 @@ export class NumericComparisonFunction extends BooleanFunctionExpression {
 
 export class NumericComparisonFunctionProvider {
 
-    private static _names = ['equal', 'closeTo', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'between'];
+    private static _names = ['equal', 'closeTo', 'close_to',
+        'greaterThan', 'greater_than', 'lessThan', 'less_than',
+        'greaterThanOrEqual', 'greater_than_or_equal', 'lessThanOrEqual', 'less_than_or_equal',
+        'between'];
 
     public static names(): string[] {
         return this._names;
@@ -115,14 +128,19 @@ export class NumericComparisonFunctionProvider {
             case 'equal':
                 return { args: ['x', 'y'], body: 'return x === y;' };
             case 'closeTo':
+            case 'close_to':
                 return { args: ['x', 'target', 'tolerance'], body: 'return Math.abs(x - target) <= Math.abs(tolerance);' };
             case 'greaterThan':
+            case 'greater_than':
                 return { args: ['x', 'y'], body: 'return x > y;' };
             case 'lessThan':
+            case 'less_than':
                 return { args: ['x', 'y'], body: 'return x < y;' };
             case 'greaterThanOrEqual':
+            case 'greater_than_or_equal':
                 return { args: ['x', 'y'], body: 'return x >= y;' };
             case 'lessThanOrEqual':
+            case 'less_than_or_equal':
                 return { args: ['x', 'y'], body: 'return x <= y;' };
             case 'between':
                 return { args: ['x', 'lower', 'upper'], body: 'return x >= lower && x <= upper;' };

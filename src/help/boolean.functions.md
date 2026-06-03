@@ -4,7 +4,7 @@ title: Boolean Functions
 
 # Boolean Functions
 
-### `is(value)` or `if(value)`
+### `is(value) | if(value)`
 Returns the boolean equivalent of the argument, so `is(1 == 1)` returns `true` and `is(1 == 0)` returns `false`.
 
 When passed a variable or a non-boolean argument, it checks if the argument has a non-false value, so:
@@ -32,7 +32,7 @@ Returns `true` when every array item satisfies the lambda condition.
 if every(Person.family, member : member.age >= 18) then Person.allAdults = true
 ```
 
-### `any(array, item : predicate)` or `some(array, item: predicate)`
+### `any(array, item : predicate) | some(array, item: predicate)`
 Returns `true` when at least one item satisfies the lambda condition.
 
 ```

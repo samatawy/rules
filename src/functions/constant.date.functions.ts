@@ -31,15 +31,19 @@ export class ConstantDates extends DateFunctionExpression {
                 const now = new Date();
                 return new Date(now.getFullYear(), now.getMonth(), now.getDate());
             case 'yearStart':
+            case 'year_start':
                 const currentYear = new Date().getFullYear();
                 return new Date(currentYear, 0, 1);
             case 'yearEnd':
+            case 'year_end':
                 const currentYearEnd = new Date().getFullYear();
                 return new Date(currentYearEnd, 11, 31);
             case 'monthStart':
+            case 'month_start':
                 const nowMonth = new Date();
                 return new Date(nowMonth.getFullYear(), nowMonth.getMonth(), 1);
             case 'monthEnd':
+            case 'month_end':
                 const nowMonthEnd = new Date();
                 return new Date(nowMonthEnd.getFullYear(), nowMonthEnd.getMonth() + 1, 0);
 
@@ -51,7 +55,9 @@ export class ConstantDates extends DateFunctionExpression {
 
 export class ConstantDatesProvider {
 
-    private static _names = ['now', 'today', 'yearStart', 'yearEnd', 'monthStart', 'monthEnd'];
+    private static _names = ['now', 'today',
+        'yearStart', 'year_start', 'yearEnd', 'year_end',
+        'monthStart', 'month_start', 'monthEnd', 'month_end'];
 
     public static names(): string[] {
         return this._names;
@@ -87,6 +93,7 @@ export class ConstantDatesProvider {
                     `
                 };
             case 'yearStart':
+            case 'year_start':
                 return {
                     args: [],
                     body: `
@@ -95,6 +102,7 @@ export class ConstantDatesProvider {
                     `
                 };
             case 'yearEnd':
+            case 'year_end':
                 return {
                     args: [],
                     body: `
@@ -103,6 +111,7 @@ export class ConstantDatesProvider {
                     `
                 };
             case 'monthStart':
+            case 'month_start':
                 return {
                     args: [],
                     body: `
@@ -111,6 +120,7 @@ export class ConstantDatesProvider {
                     `
                 };
             case 'monthEnd':
+            case 'month_end':
                 return {
                     args: [],
                     body: `
