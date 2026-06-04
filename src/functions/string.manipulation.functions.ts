@@ -39,6 +39,19 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 return [{ type: 'string' }];
             case 'extract':
                 return [{ type: 'string' }, { type: 'string' }];
+
+            case 'base64_encode':
+            case 'base64_decode':
+            case 'hex_encode':
+            case 'hex_decode':
+            case 'url_encode':
+            case 'url_decode':
+            case 'html_escape':
+            case 'html_unescape':
+            case 'json_escape':
+            case 'json_unescape':
+                return [{ type: 'string' }];
+
             default:
                 throw new TypeCheckError(`Unknown string manipulation function: ${this.name}`);
         }
@@ -92,9 +105,92 @@ export class StringManipulationFunction extends StringFunctionExpression {
                 const regex = new RegExp(evaluatedArgs[0]);
                 const match = targetValue.match(regex);
                 return match && match.length > 0 ? match[1] || '' : '';
+
+            case 'base64_encode':
+                return this.base64Encode(targetValue);
+            case 'base64_decode':
+                return this.base64Decode(targetValue);
+            case 'hex_encode':
+                return this.hexEncode(targetValue);
+            case 'hex_decode':
+                return this.hexDecode(targetValue);
+            case 'url_encode':
+                return encodeURIComponent(targetValue);
+            case 'url_decode':
+                return decodeURIComponent(targetValue);
+            case 'html_escape':
+                return this.htmlEscape(targetValue);
+            case 'html_unescape':
+                return this.htmlUnescape(targetValue);
+            case 'json_escape':
+                return JSON.stringify(targetValue).slice(1, -1);
+            case 'json_unescape':
+                return this.jsonUnescape(targetValue);
+
             default:
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }
+    }
+
+    private htmlEscape(str: string): string {
+        return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    private htmlUnescape(str: string): string {
+        return str.replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&');
+    }
+
+    private jsonUnescape(str: string): string {
+        const parsed = JSON.parse('"' + str + '"');
+        return typeof parsed === 'string' ? parsed : String(parsed);
+    }
+
+    private base64Encode(str: string): string {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        let binary = '';
+
+        for (const byte of bytes) {
+            binary += String.fromCharCode(byte);
+        }
+
+        return btoa(binary);
+    }
+
+    private base64Decode(str: string): string {
+        const binary = atob(str);
+        const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+    }
+
+    private hexEncode(str: string): string {
+        const bytes = new TextEncoder().encode(str);
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    private hexDecode(str: string): string {
+        if (str.length % 2 !== 0) {
+            throw new EvaluationError(`Invalid hex input for function ${this.name}`);
+        }
+
+        const bytes = new Uint8Array(str.length / 2);
+        for (let i = 0; i < str.length; i += 2) {
+            const byte = Number.parseInt(str.slice(i, i + 2), 16);
+            if (Number.isNaN(byte)) {
+                throw new EvaluationError(`Invalid hex input for function ${this.name}`);
+            }
+            bytes[i / 2] = byte;
+        }
+
+        return new TextDecoder().decode(bytes);
     }
 
 }
@@ -103,7 +199,9 @@ export class StringManipulationFunctionProvider {
 
     private static _names = ['substring', 'firstChars', 'first_chars', 'lastChars', 'last_chars',
         'append', 'replace', 'upperCase', 'upper_case', 'lowerCase', 'lower_case',
-        'capitalize', 'capitalizeWords', 'capitalize_words', 'extract'];
+        'capitalize', 'capitalizeWords', 'capitalize_words', 'extract',
+        'base64_encode', 'base64_decode', 'hex_encode', 'hex_decode', 'url_encode', 'url_decode', 'html_escape', 'html_unescape', 'json_escape', 'json_unescape',
+    ];
 
     public static names(): string[] {
         return this._names;
@@ -153,6 +251,47 @@ export class StringManipulationFunctionProvider {
                 return { args: ['target'], body: `return target.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')` };
             case 'extract':
                 return { args: ['target', 'pattern'], body: `const regex = new RegExp(pattern); const match = target.match(regex); return match && match.length > 0 ? match[1] || '' : '';` };
+            case 'base64_encode':
+                return {
+                    args: ['target'],
+                    body: `const bytes = new TextEncoder().encode(target); let binary = ''; for (const byte of bytes) { binary += String.fromCharCode(byte); } return btoa(binary);`
+                };
+            case 'base64_decode':
+                return {
+                    args: ['target'],
+                    body: `const binary = atob(target); const bytes = Uint8Array.from(binary, char => char.charCodeAt(0)); return new TextDecoder().decode(bytes);`
+                };
+            case 'hex_encode':
+                return {
+                    args: ['target'],
+                    body: `const bytes = new TextEncoder().encode(target); return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');`
+                };
+            case 'hex_decode':
+                return {
+                    args: ['target'],
+                    body: `if (target.length % 2 !== 0) { throw new Error('Invalid hex input'); } const bytes = new Uint8Array(target.length / 2); for (let i = 0; i < target.length; i += 2) { const byte = Number.parseInt(target.slice(i, i + 2), 16); if (Number.isNaN(byte)) { throw new Error('Invalid hex input'); } bytes[i / 2] = byte; } return new TextDecoder().decode(bytes);`
+                };
+            case 'url_encode':
+                return { args: ['target'], body: `return encodeURIComponent(target);` };
+            case 'url_decode':
+                return { args: ['target'], body: `return decodeURIComponent(target);` };
+            case 'html_escape':
+                return {
+                    args: ['target'],
+                    body: `return target.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;');`
+                };
+            case 'html_unescape':
+                return {
+                    args: ['target'],
+                    body: `return target.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');`
+                };
+            case 'json_escape':
+                return { args: ['target'], body: `return JSON.stringify(target).slice(1, -1);` };
+            case 'json_unescape':
+                return {
+                    args: ['target'],
+                    body: `const parsed = JSON.parse('"' + target + '"'); return typeof parsed === 'string' ? parsed : String(parsed);`
+                };
             default:
                 throw new EvaluationError(`Unknown string manipulation function: ${this.name}`);
         }

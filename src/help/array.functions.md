@@ -57,6 +57,20 @@ Returns `max - min` for a numeric array. It can also be called with multiple num
 set spread = range(Person.ages)
 ```
 
+### `hcf(numbers) | gcd(numbers)`
+Returns the highest common factor, also known as the greatest common divisor, of a numeric array.
+
+```
+set common_divisor = Measurements.values.gcd()
+```
+
+### `lcm(numbers)`
+Returns the least common multiple of a numeric array.
+
+```
+set common_cycle = Measurements.values.lcm()
+```
+
 ## Array Collection
 
 ### `concat(strings)`

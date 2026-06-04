@@ -31,6 +31,9 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
             case 'min':
             case 'max':
             case 'range':
+            case 'hcf':
+            case 'gcd':
+            case 'lcm':
                 return [{ type: 'number[]' }];
             default:
                 throw new TypeCheckError(`Unknown array inspection function: ${this.name}`);
@@ -91,6 +94,11 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
                 return Math.max(...targetValue);
             case 'range':
                 return Math.max(...targetValue) - Math.min(...targetValue);
+            case 'hcf':
+            case 'gcd':
+                return targetValue.reduce((acc, val) => this.hcfPair(acc, val));
+            case 'lcm':
+                return targetValue.reduce((acc, val) => this.lcmPair(acc, val));
 
             default:
                 throw new EvaluationError(`Unknown array inspection function: ${this.name}`);
@@ -107,11 +115,26 @@ export class ArrayInspectionFunction extends NumericFunctionExpression {
             return sorted[mid]!;
         }
     }
+
+    private hcfPair(a: number, b: number): number {
+        a = Math.abs(Math.trunc(a));
+        b = Math.abs(Math.trunc(b));
+        while (b !== 0) {
+            [a, b] = [b, a % b];
+        }
+        return a;
+    }
+
+    private lcmPair(a: number, b: number): number {
+        if (a === 0 || b === 0) return 0;
+        // Divide first to avoid IEEE 754 overflow with large integers
+        return (Math.abs(a) / this.hcfPair(a, b)) * Math.abs(b);
+    }
 }
 
 export class ArrayInspectionFunctionProvider {
 
-    private static _names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range'];
+    private static _names = ['count', 'sum', 'total', 'avg', 'average', 'mean', 'median', 'min', 'max', 'range', 'hcf', 'gcd', 'lcm'];
 
     public static names(): string[] {
         return this._names;
@@ -164,6 +187,41 @@ export class ArrayInspectionFunctionProvider {
                 return { args: ['...arr'], body: 'return Math.max(...arr);' };
             case 'range':
                 return { args: ['...arr'], body: 'return Math.max(...arr) - Math.min(...arr);' };
+            case 'hcf':
+            case 'gcd':
+                return {
+                    args: ['...arr'],
+                    body: `
+                        const hcfPair = (a, b) => {
+                            a = Math.abs(Math.trunc(a));
+                            b = Math.abs(Math.trunc(b));
+                            while (b !== 0) {
+                                [a, b] = [b, a % b];
+                            }
+                            return a;
+                        };
+                        return arr.reduce((acc, val) => hcfPair(acc, val));
+                    `
+                };
+            case 'lcm':
+                return {
+                    args: ['...arr'],
+                    body: `
+                        const hcfPair = (a, b) => {
+                            a = Math.abs(Math.trunc(a));
+                            b = Math.abs(Math.trunc(b));
+                            while (b !== 0) {
+                                [a, b] = [b, a % b];
+                            }
+                            return a;
+                        };
+                        const lcmPair = (a, b) => {
+                            if (a === 0 || b === 0) return 0;
+                            return (Math.abs(a) / hcfPair(a, b)) * Math.abs(b);
+                        };
+                        return arr.reduce((acc, val) => lcmPair(acc, val));
+                    `
+                };
 
             default:
                 throw new EvaluationError(`Unknown array inspection function: ${this.name}`);

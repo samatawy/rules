@@ -67,6 +67,98 @@ Returns `true` when the value is within the inclusive range.
 if age.between(18, 65) then eligible = true
 ```
 
+### Numeric Inspection
+
+### `multiple_of(value, divisor) | divisible_by(value, divisor)`
+Alternative syntax: `multipleOf(value, divisor)` or `divisibleBy(value, divisor)`.
+
+Returns `true` when the value is exactly divisible by the divisor.
+
+```
+if invoice_count.multiple_of(5) then bulk_batch = true
+```
+
+### `factor_of(value, target)`
+Alternative syntax: `factorOf(value, target)`.
+
+Returns `true` when the value is a factor of the target number.
+
+```
+if installment.factor_of(total_amount) then clean_split = true
+```
+
+### `is_positive(value)`
+Alternative syntax: `isPositive(value)`.
+
+Returns `true` when the value is greater than zero.
+
+```
+if balance.is_positive() then in_credit = true
+```
+
+### `is_negative(value)`
+Alternative syntax: `isNegative(value)`.
+
+Returns `true` when the value is less than zero.
+
+```
+if delta.is_negative() then decreased = true
+```
+
+### `is_even(value)`
+Alternative syntax: `isEven(value)`.
+
+Returns `true` when the value is an even integer.
+
+```
+if invoice_number.is_even() then even_batch = true
+```
+
+### `is_odd(value)`
+Alternative syntax: `isOdd(value)`.
+
+Returns `true` when the value is an odd integer.
+
+```
+if invoice_number.is_odd() then odd_batch = true
+```
+
+### `is_prime(value)`
+Alternative syntax: `isPrime(value)`.
+
+Returns `true` when the value is a prime integer greater than 1.
+
+```
+if candidate.is_prime() then prime_candidate = true
+```
+
+### `is_integer(value)`
+Alternative syntax: `isInteger(value)`.
+
+Returns `true` when the value has no fractional part.
+
+```
+if quantity.is_integer() then whole_units = true
+```
+
+### `is_nan(value)`
+Alternative syntax: `isNaN(value)`.
+
+Returns `true` when the value is `NaN`.
+
+```
+if measurement.is_nan() then invalid_measurement = true
+```
+
+### `is_finite(value)`
+Alternative syntax: `isFinite(value)`.
+
+Returns `true` when the value is a finite number.
+
+```
+if reading.is_finite() then usable_reading = true
+```
+
 ## Numeric Manipulation
 
 
@@ -92,11 +184,32 @@ Rounds a number down to the previous integer.
 set rounded_down = price.floor()
 ```
 
+### `truncate(number)`
+Removes the fractional part without rounding. This is equivalent to floor if the number is positive, and ceil if the number is negative.
+
+```
+set truncated = balance_change.truncate()
+```
+
 ### `round(number)`
 Rounds a number to the nearest integer.
 
 ```
 set rounded = price.round()
+```
+
+### `clamp(number, min, max)`
+Constrains a number to the inclusive range between `min` and `max`. Bound order does not matter.
+
+```
+set normalized_score = score.clamp(100, 0)
+```
+
+### `mod(number, divisor) | modulo(number, divisor)`
+Returns the positive modulo result for the given divisor.
+
+```
+set weekday_slot = offset.modulo(7)
 ```
 
 ### `round_to(number, digits)`
@@ -106,6 +219,15 @@ Rounds a number to a fixed number of decimal places.
 
 ```
 set tax = invoice_total.round_to(2)
+```
+
+### `round_to_step(number, digits)`
+Alternative syntax: `roundToStep(number, digits)`.
+
+Rounds a number to the nearest value divisible by the step.
+
+```
+set tax = invoice_total.round_to_step(0.25)
 ```
 
 ### `pow(number, exponent) | power(number, exponent)`
@@ -169,6 +291,27 @@ Returns $e^x$.
 
 ```
 set growthFactor = exp(rate)
+```
+
+### `factorial(number)`
+Returns the factorial of a non-negative integer.
+
+```
+set arrangements = count.factorial()
+```
+
+### `permutation(number, r) | npr(number, r)`
+Returns the number of ordered selections of `r` items from `number` items.
+
+```
+set ordered_codes = total_codes.npr(2)
+```
+
+### `combination(number, r) | ncr(number, r) | binomial(number, r)`
+Returns the number of unordered selections of `r` items from `number` items.
+
+```
+set unordered_codes = total_codes.ncr(2)
 ```
 
 ## Angle Functions
