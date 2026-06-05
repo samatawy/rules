@@ -32,6 +32,16 @@ export interface ObjectArrayType {
     items?: ObjectType;
 }
 
+
+export type AnnotationType = AtomicType | ArrayType | 'email' | 'email[]' | 'object' | 'any';
+
+export interface AnnotationDefinition {
+    name: string;
+    type: AnnotationType;
+}
+
+export type Annotations = Record<string, unknown>;
+
 /** A defined root type that can contain nested properties*/
 export interface RootType {
     /**
@@ -100,6 +110,12 @@ export interface FunctionDefinition {
      * This is primarily for documentation and user guidance when working with the function in rules and expressions.
      */
     hint?: string;
+
+    /**
+     * Optional annotations for the function, which can include any additional metadata or information that may be relevant for the function's behavior, usage, or categorization.
+     * Annotations can be used to provide extra context or instructions for how the function should be used or interpreted in rules and expressions.
+     */
+    annotations?: Annotations;
 
     /**
      * Indicates whether the function is disabled. Disabled functions are not executable and cannot be called in rules or expressions.

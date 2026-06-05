@@ -62,6 +62,8 @@ sales_tax(total: number) {
 
 - Functions can have annotations. Supported annotations are `@hint(...)` and `@disabled()` which are primarily of value while developing or testing.
 
+- Functions can also carry declared custom annotations for grouping, teams, ownership, and related concerns. See [Annotations](annotations.md).
+
 ```
 @hint(Currently disabled by John Smith)
 @disabled()

@@ -4,7 +4,7 @@
 
 @samatawy/rules is a declarative rule engine package for TypeScript and JavaScript applications. 
 It supports a readable DSL for rules and expressions, declared types, custom and built-in functions, 
-file readers, autocomplete support, rule graphs, and runtime workspaces for evaluating business logic.
+file readers, autocomplete support, rule graphs, runtime workspaces, diagnostics and logging, and testing support.
 
 ## Package
 
@@ -23,10 +23,13 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - API index: https://samatawy.github.io/rules/modules.html
 - Authored guides index: https://github.com/samatawy/rules/blob/main/src/help/index.md
 - Engine guide: https://samatawy.github.io/rules/documents/engine.html
+- Engine comparison guide: https://samatawy.github.io/rules/documents/comparisons.html
 - Expression syntax guide: https://samatawy.github.io/rules/documents/expression.syntax.html
 - Rules syntax guide: https://samatawy.github.io/rules/documents/rules.syntax.html
 - Functions guide: https://samatawy.github.io/rules/documents/functions.html
 - Declaration files guide: https://samatawy.github.io/rules/documents/declaration.files.html
+- Diagnostics and auditing guide: https://samatawy.github.io/rules/documents/logging.html
+- Testing guide: https://samatawy.github.io/rules/documents/testing.html
 
 ## Core topics
 
@@ -43,12 +46,16 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - Custom functions and built-in functions
 - Built-in functions for numeric, string, date/time, boolean, array, lambda, constant, and random operations
 - Rete algorithm implementation for highly scalable performance
+- Optional dynamic compilation for faster repeated evaluation in supported runtimes
 - Rule salience and conflict detection/resolution
 - Detection of cyclic dependencies
 - Working memory, scope context, and function-local execution scope
+- Built-in audit trail, diagnostic logging, and stopwatch-style performance profiling
+- Test suites, forward and backward test cases, and DSL-backed testing support
 - Autocompletion support for editors
 - File readers for rules, functions, constants, types, markdown, mixed/general files, and multi-file workspace loading
 - Markdown-backed executable documentation
+- Rendering helpers for HTML and Mermaid output
 - Browser-compatible ESM runtime and Node.js support
 - Typed public API with declaration files and preserved doc comments for IntelliSense
 
@@ -60,6 +67,8 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - `RuleParser`, `ExpressionParser`, `ExecutableParser`, `FunctionParser`, and `TypeParser`
 - `RuleRegistry`, `FunctionRegistry`, `TypeRegistry`, and `WorkspaceTypeChecker`
 - `RuleGraph` and graph nodes for efficient applicability traversal
+- `Logger`, `ContextLogger`, `Stopwatch`, and Node file logger helpers for diagnostics
+- `TestSuite`, `ForwardTestCase`, `BackwardTestCase`, and `TestsFileReader` for automated rule testing
 - `Autocomplete` for editor suggestion support
 
 ## File and declaration workflows
@@ -72,9 +81,11 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 
 ## Entry points
 
-- ESM runtime: `dist/index.js`
-- CommonJS runtime: `dist/index.cjs`
-- Type declarations: `dist/index.d.ts`
+- Main Node-oriented runtime: `@samatawy/rules` -> `dist/node/index.js`, `dist/node/index.cjs`, `dist/node/index.d.ts`
+- Browser runtime: `@samatawy/rules/browser` -> `dist/browser/index.js`, `dist/browser/index.cjs`, `dist/browser/index.d.ts`
+- Testing helpers: `@samatawy/rules/testing` -> `dist/testing/index.js`, `dist/testing/index.cjs`, `dist/testing/index.d.ts`
+- Autocomplete helpers: `@samatawy/rules/autocomplete` -> `dist/autocomplete/index.js`, `dist/autocomplete/index.cjs`, `dist/autocomplete/index.d.ts`
+- Rendering helpers: `@samatawy/rules/render` -> `dist/rendering/index.js`, `dist/rendering/index.cjs`, `dist/rendering/index.d.ts`
 
 ## Notes for LLMs
 
@@ -83,5 +94,7 @@ file readers, autocomplete support, rule graphs, and runtime workspaces for eval
 - Use the README for a concise overview and quick-start example.
 - Use the authored help pages for syntax explanations and conceptual guidance.
 - Use the Typedoc API pages for exported classes, methods, and interfaces.
+- Prefer `@samatawy/rules/testing` for test-suite APIs instead of assuming they come from the main entry point.
+- Prefer the diagnostics guides for audit trail, logger, stopwatch, and Node file logging behavior.
 - The package is intended for Node.js and browser applications that use a bundler.
 - The package focuses on deterministic business-rule execution rather than probabilistic AI workflows.

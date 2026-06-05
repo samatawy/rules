@@ -1,9 +1,12 @@
 import { EngineError } from "../rules/exception";
 import { Workspace } from "./workspace";
+import { AnnotationRegistry } from "./annotation.registry";
 
 export class RulesEngine {
 
     protected workspaces: Map<string, Workspace>;
+
+    protected annotations: AnnotationRegistry;
 
     private static _global_registry: RulesEngine;
 
@@ -39,6 +42,7 @@ export class RulesEngine {
 
     protected constructor() {
         this.workspaces = new Map<string, Workspace>();
+        this.annotations = new AnnotationRegistry();
     }
 
     /**
@@ -110,6 +114,14 @@ export class RulesEngine {
             throw new EngineError(`Workspace with name "${name}" already exists.`);
         }
         this.workspaces.set(name, workspace);
+    }
+
+    public annotationRegistry(): AnnotationRegistry {
+        return this.annotations;
+    }
+
+    public static annotationRegistry(): AnnotationRegistry {
+        return this.registry().annotationRegistry();
     }
 
     /**

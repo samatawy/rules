@@ -211,6 +211,10 @@ if x > 30 then y = 30
 
 Higher salience means higher priority.
 
+### Custom Annotations
+
+Rules can also carry declared custom annotations for grouping, teams, ownership, and related concerns. See [Annotations](annotations.md).
+
 ### Multiple Annotations
 
 Annotations can be combined:

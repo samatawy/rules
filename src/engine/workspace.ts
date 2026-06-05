@@ -379,6 +379,14 @@ export class Workspace implements Clonable<Workspace> {
         this.commandRegistry().clear();
     }
 
+    public getAnnotated(annotation: string, value?: unknown): { rules: AbstractRule[], functions: FunctionDefinition[] } {
+        const rules = this.rules.getRulesAnnotated(annotation, value);
+        const funcs = this.functions.getFunctionsAnnotated(annotation, value);
+        const functions = Object.values(funcs);
+
+        return { rules, functions };
+    }
+
     public checkTypes(): ValidationResult {
         const checks: ValidationResult[] = [];
 

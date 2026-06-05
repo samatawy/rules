@@ -6,6 +6,10 @@ import { LogicalExpression } from '../src/syntax/logical.expression';
 import { TernaryExpression } from '../src/syntax/ternary.expression';
 import { ComparisonExpression } from '../src/syntax/comparison.expression';
 import { ArithmeticExpression } from '../src/syntax/arithmetic.expression';
+import { RuleParser } from '../src/parser/rule.parser';
+import { FunctionParser } from '../src/parser/function.parser';
+import { TestParser } from '../src/parser/test.parser';
+import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Parsers Tests', () => {
 
@@ -181,6 +185,34 @@ describe('Parsers Tests', () => {
     const ctx2 = space.loadContext({ x: 5 });
     space.process(ctx2);
     expect(ctx2.getOutput('result')).toBe('lesser');
+  });
+
+  it('parse declared annotations', async () => {
+    const space = new Workspace();
+    RulesEngine.annotationRegistry().register('author', 'string');
+    RulesEngine.annotationRegistry().register('reviewers', 'string[]');
+    RulesEngine.annotationRegistry().register('reviewed_at', 'date');
+    RulesEngine.annotationRegistry().register('owner_email', 'email');
+
+    const rule = new RuleParser({ workspace: space }).parse('@author(Sam) @reviewers(["A", "B"]) IF x THEN y = true');
+    expect(rule!.getAnnotations()).toEqual({
+      author: 'Sam',
+      reviewers: ['A', 'B']
+    });
+
+    const func = new FunctionParser({ workspace: space }).parse('@reviewed_at("2026-06-05T10:00:00Z") double(n: number) = n * 2');
+    expect(func!.annotations?.reviewed_at).toBeInstanceOf(Date);
+
+    const testCase = new TestParser({ workspace: space }).parseTestCase('@owner_email(owner@example.com) TEST { value: 1 } EXPECT { value: 1 }');
+    expect(testCase.getAnnotation('owner_email')).toBe('owner@example.com');
+  });
+
+  it('reject undeclared annotations', async () => {
+    const space = new Workspace();
+    const annotationName = `unknown_annotation_${Date.now()}`;
+
+    expect(() => new RuleParser({ workspace: space }).parse(`@${annotationName}(Sam) IF x THEN y = true`))
+      .toThrow('Unknown annotation');
   });
 
 });

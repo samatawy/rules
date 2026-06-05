@@ -1,3 +1,4 @@
+import type { HasAnnotations } from "../interfaces";
 import type { Workspace } from "../engine/workspace";
 import type { TestCaseResult } from "./test.case.result";
 
@@ -5,7 +6,7 @@ import type { TestCaseResult } from "./test.case.result";
  * Abstract base class for all test cases in the system, providing common properties and methods for managing test case data and state. 
  * Each specific test case type should extend this class and implement the abstract methods for handling test case logic.
  */
-export abstract class AbstractTestCase {
+export abstract class AbstractTestCase implements HasAnnotations {
 
     /**
      * Optional name for the test case, which can be used for identification and debugging purposes.
@@ -17,6 +18,8 @@ export abstract class AbstractTestCase {
      * This is primarily for documentation and user guidance when working with the test case.
      */
     public hint?: string;
+
+    private custom_annotations?: Record<string, unknown>;
 
     private disabled?: boolean;
 
@@ -71,6 +74,67 @@ export abstract class AbstractTestCase {
      */
     public enable(): void {
         this.disabled = false;
+    }
+
+    public annotate(annotation: string, value: unknown): void {
+        switch (annotation) {
+            case 'name':
+                this.name = String(value); break;
+
+            case 'hint':
+                this.hint = String(value); break;
+
+            case 'disabled':
+                if (typeof value !== 'boolean') {
+                    throw new Error(`Invalid value for 'disabled' annotation: expected boolean but got ${typeof value}`);
+                }
+                this.disabled = Boolean(value); break;
+
+            default:
+                this.custom_annotations = this.custom_annotations || {};
+                this.custom_annotations[annotation] = value;
+        }
+    }
+
+    public isAnnotated(annotation: string, value?: unknown): boolean {
+        switch (annotation) {
+            case 'hint':
+                return this.hint !== undefined && (value === undefined || this.hint === value);
+
+            case 'disabled':
+                return this.disabled !== undefined && (value === undefined || this.disabled === value);
+
+            default:
+                if (this.custom_annotations && this.custom_annotations[annotation] !== undefined) {
+                    if (value === undefined || this.custom_annotations[annotation] === value) {
+                        return true;
+                    }
+                }
+        }
+        return false;
+    }
+
+    public getAnnotation(annotation: string): unknown {
+        switch (annotation) {
+            case 'hint':
+                return this.hint;
+            case 'disabled':
+                return this.disabled;
+            default:
+                return this.custom_annotations ? this.custom_annotations[annotation] : undefined;
+        }
+    }
+
+    public getAnnotations(): Record<string, unknown> {
+        const obj: any = {};
+        if (this.hint !== undefined) obj['hint'] = this.hint;
+        if (this.disabled) obj['disabled'] = this.disabled;
+        if (this.custom_annotations) {
+            for (const key in this.custom_annotations) {
+                obj[key] = this.custom_annotations[key];
+            }
+        }
+        return Object.keys(obj).length > 0 ? obj : {};
     }
 
     /**

@@ -1,4 +1,4 @@
-import type { ArrayType, AtomicType, FunctionDefinition, NamedParameter, ObjectType, PropertyType } from "../types";
+import type { ArrayType, AtomicType, FunctionDefinition, Annotations, NamedParameter, ObjectType, PropertyType } from "../types";
 import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.parser";
 import { ExpressionParser } from "./expression.parser";
 import { ExecutableParser } from "./executable.parser";
@@ -8,10 +8,12 @@ import { ParserError } from "../rules/exception";
 import { Logger } from "../logging";
 import { parseTypeJson } from "../common.utils";
 import { FunctionFactory } from "./function.factory";
+import { parseAnnotationValue, readLeadingAnnotation } from "./annotation.utils";
 
-export interface FunctionMetadata {
+interface AnnotatedSyntax {
     hint?: string;
     disabled?: boolean;
+    annotations?: Annotations;
     syntax?: string;
 }
 
@@ -46,9 +48,9 @@ export class FunctionParser {
      */
     public parse(syntax: string): FunctionDefinition | null {
 
-        const metadata = this.parseMetadata({ syntax });
+        const annotated = this.parseAnnotations({ syntax });
         let defined: FunctionDefinition | null = null;
-        syntax = metadata.syntax || '';
+        syntax = annotated.syntax || '';
         if (syntax.length === 0) {
             throw new ParserError('Rule syntax cannot be empty');
         }
@@ -62,8 +64,9 @@ export class FunctionParser {
         }
 
         if (defined) {
-            defined.hint = metadata.hint;
-            defined.disabled = metadata.disabled;
+            defined.hint = annotated.hint;
+            defined.annotations = annotated.annotations;
+            defined.disabled = annotated.disabled;
             return defined;
         } else {
             throw new ParserError(`Unrecognized function syntax: ${syntax}`);
@@ -82,6 +85,7 @@ export class FunctionParser {
             name: original.name,
             hint: original.hint,
             disabled: original.disabled,
+            annotations: original.annotations ? { ...original.annotations } : undefined,
             parameters: original.parameters.map(param => ({ ...param })),
             expression: this.expressionParser.parse(original.expression.toString()),
             lines: original.lines ? original.lines.map(line => this.executableParser.parse(line.toString()) as any) : undefined
@@ -157,28 +161,32 @@ export class FunctionParser {
         throw new ParserError(`Syntax does not match CustomFunction pattern: ${syntax}`);
     }
 
-    protected parseMetadata(given: FunctionMetadata): FunctionMetadata {
+    protected parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
         given.syntax = given.syntax?.trim() || '';
-        if (given.syntax.length === 0 || !(given.syntax.startsWith('@'))) {
+        const annotation = readLeadingAnnotation(given.syntax);
+        if (!annotation) {
             return given;
         }
 
-        if (given.syntax.startsWith('@hint(')) {
-            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/ms);
-            if (match) {
-                given.hint = match[1]!;
-                given.syntax = match[2]!;
-            }
-        } else if (given.syntax.startsWith('@disabled(')) {
-            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/ms);
-            if (match) {
-                given.disabled = true;
-                given.syntax = match[2]!;
-            }
+        given.syntax = annotation.rest;
+
+        if (annotation.name === 'hint') {
+            given.hint = annotation.value;
+            given.annotations = given.annotations || {};
+            given.annotations['hint'] = annotation.value;
+
+        } else if (annotation.name === 'disabled') {
+            given.disabled = true;
+            given.annotations = given.annotations || {};
+            given.annotations['disabled'] = true;
+
+        } else {
+            given.annotations = given.annotations || {};
+            given.annotations[annotation.name] = parseAnnotationValue(annotation.name, annotation.value);
         }
 
-        // loop to allow multiple metadata annotations in any order, like "@name(...) @salience(...) @hint(...)"
-        return this.parseMetadata(given);
+        // loop to allow multiple annotations in any order, like "@name(...) @salience(...) @hint(...)"
+        return this.parseAnnotations(given);
     }
 
     protected readParameters(syntax: string): NamedParameter[] {

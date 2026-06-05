@@ -87,6 +87,8 @@ sales.import(base);
 
 Use `clone()` when you want an isolated copy that can diverge safely. Use `import()` when you want to merge rules, functions, types, and constants from one workspace into another workspace you are already building.
 
+`RulesEngine` also exposes a global annotation registry through `RulesEngine.annotationRegistry()`. Use it during startup to declare custom annotations before loading rules, functions, or test cases that use them. See [Annotations](annotations.md).
+
 ## Workspace
 
 A workspace holds a set of rules and any types, constants, and functions they may need.

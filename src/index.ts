@@ -14,6 +14,7 @@ export * from './engine/rule.registry';
 export * from './engine/scope.memory';
 export * from './engine/working.type.checker';
 export * from './engine/working.memory';
+export * from './engine/annotation.registry';
 
 export * from './engine/graph/rete.graph';
 export * from './engine/graph/rete.nodes';

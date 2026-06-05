@@ -110,6 +110,16 @@ export class TestSuite {
     }
 
     /**
+     * Retrieve all test cases that have a specific annotation and optional value.
+     * @param annotation The annotation to filter test cases by.
+     * @param value The optional value of the annotation to match.
+     * @returns An array of test cases that match the annotation and value.
+     */
+    public testCasesWithAnnotation(annotation: string, value?: any): AbstractTestCase[] {
+        return this.cases.filter(testCase => testCase.isAnnotated(annotation, value));
+    }
+
+    /**
      * Runs the specified test cases by name or by instance and returns an array of their results.
      * If a test case name is provided, it will look up the corresponding test case instance in the suite and run it. 
      * If an instance of AbstractTestCase is provided directly, it will run that instance. 

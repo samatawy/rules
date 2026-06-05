@@ -289,6 +289,15 @@ export interface TypeChecker {
     strictOutputs(): boolean;
 }
 
+export interface HasAnnotations {
+
+    annotate(annotation: string, value: unknown): void;
+    // annotate(annotations: Record<string, unknown>): void;
+    isAnnotated(annotation: string, value?: unknown): boolean;
+    getAnnotation(annotation: string): unknown;
+    getAnnotations(): Record<string, unknown>;
+}
+
 export interface HasValidity {
 
     /**

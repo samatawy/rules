@@ -73,6 +73,16 @@ export class RuleRegistry {
     }
 
     /**
+     * Retrieve all rules that have a specific annotation and optional value.
+     * @param annotation The annotation to filter rules by.
+     * @param value The optional value of the annotation to match.
+     * @returns An array of rules that match the annotation and value.
+     */
+    public getRulesAnnotated(annotation: string, value?: unknown): AbstractRule[] {
+        return this.rules.filter(rule => rule.isAnnotated(annotation, value));
+    }
+
+    /**
      * Clear all rules from the registry.
      */
     public clear(): void {

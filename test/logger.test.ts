@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Logger, MemoryLogger, NoopLogger, Stopwatch } from "../src/logging";
 import { MessageFormatter } from "../src/logging";
+import { LoggedEventFormatter } from "../src/logging/file";
 
 describe('Logger tests', () => {
 
@@ -57,6 +58,47 @@ describe('Logger tests', () => {
 
         memory.flush();
         expect(memory.events).toHaveLength(0);
+    });
+
+    it('formats remaining logger args with args and wildcard placeholders', () => {
+        const event = {
+            timestamp: Date.UTC(2026, 5, 5, 10, 15, 30),
+            level: 'warn' as const,
+            message: 'Rule evaluation took longer than expected',
+            args: [{ workspace: 'pricing' }, 2, true],
+        };
+
+        const withArgs = LoggedEventFormatter
+            .using('{timestamp} [{level}] {message} :: {0}[? :: {args}]')
+            .format(event);
+
+        expect(withArgs).toBe(
+            '2026-06-05T10:15:30.000Z [WARN] Rule evaluation took longer than expected :: {"workspace":"pricing"} :: [2, true]'
+        );
+
+        const withWildcard = LoggedEventFormatter
+            .using('{message}[? | first={0}][? | rest={*}]')
+            .format(event);
+
+        expect(withWildcard).toBe(
+            'Rule evaluation took longer than expected | first={"workspace":"pricing"} | rest=[2, true]'
+        );
+
+        const onlyIndexed = LoggedEventFormatter
+            .using('{message}[? | first={0}][? | second={1}][? | rest={args}]')
+            .format(event);
+
+        expect(onlyIndexed).toBe(
+            'Rule evaluation took longer than expected | first={"workspace":"pricing"} | second=2 | rest=[true]'
+        );
+
+        const skippedIndexedBlock = LoggedEventFormatter
+            .using('{message}[? | missing={9}][? | rest={args}]')
+            .format(event);
+
+        expect(skippedIndexedBlock).toBe(
+            'Rule evaluation took longer than expected | rest=[{"workspace":"pricing"}, 2, true]'
+        );
     });
 
 });

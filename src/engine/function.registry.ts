@@ -119,6 +119,24 @@ export class FunctionRegistry {
     }
 
     /**
+     * Retrieve all function definitions that have a specific annotation and optional value.
+     * @param annotation The annotation to filter functions by.
+     * @param value The optional value of the annotation to match.
+     * @returns A record of function definitions that match the annotation and value, keyed by their names.
+     */
+    public getFunctionsAnnotated(annotation: string, value?: any): Record<string, FunctionDefinition> {
+        const result: Record<string, FunctionDefinition> = {};
+        for (const [key, func] of this.functions.entries()) {
+            if (func.annotations && func.annotations[annotation] !== undefined) {
+                if (value === undefined || func.annotations[annotation] === value) {
+                    result[key] = func;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * Perform type checking on all function definitions in the registry using the provided type checker.
      * This method iterates through each function definition, checks its types against the type checker, and returns an array of validation results.
      * 

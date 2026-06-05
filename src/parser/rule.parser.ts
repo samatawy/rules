@@ -6,12 +6,15 @@ import { IfThenElseRule, IfThenRule, IfThrowRule } from "../rules/conditional.ru
 import { ExecutableParser } from "./executable.parser";
 import { ExpressionParser } from "./expression.parser";
 import { ParserError } from "../rules/exception";
+import { parseAnnotationValue, readLeadingAnnotation } from "./annotation.utils";
+import type { Annotations } from "../types";
 
-export interface RuleMetadata {
+interface AnnotatedSyntax {
     name?: string;
     hint?: string;
     disabled?: boolean;
     salience?: number;
+    annotations?: Annotations;
     syntax?: string;
 }
 
@@ -23,7 +26,7 @@ export interface ParserOptions {
  * Parser class for parsing rule syntax into AbstractRule objects.
  * You should normally not need to use this parser directly, as it is primarily used internally when creating rules from syntax.
  * This parser handles parsing of conditional rules (IF-THEN, IF-THEN-ELSE, IF-THROW) as well as assignment rules (SET x = value).
- * It also supports parsing of metadata annotations for rules, such as @name, @description, and @salience.
+ * It also supports parsing of annotations for rules, such as @name, @hint, and @salience.
  * The parser uses regular expressions to identify the structure of the rule syntax and delegates to the ExpressionParser and ExecutableParser 
  * for parsing specific components of the rules (like conditions and consequences). 
  * The parser is designed to be extensible, allowing for additional rule types and syntax patterns to be added in the future as needed.
@@ -51,9 +54,9 @@ export class RuleParser {
      */
     public parse(syntax: string): AbstractRule | null {
 
-        const metadata = this.parseMetadata({ syntax });
+        const annotated = this.parseAnnotations({ syntax });
         let parsed: AbstractRule | null = null;
-        syntax = metadata.syntax || '';
+        syntax = annotated.syntax || '';
         if (syntax.length === 0) {
             throw new ParserError('Rule syntax cannot be empty');
         }
@@ -80,10 +83,13 @@ export class RuleParser {
         }
 
         if (parsed) {
-            parsed.name = metadata.name;
-            parsed.hint = metadata.hint;
-            metadata.disabled ? parsed.disable() : parsed.enable();
-            parsed.setSalience(metadata.salience ?? 0);
+            parsed.name = annotated.name;
+            parsed.hint = annotated.hint;
+            annotated.disabled ? parsed.disable() : parsed.enable();
+            parsed.setSalience(annotated.salience ?? 0);
+            for (const key in annotated.annotations) {
+                parsed.annotate(key, annotated.annotations[key]);
+            }
             return parsed;
         } else {
             throw new ParserError(`Unrecognized rule syntax: ${syntax}`);
@@ -91,7 +97,7 @@ export class RuleParser {
     }
 
     /**
-     * Create a deep clone of the given AbstractRule by parsing its syntax and copying its metadata.
+     * Create a deep clone of the given AbstractRule by parsing its syntax and copying its annotations.
      * 
      * @param original the original AbstractRule object to clone.
      * @returns a new AbstractRule object that is a deep clone of the original.
@@ -102,46 +108,45 @@ export class RuleParser {
         if (!cloned) {
             throw new ParserError(`Failed to clone rule: ${original.getSyntax()}`);
         }
-        cloned.name = original.name;
-        cloned.hint = original.hint;
+        // cloned.name = original.name;
+        // cloned.hint = original.hint;
+        for (const key in original.getAnnotations()) {
+            if (!cloned.isAnnotated(key)) {
+                cloned.annotate(key, original.getAnnotation(key));
+            }
+        }
         cloned.setSalience(original.getSalience());
         return cloned;
     }
 
-    protected parseMetadata(given: RuleMetadata): RuleMetadata {
+    protected parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
         given.syntax = given.syntax?.trim() || '';
-        if (given.syntax.length === 0 || !(given.syntax.startsWith('@'))) {
+        const annotation = readLeadingAnnotation(given.syntax);
+        if (!annotation) {
             return given;
         }
 
-        if (given.syntax.startsWith('@name(')) {
-            const match = given.syntax.match(/^@name\((.+?)\)\s*(.*)$/ms);
-            if (match) {
-                given.name = match[1]!;
-                given.syntax = match[2]!;
+        given.syntax = annotation.rest;
+
+        if (annotation.name === 'name') {
+            given.name = annotation.value;
+        } else if (annotation.name === 'hint') {
+            given.hint = annotation.value;
+        } else if (annotation.name === 'disabled') {
+            given.disabled = true;
+        } else if (annotation.name === 'salience') {
+            const salience = parseInt(annotation.value, 10);
+            if (Number.isNaN(salience)) {
+                throw new ParserError(`Invalid salience annotation value: ${annotation.value}`);
             }
-        } else if (given.syntax.startsWith('@hint(')) {
-            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/m);
-            if (match) {
-                given.hint = match[1]!;
-                given.syntax = match[2]!;
-            }
-        } else if (given.syntax.startsWith('@disabled(')) {
-            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/ms);
-            if (match) {
-                given.disabled = true;
-                given.syntax = match[2]!;
-            }
-        } else if (given.syntax.startsWith('@salience(')) {
-            const match = given.syntax.match(/^@salience\((\d+)\)\s*(.*)$/ms);
-            if (match) {
-                given.salience = parseInt(match[1]!, 10);
-                given.syntax = match[2]!;
-            }
+            given.salience = salience;
+        } else {
+            given.annotations = given.annotations || {};
+            given.annotations[annotation.name] = parseAnnotationValue(annotation.name, annotation.value);
         }
 
-        // loop to allow multiple metadata annotations in any order, like "@name(...) @salience(...) @hint(...)"
-        return this.parseMetadata(given);
+        // loop to allow multiple annotations in any order, like "@name(...) @salience(...) @hint(...)"
+        return this.parseAnnotations(given);
     }
 
     protected parseConditionalRule(syntax: string): AbstractRule | null {

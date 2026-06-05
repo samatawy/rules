@@ -1,15 +1,17 @@
 import type { ParserOptions } from "./rule.parser";
 import { ParserError } from "../rules/exception";
-import { parseTypeJson } from "../common.utils";
 import { AbstractTestCase } from "../testing/abstract.test.case";
 import { ForwardTestCase } from "../testing/forward.test.case";
 import { BackwardTestCase } from "../testing/backward.test.case";
 import JSON5 from "json5";
+import { parseAnnotationValue, readLeadingAnnotation } from "./annotation.utils";
+import type { Annotations } from "../types";
 
-export interface TestCaseMetadata {
+interface AnnotatedSyntax {
     name?: string;
     hint?: string;
     disabled?: boolean;
+    annotations?: Annotations;
     syntax?: string;
 }
 
@@ -40,8 +42,8 @@ export class TestParser {
      * @throws An error if the syntax is invalid or if parsing fails for any reason.
      */
     public parseTestCase(syntax: string): AbstractTestCase {
-        const metadata = this.parseMetadata({ syntax });
-        syntax = metadata.syntax || '';
+        const annotated = this.parseAnnotations({ syntax });
+        syntax = annotated.syntax || '';
         if (syntax.length === 0) {
             throw new ParserError('Test case syntax cannot be empty');
         }
@@ -49,43 +51,40 @@ export class TestParser {
         const parsed = this.parseTestJson(syntax);
 
         if (parsed) {
-            parsed.name = metadata.name;
-            parsed.hint = metadata.hint;
-            metadata.disabled ? parsed.disable() : parsed.enable();
+            parsed.name = annotated.name;
+            parsed.hint = annotated.hint;
+            annotated.disabled ? parsed.disable() : parsed.enable();
+            for (const key in annotated.annotations) {
+                parsed.annotate(key, annotated.annotations[key]);
+            }
             return parsed;
         } else {
             throw new ParserError(`Unrecognized test case syntax: ${syntax}`);
         }
     }
 
-    protected parseMetadata(given: TestCaseMetadata): TestCaseMetadata {
+    protected parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
         given.syntax = given.syntax?.trim() || '';
-        if (given.syntax.length === 0 || !(given.syntax.startsWith('@'))) {
+        const annotation = readLeadingAnnotation(given.syntax);
+        if (!annotation) {
             return given;
         }
 
-        if (given.syntax.startsWith('@name(')) {
-            const match = given.syntax.match(/^@name\((.+?)\)\s*(.*)$/ms);
-            if (match) {
-                given.name = match[1]!;
-                given.syntax = match[2]!;
-            }
-        } else if (given.syntax.startsWith('@hint(')) {
-            const match = given.syntax.match(/^@hint\((.+?)\)\s*(.*)$/ms);
-            if (match) {
-                given.hint = match[1]!;
-                given.syntax = match[2]!;
-            }
-        } else if (given.syntax.startsWith('@disabled(')) {
-            const match = given.syntax.match(/^@disabled\((.*?)\)\s*(.*)$/ms);
-            if (match) {
-                given.disabled = true;
-                given.syntax = match[2]!;
-            }
+        given.syntax = annotation.rest;
+
+        if (annotation.name === 'name') {
+            given.name = annotation.value;
+        } else if (annotation.name === 'hint') {
+            given.hint = annotation.value;
+        } else if (annotation.name === 'disabled') {
+            given.disabled = true;
+        } else {
+            given.annotations = given.annotations || {};
+            given.annotations[annotation.name] = parseAnnotationValue(annotation.name, annotation.value);
         }
 
-        // loop to allow multiple metadata annotations in any order, like "@name(...) @salience(...) @hint(...)"
-        return this.parseMetadata(given);
+        // loop to allow multiple annotations in any order, like "@name(...) @salience(...) @hint(...)"
+        return this.parseAnnotations(given);
     }
 
     protected parseTestJson(syntax: string): AbstractTestCase {

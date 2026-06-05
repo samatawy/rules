@@ -1,5 +1,5 @@
 import type { ArrayType, AtomicType, ObjectType } from "../types";
-import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker } from "../interfaces";
+import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker, HasAnnotations } from "../interfaces";
 import type { Expression } from "../syntax/expression";
 import type { Renderable } from "../rendering/render.types";
 
@@ -8,7 +8,7 @@ import type { Renderable } from "../rendering/render.types";
  * Each specific rule type (e.g. conditional rules, assignment rules) should extend this class 
  * and implement the abstract methods for evaluation and execution.
  */
-export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
+export abstract class AbstractRule implements Evaluator, Executor, HasValidity, HasAnnotations {
 
     /**
      * Optional name for the rule, which can be used for identification and debugging purposes.
@@ -20,6 +20,8 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
      * This is primarily for documentation and user guidance when working with the rule.
      */
     public hint?: string;
+
+    private custom_annotations?: Record<string, unknown>;
 
     private syntax: string;
 
@@ -91,6 +93,73 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity {
      */
     public enable(): void {
         this.disabled = false;
+    }
+
+    public annotate(annotation: string, value: unknown): void {
+        switch (annotation) {
+            case 'name':
+                this.name = String(value); break;
+
+            case 'hint':
+                this.hint = String(value); break;
+
+            case 'disabled':
+                if (typeof value !== 'boolean') {
+                    throw new Error(`Invalid value for 'disabled' annotation: expected boolean but got ${typeof value}`);
+                }
+                this.disabled = value; break;
+
+            case 'salience':
+                if (typeof value !== 'number') {
+                    throw new Error(`Invalid value for 'salience' annotation: expected number but got ${typeof value}`);
+                }
+                this.salience = value; break;
+
+            default:
+                this.custom_annotations = this.custom_annotations || {};
+                this.custom_annotations[annotation] = value;
+        }
+    }
+
+    public isAnnotated(annotation: string, value?: unknown): boolean {
+        switch (annotation) {
+            case 'hint':
+                return this.hint !== undefined && (value === undefined || this.hint === value);
+
+            case 'disabled':
+                return this.disabled !== undefined && (value === undefined || this.disabled === value);
+
+            default:
+                if (this.custom_annotations && this.custom_annotations[annotation] !== undefined) {
+                    if (value === undefined || this.custom_annotations[annotation] === value) {
+                        return true;
+                    }
+                }
+        }
+        return false;
+    }
+
+    public getAnnotation(annotation: string): unknown {
+        switch (annotation) {
+            case 'hint':
+                return this.hint;
+            case 'disabled':
+                return this.disabled;
+            default:
+                return this.custom_annotations ? this.custom_annotations[annotation] : undefined;
+        }
+    }
+
+    public getAnnotations(): Record<string, unknown> {
+        const obj: any = {};
+        if (this.hint !== undefined) obj['hint'] = this.hint;
+        if (this.disabled) obj['disabled'] = this.disabled;
+        if (this.custom_annotations) {
+            for (const key in this.custom_annotations) {
+                obj[key] = this.custom_annotations[key];
+            }
+        }
+        return obj;
     }
 
     /**

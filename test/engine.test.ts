@@ -6,6 +6,7 @@ import { ExpressionParser } from '../src/parser/expression.parser';
 import { RuleParser } from '../src/parser/rule.parser';
 import { CustomFunctionExpression } from '../src/functions/custom.function';
 import { FunctionParser } from '../src/parser/function.parser';
+import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Engine tests', () => {
 
@@ -217,6 +218,16 @@ describe('Engine tests', () => {
 
     expect(space.checkTypes().valid).toBe(true);
     // console.debug('Logged rules during processing:', ctx.getLog().map(logged => ({ rule: logged.rule.toString(), effect: logged.effect })));
+  });
+
+  it('register annotations through the rules engine', async () => {
+    const annotationName = `engine_meta_${Date.now()}`;
+    RulesEngine.annotationRegistry().register(annotationName, 'string');
+
+    const rule = new RuleParser({ workspace: RulesEngine.defaultSpace() })
+      .parse(`@${annotationName}(platform) IF ready THEN result = true`);
+
+    expect(rule!.getAnnotation(annotationName)).toBe('platform');
   });
 
 });
