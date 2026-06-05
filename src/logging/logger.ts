@@ -1,19 +1,27 @@
-import type { WorkingContext } from "../interfaces";
 import { ConsoleLogger } from "./console.logger";
-import { ContextLogger } from "./context.logger";
 import { rankedLogLevels, type ILogger, type LogLevel } from "./interfaces";
 
-
 /**
- * Helper class to handle and configure logging for all Rule engine classes.
+ * Main class to handle and configure logging with multiple logger implementations.
+ * Unlike Logger implementations, this class provides static methods to manage global logging configuration and registered loggers,
+ * as well as helper functions to create ContextLoggers and temporarily override loggers for specific code blocks.
+ * 
+ * You can also register multiple loggers that implement the ILogger interface, which will all receive the log events that pass the log level filter.
+ * If no loggers are registered, a default ConsoleLogger will be used to output to the console.
+ * 
+ * The LogLevel can be set globally for all loggers through the `setLogLevel` method, which will filter out any log events below the specified level.
+ * Each registered Logger instance can have its own level, but none can bypass the global level set by this class.
+ * 
+ * If you need to temporarily redirect all log events to a specific logger for a block of code, you can use the `withLogger` helper function, 
+ * which will override the logger implementation during the execution of the provided function and reset it afterward. 
  */
-export class WorkLogger {
+export class Logger {
 
-    private static logLevel: LogLevel = 'info';
+    protected static logLevel: LogLevel = 'info';
 
-    private static loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
+    protected static loggerMap: Map<string, ILogger> = new Map<string, ILogger>();
 
-    private static levelSupport: Record<LogLevel, boolean> = {
+    protected static levelSupport: Record<LogLevel, boolean> = {
         trace: rankedLogLevels['trace'] >= rankedLogLevels[this.logLevel],
         debug: rankedLogLevels['debug'] >= rankedLogLevels[this.logLevel],
         info: rankedLogLevels['info'] >= rankedLogLevels[this.logLevel],
@@ -35,6 +43,22 @@ export class WorkLogger {
         }
     }
 
+    public static setLoggerLevels(levels: Record<string, LogLevel>): void {
+        for (const [loggerName, level] of Object.entries(levels)) {
+            const logger = this.loggerMap.get(loggerName);
+            if (logger) {
+                logger.setLogLevel(level);
+
+            } else {
+                console.warn(`Logger "${loggerName}" not found among registered loggers.`);
+            }
+        }
+    }
+
+    public static getLogLevel(): LogLevel {
+        return this.logLevel;
+    }
+
     public static canLog(level: LogLevel): boolean {
         return this.levelSupport[level];
     }
@@ -46,7 +70,7 @@ export class WorkLogger {
     }
 
     protected static performAll(func: LogLevel, msg: string, ...args: unknown[]) {
-        const canLog = this.canLog(func);
+        const canLog = this.levelSupport[func];
         if (!canLog) {
             return;
         }
@@ -132,23 +156,14 @@ export class WorkLogger {
     }
 
     /**
-     * Create a new ContextLogger for a specific working context. 
-     * This allows you to log events related to that context and manage them separately from other contexts.
-     * If you need a blank ContextLogger without any pre-registered loggers, you can create one directly using `new ContextLogger(context)`.
-     * 
-     * @param context the working context to associate with the new ContextLogger.
-     * @returns a new ContextLogger instance, using the same global loggers as WorkLogger.
+     * List the currently registered loggers.
+     * @returns a map of logger identifiers to their ILogger implementations.
      */
-    public static forContext(context: WorkingContext): ContextLogger {
-        const contextLogger = new ContextLogger(context);
-        contextLogger.setLogLevel(this.logLevel);
-        for (const [name, logger] of this.loggerMap.entries()) {
-            contextLogger.register(name, logger);
-        }
-        return contextLogger;
+    public static registeredLoggers(): Map<string, ILogger> {
+        return new Map(this.loggerMap);
     }
 
-    private static override?: ILogger;
+    protected static override?: ILogger;
 
     /**
      * Override the current logger implementation with a custom logger.
@@ -175,46 +190,4 @@ export class WorkLogger {
     }
 }
 
-/**
- * Helper function to execute a block of code with a temporary logger override.
- * This allows you to redirect all log events within the block to a specific logger without affecting the global logging configuration.
- * 
- * Example usage:
- * ```typescript
- * // Your custom logger implementation
- * const customLogger: ILogger = ...; 
- * 
- * withLogger(customLogger, () => {
- *      // Your code block where the custom logger is used
- *      WorkLogger.info("This will be logged using the custom logger.");
- * });
- * 
- * // For wrapping a standalone function with the custom logger:
- * withLogger(customLogger, functionName)(...args);
- * 
- * // For wrapping a class method with the custom logger:
- * withLogger(customLogger, class_method.bind(class_instance))(...args  );
- * ```
- * 
- * N.B. The logger override is only active during the execution of the provided function, including any level of nested function calls. 
- * Therefore, you only need this wrapper at the entry point of a code block.
- * Once the function completes, whether it returns successfully or throws an error, the logger will automatically reset to its previous state.
- * 
- * N.B. This is a simple implementation that does not support nested overrides. If you call `withLogger` within another `withLogger`, 
- * the inner call will overwrite the outer override until it resets, 
- * which may lead to unexpected logging behavior. Use with caution in complex scenarios.   
- * 
- * @param logger the custom logger to use within the block.
- * @param fn the function to execute with the temporary logger override.
- * @returns the result of the function execution.
- */
-export function withLogger<T extends (...args: any[]) => any>(logger: ILogger, fn: T): (...args: Parameters<T>) => ReturnType<T> {
-    return (...args: Parameters<T>) => {
-        WorkLogger.overrideWith(logger);
-        try {
-            return fn(...args);
-        } finally {
-            WorkLogger.resetOverride(); // Clear the override after the function execution
-        }
-    };
-}
+// export const logger = Logger;

@@ -9,7 +9,7 @@ import { EvaluationError, ExecutionError, ParserError } from "./exception";
 import type { Renderable } from "../rendering/render.types";
 import type { AtomicType, ArrayType, ObjectType } from "../types";
 import { FunctionCompiler } from "../parser/function.compiler";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 
 /**
  * A conditional rule that is executed if a condition is satisified.
@@ -58,7 +58,7 @@ export class IfThenRule extends AbstractRule {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
-                WorkLogger.warn(`Cannot compile IfThenRule condition due to missing function dependencies in the condition expression`);
+                Logger.warn(`Cannot compile IfThenRule condition due to missing function dependencies in the condition expression`);
             } else {
                 this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
             }
@@ -163,7 +163,7 @@ export class IfThenElseRule extends AbstractRule {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
-                WorkLogger.warn(`Cannot compile IfThenElseRule condition due to missing function dependencies in the condition expression`);
+                Logger.warn(`Cannot compile IfThenElseRule condition due to missing function dependencies in the condition expression`);
             } else {
                 this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
             }
@@ -261,7 +261,7 @@ export class IfThrowRule extends AbstractRule {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.condition)) {
-                WorkLogger.warn(`Cannot compile IfThrowRule condition due to missing function dependencies in the condition expression`);
+                Logger.warn(`Cannot compile IfThrowRule condition due to missing function dependencies in the condition expression`);
             } else {
                 this.compiled_eval = FunctionCompiler.compileFunction([], `return ${this.condition.toJS()};`);
             }

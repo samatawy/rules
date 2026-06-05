@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { WorkLogger } from '../src/logging/work.logger';
-import { PerformanceLogger } from '../src/logging/performance.logger';
+import { Logger, Stopwatch } from '../src/logging';
 
 import inspector from 'node:inspector';
 import fs from 'node:fs';
 
 import { ExecutableParser, ExpressionParser } from '../src';
+
 const session = new inspector.Session();
 session.connect();
 
@@ -14,7 +14,7 @@ describe('Speed tests', () => {
 
   it('suitable parsing speed', async () => {
 
-    WorkLogger.setLogLevel('warn'); // Set log level to warn to reduce console output during performance test
+    Logger.setLogLevel('warn'); // Set log level to warn to reduce console output during performance test
 
     const space = new Workspace({ strict_inputs: false, strict_outputs: false });
     space.typeRegistry().addRootType({
@@ -35,25 +35,26 @@ describe('Speed tests', () => {
     });
 
     let iterations = 10_000;
-    let perflog = new PerformanceLogger('error', `Adding ${iterations} rules`);
+    let stopwatch = Stopwatch.start('error', `Adding ${iterations} rules`);
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = ${i}`);
     }
-    console.debug(perflog.checkpoint().message);
+    // console.debug(stopwatch.checkpoint().message);
+    stopwatch.logEnd();
 
     iterations = 1000;
-    perflog = new PerformanceLogger('error', `Adding ${iterations} rules with function calls`);
+    stopwatch = Stopwatch.start('error', `Adding ${iterations} rules with function calls`);
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);
     }
-    console.debug(perflog.checkpoint().message);
+    console.debug(stopwatch.checkpoint().message);
 
     // expect(space.checkTypes().valid).toBe(true);
   });
 
   it('suitable processing speed', async () => {
 
-    WorkLogger.setLogLevel('warn'); // Set log level to warn to reduce console output during performance test
+    Logger.setLogLevel('warn'); // Set log level to warn to reduce console output during performance test
 
     const space = new Workspace({ strict_inputs: false, strict_outputs: false });
     space.typeRegistry().addRootType({
@@ -74,17 +75,19 @@ describe('Speed tests', () => {
     });
 
     let iterations = 1000;
-    let perflog = new PerformanceLogger('error', `Adding ${iterations} rules`);
+    let stopwatch = Stopwatch.start('error', `Adding ${iterations} rules`);
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = ${i}`);
     }
+    stopwatch.logEnd();
 
     iterations = 1000;
-    perflog = new PerformanceLogger('error', `Adding ${iterations} rules`);
+    stopwatch = Stopwatch.start('error', `Adding ${iterations} rules`);
     for (let i = 0; i < iterations; i++) {
       space.addRule(`if Person.children.count() > ${i} then Person.child_count = Person.children.filter(child : child.upperCase().contains("A"))`);
     }
-    console.debug(perflog.checkpoint().message);
+    // console.debug(stopwatch.checkpoint().message);
+    stopwatch.logEnd();
 
     // expect(space.checkTypes().valid).toBe(true);
 
@@ -108,13 +111,14 @@ describe('Speed tests', () => {
 
     const rules = space.getRules().length;
 
-    perflog = new PerformanceLogger('error', `Processing ${iterations} times with ${rules} rules`);
+    stopwatch = Stopwatch.start('error', `Processing ${iterations} times with ${rules} rules`);
     for (let i = 0; i < iterations; i++) {
       space.process(ctx);
     }
-    console.debug(perflog.checkpoint().message);
+    // console.debug(stopwatch.checkpoint().message);
+    stopwatch.logEnd();
 
-    const ruleCount = space.dependencyGraph().applicableRules(ctx).length;
+    // const ruleCount = space.dependencyGraph().applicableRules(ctx).length;
 
   });
 
@@ -123,7 +127,7 @@ describe('Speed tests', () => {
     session.post('Profiler.enable');
     session.post('Profiler.start');
 
-    WorkLogger.setLogLevel('error'); // Set log level to error to reduce output during test
+    Logger.setLogLevel('error'); // Set log level to error to reduce output during test
 
     const space = new Workspace();
     const expressionParser = new ExpressionParser({ workspace: space });
@@ -146,11 +150,12 @@ describe('Speed tests', () => {
     const ctx = space.loadContext({ a: 4, b: 5 });
     const iterations = 100_000;
 
-    let perflog = new PerformanceLogger('error', `Executing uncompiled functions ${iterations} times`);
+    let stopwatch = Stopwatch.start('error', `Executing uncompiled functions ${iterations} times`);
     for (let i = 0; i < iterations; i++) {
       space.process(ctx);
     }
-    console.debug(perflog.checkpoint().message);
+    // console.debug(stopwatch.checkpoint().message);
+    stopwatch.logEnd();
 
     const spaceResult = space.evaluate('x', ctx);
 
@@ -170,12 +175,13 @@ describe('Speed tests', () => {
     // console.debug('Result of multiline function:', result2);
     expect(result2).toEqual(4 * 2);
 
-    perflog = new PerformanceLogger('error', `Execution of compiled multiline function ${iterations} times`);
+    stopwatch = Stopwatch.start('error', `Execution of compiled multiline function ${iterations} times`);
 
     for (let i = 0; i < iterations; i++) {
       funclines(4, 5);
     }
-    console.debug(perflog.checkpoint().message);
+    // console.debug(stopwatch.checkpoint().message);
+    stopwatch.logEnd();
 
     // Stop recording and save the physical profile directly to disk
     session.post('Profiler.stop', (err, { profile }) => {

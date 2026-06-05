@@ -1,6 +1,6 @@
 import { EngineError, ParserError } from "../rules/exception";
 import { AbstractFileReader } from "./abstract.file.reader";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import JSON5 from 'json5';
 import { Workspace, type WorkspaceOptions } from "../engine/workspace";
 import { WorkspaceFilesReader } from "./workspace.files.reader";
@@ -51,7 +51,7 @@ export class ConfigFileReader extends AbstractFileReader {
      * 
      * @param fileContent The content of the file to parse.
      * @returns The result of parsing, including the successfully parsed constants, functions, types, rules, and any errors encountered.
-     * @throws Will throw an error if the file content cannot be parsed as valid JSON5. Errors will also be logged using the WorkLogger.
+     * @throws Will throw an error if the file content cannot be parsed as valid JSON5. Errors will also be logged using the Logger.
      * 
      */
     public parse(fileContent: string): ConfigFileResult {
@@ -70,7 +70,7 @@ export class ConfigFileReader extends AbstractFileReader {
      * 
      * @param path the path of the file to read.
      * @returns the result of parsing, including the successfully parsed workspaces and any errors encountered.
-     * @throws Will throw an error if the file cannot be read or if its content cannot be parsed as valid JSON5. Errors will also be logged using the WorkLogger.
+     * @throws Will throw an error if the file cannot be read or if its content cannot be parsed as valid JSON5. Errors will also be logged using the Logger.
      */
     public readFromFile(path: string): ConfigFileResult {
         if (this.fs) {
@@ -91,7 +91,7 @@ export class ConfigFileReader extends AbstractFileReader {
      * 
      * @param config The configuration for the workspace, including its name, options, and files to load.
      * @param mode The mode for loading the workspace, including how to handle existing workspaces and file reading options.
-     * @returns true if the workspace was successfully loaded, otherwise false. Errors will be logged using the WorkLogger.
+     * @returns true if the workspace was successfully loaded, otherwise false. Errors will be logged using the Logger.
      */
     public loadNewWorkspace(config: WorkspaceConfig, mode: WorkspaceLoaderOptions): boolean {
         const { name, readerMode, options, files } = config;
@@ -135,7 +135,7 @@ export class ConfigFileReader extends AbstractFileReader {
      * 
      * @param config The configuration containing all workspaces to load.
      * @param mode The mode for loading the workspaces, including how to handle existing workspaces and file reading options.
-     * @returns true if all workspaces were successfully loaded, otherwise false. Errors will be logged using the WorkLogger.
+     * @returns true if all workspaces were successfully loaded, otherwise false. Errors will be logged using the Logger.
      */
     public loadAllWorkspaces(config: ConfigFileResult, mode: WorkspaceLoaderOptions): boolean {
         let result = true;
@@ -183,7 +183,7 @@ export class ConfigFileReader extends AbstractFileReader {
      * 
      * @param content the raw parsed content from the configuration file to validate.
      * @returns the validated content.
-     * @throws Will throw an error if the content is invalid. Errors will also be logged using the WorkLogger.
+     * @throws Will throw an error if the content is invalid. Errors will also be logged using the Logger.
      */
     protected validated(content: any): ConfigFileResult {
         if (content == null || typeof content !== 'object') {
@@ -240,15 +240,15 @@ export class ConfigFileReader extends AbstractFileReader {
 
     protected logError(e: unknown, context: string): void {
         if (!e) {
-            WorkLogger.error(`Unknown error occurred ${context}.`);
+            Logger.error(`Unknown error occurred ${context}.`);
         } else if (e instanceof ParserError) {
-            WorkLogger.error(`Parser Error ${context}: ${e.message}`);
+            Logger.error(`Parser Error ${context}: ${e.message}`);
         } else if (e instanceof EngineError) {
-            WorkLogger.error(`Engine Error ${context}: ${e.message}`);
+            Logger.error(`Engine Error ${context}: ${e.message}`);
         } else if (e instanceof Error) {
-            WorkLogger.error(`Error ${context}: ${e.message}`);
+            Logger.error(`Error ${context}: ${e.message}`);
         } else {
-            WorkLogger.error(`Unexpected error ${context}: ${String(e)}`);
+            Logger.error(`Unexpected error ${context}: ${String(e)}`);
         }
     }
 

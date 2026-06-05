@@ -13,12 +13,12 @@ import { TypeRegistry } from "./type.registry";
 import { EngineError, EngineException, ParserError, TypeException } from "../rules/exception";
 import { RulesEngine } from "./rules.engine";
 import * as commonConstants from "./common.constants";
-import { withLogger } from "../logging/work.logger";
-import { ContextLogger } from "../logging/context.logger";
+import { Logger, withLogger } from "../logging";
+import { ContextLogger } from "../logging";
 import { CommandRegistry } from "../commands/command.registry";
 import type { FunctionDefinition } from "../types";
 import { VariableExpression } from "../syntax/variable.expression";
-import { PerformanceLogger } from "../logging/performance.logger";
+import { Stopwatch } from "../logging";
 
 /**
  * Options for configuring the behavior of the Workspace, including debugging, conflict resolution, and iteration limits.
@@ -523,10 +523,10 @@ export class Workspace implements Clonable<Workspace> {
      */
     public process(context: WorkingMemory): boolean {
 
-        const performanceLogger = new PerformanceLogger('info', 'Workspace.process');
+        const logger = context.logger();
+        const stopwatch = Stopwatch.start('info', 'Workspace.process').useLogger(logger);
 
         context.clearLog();
-        const logger = context.logger();
 
         if (this.isValidContext(context) === false) {
             logger.warn('Context failed validation. Aborting rule processing.');
@@ -636,7 +636,7 @@ export class Workspace implements Clonable<Workspace> {
             logger.info('Cache metrics', context.getCacheMetrics());
         }
 
-        performanceLogger.end();
+        stopwatch.logEnd();
 
         if (logger instanceof ContextLogger) logger.flush();
 
@@ -653,10 +653,10 @@ export class Workspace implements Clonable<Workspace> {
      */
     public evaluate(variable: string, context: WorkingMemory): any {
 
-        const performanceLogger = new PerformanceLogger('info', 'Workspace.evaluate');
+        const logger = context.logger();
+        const stopwatch = Stopwatch.start('info', 'Workspace.evaluate').useLogger(logger);
 
         context.clearLog();
-        const logger = context.logger();
 
         const already = new VariableExpression(variable).evaluate(context);
         if (already !== undefined) {
@@ -741,7 +741,7 @@ export class Workspace implements Clonable<Workspace> {
             logger.info('Cache metrics', context.getCacheMetrics());
         }
 
-        performanceLogger.end();
+        stopwatch.logEnd();
 
         if (logger instanceof ContextLogger) logger.flush();
 

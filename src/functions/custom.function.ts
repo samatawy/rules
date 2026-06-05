@@ -6,7 +6,7 @@ import { assignableTo, getLiteralType, getReturnType } from "../type.utils";
 import { mergeValidationResults } from "../common.utils";
 import type { Expression } from "../syntax/expression";
 import { FunctionExpression } from "../syntax/function.expression";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import { isArrayType, isAtomicType, isTypedObjectType } from "../parser/type.parser";
 
 export class CustomFunctionExpression extends FunctionExpression {
@@ -114,14 +114,14 @@ export class CustomFunctionExpression extends FunctionExpression {
             if (expectedType === 'array') {
                 // This is a special case, parameters of type array can accept any array type (string[], number[], etc.)
                 if (argType && !isArrayType(argType!)) {
-                    WorkLogger.warn(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
+                    Logger.warn(`Array Type mismatch for argument ${i + 1} in function ${this.name}: expected array, got ${argType} (${arg})`);
                     checks.push({
                         valid: false,
                         errors: [`Argument ${i + 1} for function ${this.name} must be of type array, but got ${argType}`],
                     });
                 }
             } else if (argType && !assignableTo(argType, expectedType)) {
-                WorkLogger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
+                Logger.warn(`Type mismatch for argument ${i + 1} in function ${this.name}: expected ${expectedType}, got ${argType} (${arg})`);
                 checks.push({
                     valid: false,
                     errors: [`Argument ${i + 1} for function ${this.name} must be of type ${JSON.stringify(expectedType)}, but got ${JSON.stringify(argType)}`],

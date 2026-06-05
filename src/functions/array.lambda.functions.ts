@@ -9,7 +9,7 @@ import { LambdaExpression } from "../syntax/lambda.expression";
 import type { VariableExpression } from "../syntax/variable.expression";
 import { EvaluationError, TypeCheckError } from "../rules/exception";
 import { isArrayType, isTypedObjectType } from "../parser/type.parser";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import { FunctionCompiler } from "../parser/function.compiler";
 
 export class ArrayLambdaFunction extends FunctionExpression {
@@ -119,7 +119,7 @@ export class ArrayLambdaFunction extends FunctionExpression {
                 valid: false,
                 errors: ['First parameter of lambda function must be an array type']
             });
-            WorkLogger.warn('First argument to lambda function is not an array');
+            Logger.warn('First argument to lambda function is not an array');
         }
 
         const lambdaTargetType = target_is_array ? makeItemType(targetType) : undefined;

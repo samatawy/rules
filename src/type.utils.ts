@@ -8,7 +8,7 @@ import { VariableExpression } from "./syntax/variable.expression";
 import type { ArrayType, AtomicType, ComplexType, ObjectArrayType, ObjectType, PropertyType, RootType } from "./types";
 import type { TypeChecker } from "./interfaces";
 import { TypeCheckError } from "./rules/exception";
-import { WorkLogger } from "./logging/work.logger";
+import { Logger } from "./logging";
 import { toDateSafe } from "./common.utils";
 
 function hasReturnsType(expression: Expression): expression is Expression & {
@@ -59,7 +59,7 @@ export function getReturnType(expression: Expression, checker?: TypeChecker): At
         return 'date';
     }
 
-    WorkLogger.warn(`Unable to determine return type for expression: ${expression}`);
+    Logger.warn(`Unable to determine return type for expression: ${expression}`);
     // For other expression types, we would need to implement logic to determine the return type based on the expression structure and the types of its components.
     return undefined;
 }
@@ -140,7 +140,7 @@ export function hasDefinedType(type: RootType | PropertyType | any, key?: string
             return hasDefinedType(itemType, remainingPath);
         }
     }
-    WorkLogger.warn(`Key segment ${firstSegment} not found in type properties or items:`, type);
+    Logger.warn(`Key segment ${firstSegment} not found in type properties or items:`, type);
     return false;
 }
 
@@ -164,13 +164,13 @@ export function getDefinedType(type: RootType | PropertyType | any, key?: string
             if (property) {
                 if (array_path) {
                     const explicitType = property.type || property as AtomicType | ArrayType;
-                    WorkLogger.debug(`Handling array in path for property ${key}: original type ${explicitType}, array_path=${array_path}`);
+                    Logger.debug(`Handling array in path for property ${key}: original type ${explicitType}, array_path=${array_path}`);
                     if (explicitType === 'array' && (property as ObjectArrayType).items) {
                         return property as ObjectArrayType;
                     } else if (isArrayType(explicitType)) {
                         return explicitType;
                     } else if (isAtomicType(explicitType)) {
-                        WorkLogger.debug(`Converting atomic type to array type for property ${key}: original type ${explicitType}, ${explicitType + '[]' as ArrayType}`);
+                        Logger.debug(`Converting atomic type to array type for property ${key}: original type ${explicitType}, ${explicitType + '[]' as ArrayType}`);
                         return explicitType + '[]' as ArrayType;
                     } else {
                         return 'array';
@@ -189,20 +189,20 @@ export function getDefinedType(type: RootType | PropertyType | any, key?: string
             const itemType = type.items[key];
             if (itemType) {
                 const explicitType = itemType.type || itemType as AtomicType | ArrayType | ObjectArrayType;
-                WorkLogger.debug(`Handling array in last step for item ${key}: original type ${explicitType}, array_path=${array_path}`);
+                Logger.debug(`Handling array in last step for item ${key}: original type ${explicitType}, array_path=${array_path}`);
                 if (explicitType === 'array' && (itemType as ObjectArrayType).items) {
                     return itemType as ObjectArrayType;
                 } else if (isArrayType(explicitType)) {
                     return explicitType;
                 } else if (isAtomicType(explicitType)) {
-                    WorkLogger.debug(`Converting atomic type to array type for property ${key}: original type ${explicitType}, ${explicitType + '[]' as ArrayType}`);
+                    Logger.debug(`Converting atomic type to array type for property ${key}: original type ${explicitType}, ${explicitType + '[]' as ArrayType}`);
                     return explicitType + '[]' as ArrayType;
                 } else {
                     return 'array';
                 }
             }
         }
-        WorkLogger.warn(`Property ${key} not found in type properties: or items`);
+        Logger.warn(`Property ${key} not found in type properties: or items`);
         return undefined;
     }
 
@@ -213,7 +213,7 @@ export function getDefinedType(type: RootType | PropertyType | any, key?: string
     if (type.properties) {
         const propertyType = type.properties[firstSegment];
         if (propertyType) {
-            WorkLogger.debug(`Found property ${firstSegment} in type properties: ${propertyType}, remainingPath=${remainingPath}, array_path=${array_path}`);
+            Logger.debug(`Found property ${firstSegment} in type properties: ${propertyType}, remainingPath=${remainingPath}, array_path=${array_path}`);
             return getDefinedType(propertyType, remainingPath, array_path);
         }
     }
@@ -221,7 +221,7 @@ export function getDefinedType(type: RootType | PropertyType | any, key?: string
         const itemType = type.items[firstSegment];
         if (itemType) {
             array_path = true;
-            WorkLogger.debug(`Setting array path for segment ${firstSegment}: itemType=${itemType}, remainingPath=${remainingPath}, array_path=${array_path}`);
+            Logger.debug(`Setting array path for segment ${firstSegment}: itemType=${itemType}, remainingPath=${remainingPath}, array_path=${array_path}`);
             return getDefinedType(itemType, remainingPath, array_path);
         }
     }

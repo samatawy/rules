@@ -4,7 +4,7 @@ import { getReturnType } from "../type.utils";
 import { Expression } from "./expression";
 import type { Renderable } from "../rendering/render.types";
 import { FunctionCompiler } from "../parser/function.compiler";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 
 /**
  * A LambdaExpression represents an anonymous function that takes a single variable as input and returns a value based on an expression.
@@ -41,7 +41,7 @@ export class LambdaExpression extends Expression {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.expression)) {
-                WorkLogger.warn(`Cannot compile LambdaExpression due to missing function dependencies in the expression body`);
+                Logger.warn(`Cannot compile LambdaExpression due to missing function dependencies in the expression body`);
             } else {
                 this.compiled = FunctionCompiler.compileFunction([this.variableName], `{ return (${this.expression.toJS()}); }`);
             }

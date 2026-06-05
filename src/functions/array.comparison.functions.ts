@@ -140,6 +140,89 @@ export class ArrayComparisonFunctionProvider {
 
     public static toJS(name: string): { args: string[], body: string } {
         // TODO: Implement if necessary
-        return { args: [], body: '' }
+        // return { args: [], body: '' }
+
+        switch (name) {
+            case 'sameArray':
+            case 'same_array':
+                return {
+                    args: ['arr1', 'arr2'],
+                    body: `
+                        if (arr1.length !== arr2.length) return false;
+                        return arr1.every((val, idx) => val === arr2[idx]);
+                    `
+                };
+            case 'sameSet':
+            case 'same_set':
+                return {
+                    args: ['arr1', 'arr2'],
+                    body: `
+                        return arr1.every(val => arr2.includes(val))
+                            && arr2.every(val => arr1.includes(val));
+                    `
+                };
+            case 'subsetOf':
+            case 'subset_of':
+                return {
+                    args: ['subset', 'superset'],
+                    body: `
+                        return subset.every(val => superset.includes(val));
+                    `
+                };
+            case 'subArrayOf':
+            case 'sub_array_of':
+                return {
+                    args: ['subArr', 'mainArr'],
+                    body: `
+                        if (subArr.length > mainArr.length) return false;
+                        for (let i = 0; i <= mainArr.length - subArr.length; i++) {
+                            if (subArr.every((val, idx) => val === mainArr[i + idx])) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    `
+                };
+            case 'supersetOf':
+            case 'superset_of':
+                return {
+                    args: ['superset', 'subset'],
+                    body: `
+                        return subset.every(val => superset.includes(val));
+                    `
+                };
+            case 'superArrayOf':
+            case 'super_array_of':
+                return {
+                    args: ['mainArr', 'subArr'],
+                    body: `
+                        if (subArr.length > mainArr.length) return false;
+                        for (let i = 0; i <= mainArr.length - subArr.length; i++) {
+                            if (subArr.every((val, idx) => val === mainArr[i + idx])) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    `
+                };
+            case 'overlapsWith':
+            case 'overlaps_with':
+                return {
+                    args: ['arr1', 'arr2'],
+                    body: `
+                        return arr1.some(val => arr2.includes(val));
+                    `
+                };
+            case 'disjointFrom':
+            case 'disjoint_from':
+                return {
+                    args: ['arr1', 'arr2'],
+                    body: `
+                        return !arr1.some(val => arr2.includes(val));
+                    `
+                };
+            default:
+                throw new Error(`Unknown array comparison function: ${name}`);
+        }
     }
 }

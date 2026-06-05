@@ -3,8 +3,8 @@ import { cloneDeep, getPathValue, pathExists, setPathValue } from "../common.uti
 import type { RuleEffect, WorkingContext } from "../interfaces";
 import type { Workspace } from "./workspace";
 import type { AbstractRule } from "../rules/abstract.rule";
-import type { ILogger } from "../logging/interfaces";
-import { withLogger, WorkLogger } from "../logging/work.logger";
+import type { ILogger } from "../logging";
+import { getContextLogger, withLogger } from "../logging";
 import { CommandHandler } from "../commands/command.handler";
 
 /**
@@ -204,9 +204,9 @@ export class WorkingMemory implements WorkingContext {
 
     public logger(): ILogger {
         if (!this.logImpl) {
-            this.logImpl = WorkLogger.forContext(this);
+            this.logImpl = getContextLogger(this);
         }
-        return this.logImpl;
+        return this.logImpl!;
     }
 
     public commandHandler(): CommandHandler {

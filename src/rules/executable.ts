@@ -5,7 +5,7 @@ import { getReturnType } from "../type.utils";
 import { equalsDeep, mergeValidationResults } from "../common.utils";
 import { RuleException } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { withLogger, WorkLogger } from "../logging/work.logger";
+import { withLogger, Logger } from "../logging";
 import type { Renderable } from "../rendering/render.types";
 import { FunctionCompiler } from "../parser/function.compiler";
 
@@ -77,7 +77,7 @@ export class OutputAction extends ExecutableAction {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.value)) {
-                WorkLogger.warn(`Cannot compile OutputAction for key '${this.key}' due to missing function dependencies`);
+                Logger.warn(`Cannot compile OutputAction for key '${this.key}' due to missing function dependencies`);
             } else {
                 this.compiled = FunctionCompiler.compileFunction([], `return ${this.value.toJS()};`);
             }

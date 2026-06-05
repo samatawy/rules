@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { WorkLogger } from '../src/logging/work.logger';
+import { Logger } from '../src/logging';
 import { SelectionSpace } from '../src/engine/special/selection.workspace';
 import { ExecutableParser, ExpressionParser, garbageCollect } from '../src';
+import { Stopwatch } from '../src/logging';
 
 import inspector from 'node:inspector';
 import fs from 'node:fs';
-import { PerformanceLogger } from '../src/logging/performance.logger';
 
 const session = new inspector.Session();
 session.connect();
@@ -15,7 +15,7 @@ describe('Selection tests', () => {
 
     it('select candidate using eligibility criteria', async () => {
 
-        WorkLogger.setLogLevel('info'); // Set log level to info to see detailed output during test
+        Logger.setLogLevel('info'); // Set log level to info to see detailed output during test
 
         const space = new Workspace({ strict_inputs: false, strict_outputs: false });
         // space.typeRegistry().addRootType({
@@ -61,7 +61,7 @@ describe('Selection tests', () => {
         space.addRule('if Task and Eligible and not(Selected) then set Selected = Eligible');
         space.addRule('if Selected.count() == 0 then Message = "Nobody is eligible for the task" else Message = concat("Selected ", Selected.count(), " candidates")');
 
-        let perflog = new PerformanceLogger('error', 'Eligibility-based selection');
+        let stopwatch = Stopwatch.start('error', 'Eligibility-based selection');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -70,7 +70,8 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        console.debug(perflog.checkpoint().message);
+        // console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         // console.debug('Final output:', ctx.getOutput());
         // console.debug('Nearby candidates:', ctx.getOutput('Nearby'));
@@ -94,7 +95,7 @@ describe('Selection tests', () => {
 
     it('select candidate using scoring factors', async () => {
 
-        WorkLogger.setLogLevel('info'); // Set log level to info to see detailed output during test
+        Logger.setLogLevel('info'); // Set log level to info to see detailed output during test
 
         const space = new Workspace({ strict_inputs: false, strict_outputs: false });
 
@@ -140,7 +141,7 @@ describe('Selection tests', () => {
                                         .sort(candidate : neg(candidate.score))
         `);
 
-        let perflog = new PerformanceLogger('error', 'Scoring-based selection');
+        let stopwatch = Stopwatch.start('error', 'Scoring-based selection');
         let ctx = space.loadContext({
             Task: payload.Task,
         }, {
@@ -148,7 +149,8 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        console.debug(perflog.checkpoint().message);
+        // console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('BySeniority')[0].name).toEqual('Bob');
@@ -158,7 +160,7 @@ describe('Selection tests', () => {
 
     it('select candidate using target distribution', async () => {
 
-        WorkLogger.setLogLevel('info'); // Set log level to info to see detailed output during test
+        Logger.setLogLevel('info'); // Set log level to info to see detailed output during test
 
         const space = new Workspace({ strict_inputs: false, strict_outputs: false });
 
@@ -207,7 +209,7 @@ describe('Selection tests', () => {
         space.addRule('if Projected then Ranked = Projected.sort(candidate : abs(candidate.target_workload - candidate.projected_workload))');
 
 
-        let perflog = new PerformanceLogger('error', 'Target distribution-based selection');
+        let stopwatch = Stopwatch.start('error', 'Target distribution-based selection');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -216,7 +218,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         // console.debug('Final output:', ctx.getOutput());
         expect(ctx.getOutput('Ranked')[0].name).toBeOneOf(['Alice', 'Charlie']);
@@ -224,7 +226,7 @@ describe('Selection tests', () => {
 
     it('handles selection with large candidate pool efficiently', async () => {
 
-        WorkLogger.setLogLevel('warn'); // Set log level to warn to reduce output during test
+        Logger.setLogLevel('warn'); // Set log level to warn to reduce output during test
 
         const space = new Workspace({ strict_inputs: false, strict_outputs: false });
 
@@ -264,7 +266,7 @@ describe('Selection tests', () => {
         space.addRule('if Task and Eligible and not(Selected) then set Selected = Eligible');
         space.addRule('if Selected.count() == 0 then Message = "Nobody is eligible for the task" else Message = concat("Selected ", Selected.count(), " candidates")');
 
-        let perflog = new PerformanceLogger('error', 'Select from large candidate pool');
+        let stopwatch = Stopwatch.start('error', 'Select from large candidate pool');
 
         let ctx = space.loadContext({
             Task: payload.Task,
@@ -273,7 +275,7 @@ describe('Selection tests', () => {
         });
 
         space.process(ctx);
-        console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         // console.debug('Final output:', JSON.stringify(ctx.getOutput(), null, '    '));
         console.debug('Nearby candidates:', ctx.getOutput('Nearby').length);
@@ -287,7 +289,7 @@ describe('Selection tests', () => {
         session.post('Profiler.enable');
         session.post('Profiler.start');
 
-        WorkLogger.setLogLevel('error'); // Set log level to info to see detailed output during test
+        Logger.setLogLevel('error'); // Set log level to info to see detailed output during test
 
         const space = new SelectionSpace();
 
@@ -358,14 +360,14 @@ describe('Selection tests', () => {
 
         const iterations = 10_000;
 
-        let perflog = new PerformanceLogger('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using special workspace`);
+        let stopwatch = Stopwatch.start('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using special workspace`);
         let ctx = space.loadContext(payload.Task);
 
         for (let i = 0; i < iterations; i++) {
             ctx = space.loadContext(payload.Task);
             space.process(ctx);
         }
-        console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         // console.log(ctx.getOutput());
         console.log('Selected candidates:', ctx.getSelected());
@@ -386,7 +388,7 @@ describe('Selection tests', () => {
         });
         space.buildWorkspace();
 
-        perflog = new PerformanceLogger('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using native functions`);
+        stopwatch = Stopwatch.start('error', `Selecting from pool with ${candidates.length} candidates ${iterations} times using native functions`);
 
         let eligible: any[] = [];
         let scored: any[] = [];
@@ -397,13 +399,13 @@ describe('Selection tests', () => {
             selected = scored.sort((a, b) => b.score - a.score);
         }
 
-        console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
         console.debug('Selected candidates (native):', selected);
 
         // ===========================================
         // Testing with large number of candidates
 
-        // WorkLogger.setLogLevel('info'); // Set log level to info to reduce output during test
+        // WLogger.setLogLevel('info'); // Set log level to info to reduce output during test
 
         const largeCandidates = Array.from({ length: 10_000 }, (_, i) => ({
             name: `Candidate${i}`,
@@ -422,7 +424,8 @@ describe('Selection tests', () => {
         garbageCollect(); // Force garbage collection before starting the test to get a cleaner memory profile
         let peakHeap = 0;
         let initialHeap = process.memoryUsage().heapUsed;
-        perflog = new PerformanceLogger('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using workspace functions`);
+
+        stopwatch = Stopwatch.start('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using workspace functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             ctx = space.loadContext(largeTask);
@@ -435,7 +438,8 @@ describe('Selection tests', () => {
                 }
             }
         }
-        console.debug(perflog.checkpoint().message);
+        // console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
 
         let finalHeap = process.memoryUsage().heapUsed;
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);
@@ -448,7 +452,7 @@ describe('Selection tests', () => {
         garbageCollect();
         peakHeap = 0;
         initialHeap = process.memoryUsage().heapUsed;
-        perflog = new PerformanceLogger('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions`);
+        stopwatch = Stopwatch.start('error', `Selection from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions`);
 
         for (let i = 0; i < poolIterations; i++) {
             eligible = largeCandidates.filter(candidate => space.isEligible(candidate, largeTask));
@@ -464,7 +468,10 @@ describe('Selection tests', () => {
         }
         finalHeap = process.memoryUsage().heapUsed;
 
-        console.debug(perflog.checkpoint().message);
+        // console.debug(perflog.checkpoint().message);
+        stopwatch.logCheckpoint();
+
+        stopwatch.logMetrics();
 
         // console.log(`Time taken to select from pool with ${largeCandidates.length} candidates ${poolIterations} times using native functions: ${ended - started} ms`);
         console.log(`Memory usage - Initial: ${(initialHeap / 1024 / 1024).toFixed(2)} MB, Peak: ${(peakHeap / 1024 / 1024).toFixed(2)} MB, Final: ${(finalHeap / 1024 / 1024).toFixed(2)} MB`);

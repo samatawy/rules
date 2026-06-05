@@ -57,6 +57,7 @@
         "lint": "tsc --noEmit -p tsconfig.json",
         "test": "NODE_OPTIONS=\"--expose-gc\" vitest run",
         "test:watch": "vitest",
+        "smoke:file-logger": "vite-node scripts/file-logger-smoke.ts all",
         "docs": "typedoc",
         "prepublishOnly": "npm run lint && npm run test && npm run build"
     },

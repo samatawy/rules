@@ -30,6 +30,12 @@ export interface ILogger {
     log(level: LogLevel, msg: string, ...args: unknown[]): void;
 
     /**
+     * Set the minimum log level for this logger. Messages with a lower log level will be ignored.
+     * @param level the minimum log level to set.
+     */
+    setLogLevel(level: LogLevel): void;
+
+    /**
      * Check if a message at the given log level would be logged by the current logger configuration.
      * @param level the log level to check.
      */
@@ -40,4 +46,11 @@ export interface ILogger {
      * If your logger does not buffer logs, you can leave this method empty.
      */
     flush(): void;
+}
+
+export interface LoggedEvent {
+    timestamp: number;
+    level: LogLevel;
+    message: string;
+    args: unknown[];
 }

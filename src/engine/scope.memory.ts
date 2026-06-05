@@ -3,8 +3,8 @@ import type { ArrayType, AtomicType, ObjectArrayType, ObjectType } from "../type
 import type { TypeChecker, ValidationResult, WorkingContext } from "../interfaces";
 import { getPathValue, pathExists, setPathValue } from "../common.utils";
 import type { ILogger } from "../logging/interfaces";
-import { WorkLogger } from "../logging/work.logger";
 import type { CommandHandler } from "../commands/command.handler";
+import { getContextLogger } from "../logging";
 
 /**
  * A context implementation internally used by functions (including lambda functions).
@@ -125,9 +125,9 @@ export class ScopeContext implements WorkingContext {
 
     public logger(): ILogger {
         if (!this.logImpl) {
-            this.logImpl = WorkLogger.forContext(this);
+            this.logImpl = getContextLogger(this);
         }
-        return this.logImpl;
+        return this.logImpl!;
     }
 
     public commandHandler(): CommandHandler | undefined {

@@ -20,6 +20,11 @@ You can always declare your own functions if these lack what you need.
 
 Please note that there is no overloading of functions, so no two functions can have the same name.
 
+However, the same function can have aliases for convenience and expressibility.
+
+**N.B.** There are a total of __289__ function names in the core package. Of these, __102__ are aliases, so only __187__ distinct implementations. 
+Functions that compile into native code for performance are __147__ leaving __40__ only reachable through expression traversal.
+
 Use snake_case names whenever possible. Many functions may offer a camelCase alternative name to suit common styles, but snake_case allows more clarity in longer names so it is recommended as the default.
 
 ## Numeric Functions

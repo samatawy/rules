@@ -7,7 +7,7 @@ import { TypeRegistry } from "./type.registry";
 import { ParserError } from "../rules/exception";
 import { cloneDeep, hasOwn } from "../common.utils";
 import { isArrayType, isAtomicType } from "../parser/type.parser";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 
 /**
  * An implementation of TypeChecker that provides top-level type checks for a workspace.
@@ -94,7 +94,7 @@ export class WorkingTypeChecker implements TypeChecker {
 
             } else {
                 // No type definition found for this key, skipping validation
-                WorkLogger.warn(`No type definition found for key: ${rootKey}.`);
+                Logger.warn(`No type definition found for key: ${rootKey}.`);
                 errors.push(`No type definition found for key: ${rootKey}.`);
             }
         }
@@ -120,7 +120,7 @@ export class WorkingTypeChecker implements TypeChecker {
         //     return { valid: false, errors: [`${key} is undefined, expected type ${JSON.stringify(expectedType)}.`] };
         // }
 
-        // WorkLogger.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
+        // Logger.debug(`Validating value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
         const expected: any = expectedType as any;
         const errors: string[] = [];
 
@@ -138,7 +138,7 @@ export class WorkingTypeChecker implements TypeChecker {
             if (actualType === expected.type) {
                 return { valid: true };
             } else {
-                WorkLogger.warn(`${key} has value ${value} of type ${actualType}, expected atomic type ${expected.type}.`);
+                Logger.warn(`${key} has value ${value} of type ${actualType}, expected atomic type ${expected.type}.`);
                 return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expected.type}.`] };
             }
         }
@@ -150,7 +150,7 @@ export class WorkingTypeChecker implements TypeChecker {
         else if (hasOwn(expected, 'properties')) {
             // An object type with nested properties
             for (const propKey in expected.properties) {
-                // WorkLogger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
+                // Logger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
                 const result = this.validateType(propKey, value[propKey], expected.properties[propKey]);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
@@ -169,7 +169,7 @@ export class WorkingTypeChecker implements TypeChecker {
         else if (typeof expected === 'object' && Object.keys(expected).length > 0) {
             // A record type with dynamic keys
             for (const propKey in expected) {
-                // WorkLogger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
+                // Logger.debug(`Validating property: ${propKey} with value: ${value[propKey]} against property type definition.`);
                 const result = this.validateType(propKey, value[propKey], expected[propKey]);
                 if (!result.valid) {
                     // One of the properties did not match the expected type
@@ -184,25 +184,25 @@ export class WorkingTypeChecker implements TypeChecker {
             };
 
         } else {
-            WorkLogger.warn(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
+            Logger.warn(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
             throw new ParserError(`Unsupported type definition: ${JSON.stringify(expectedType)}.`);
         }
     }
 
     private validateAtomic(key: string, value: unknown, expectedType: AtomicType): ValidationResult {
         if (this.options.strict_inputs) {
-            WorkLogger.debug(`Validating ${value} as ${expectedType} with strict_inputs`);
+            Logger.debug(`Validating ${value} as ${expectedType} with strict_inputs`);
             // Except the exact types
             const actualType = typeof value;
             if (actualType === expectedType) {
                 return { valid: true };
 
             } else {
-                WorkLogger.warn(`${key} has value ${value} of type ${actualType}, expected atomic type ${expectedType}.`);
+                Logger.warn(`${key} has value ${value} of type ${actualType}, expected atomic type ${expectedType}.`);
                 return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expectedType}.`] };
             }
         } else {
-            WorkLogger.debug(`Validating ${value} as ${expectedType} without strict_inputs`);
+            Logger.debug(`Validating ${value} as ${expectedType} without strict_inputs`);
             // Allow coerced types
             try {
                 const coerced = makeAtomic(value, expectedType);
@@ -211,17 +211,17 @@ export class WorkingTypeChecker implements TypeChecker {
 
             } catch (e) {
                 const msg = (e instanceof Error) ? e.message : e + '';
-                WorkLogger.warn(`Invalid type: ${msg}`);
+                Logger.warn(`Invalid type: ${msg}`);
                 return { valid: false, errors: [`${key} has value ${value}, expected ${expectedType}.`] };
             }
         }
     }
 
     private validateArray(key: string, value: unknown, expectedType: ArrayType): ValidationResult {
-        WorkLogger.debug(`Validating array value: ${value} against expected array type: ${expectedType}.`);
+        Logger.debug(`Validating array value: ${value} against expected array type: ${expectedType}.`);
         if (!Array.isArray(value)) {
             const actualType = typeof value;
-            WorkLogger.warn(`${key} has value ${value} of type ${actualType}, expected array type ${expectedType}.`);
+            Logger.warn(`${key} has value ${value} of type ${actualType}, expected array type ${expectedType}.`);
             return { valid: false, errors: [`${key} has value ${value} of type ${actualType}, expected ${expectedType}.`] };
         }
 
@@ -230,7 +230,7 @@ export class WorkingTypeChecker implements TypeChecker {
 
         for (let i = 0; i < value.length; i++) {
             const element = value[i];
-            WorkLogger.debug(`Validating array element at index ${i}: ${element} against expected array type: ${expectedType}.`);
+            Logger.debug(`Validating array element at index ${i}: ${element} against expected array type: ${expectedType}.`);
             const result = this.validateType(`${key}[${i}]`, element, elementType);
             if (!result.valid) {
                 for (const err of result.errors || []) {
@@ -246,7 +246,7 @@ export class WorkingTypeChecker implements TypeChecker {
 
     public coerceData(input: any): any {
 
-        // WorkLogger.debug(`Coercing input: ${JSON.stringify(input)} against type definitions.`, this.types);
+        // Logger.debug(`Coercing input: ${JSON.stringify(input)} against type definitions.`, this.types);
         if (typeof input !== 'object') {
             return undefined;
         }
@@ -255,7 +255,7 @@ export class WorkingTypeChecker implements TypeChecker {
         for (const rootKey in input) {
             const data = input[rootKey];
             if (this.types.hasRootType(rootKey)) {
-                // WorkLogger.debug(`Coercing key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
+                // Logger.debug(`Coercing key: ${rootKey} with value: ${JSON.stringify(data)} against type definition.`);
 
                 const expectedType = this.types.getRootType(rootKey);
                 if (expectedType) {
@@ -265,7 +265,7 @@ export class WorkingTypeChecker implements TypeChecker {
                 }
             } else {
                 // No type definition found for this key, skipping validation
-                WorkLogger.warn(`No type definition found for key: ${rootKey}.`);
+                Logger.warn(`No type definition found for key: ${rootKey}.`);
                 output[rootKey] = cloneDeep(data);
             }
         }
@@ -277,7 +277,7 @@ export class WorkingTypeChecker implements TypeChecker {
             return value;
         }
 
-        // WorkLogger.debug(`Coercing value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
+        // Logger.debug(`Coercing value: ${value} against expected type: ${JSON.stringify(expectedType)}.`);
         const expected: any = expectedType as any;
 
         if (isAtomicType(expectedType)) {

@@ -3,18 +3,19 @@ import { rankedLogLevels, type ILogger, type LogLevel } from "./interfaces";
 
 /**
  * Abstract logger class that provides the core logging functionality for the Rule engine.
- * This class is not meant to be used directly. Instead, use the WorkLogger class, which extends AbstractLogger and provides additional features.
+ * This class is not meant to be used directly. Instead, use the Logger class, which extends AbstractLogger and provides additional features.
  * If you want to create a custom logger, you can either extend AbstractLogger or implement the ILogger interface directly.
- * The WorkLogger class includes a helper function `withLogger` to execute code blocks with a temporary logger override, which can be useful for testing or specific logging scenarios.
+ * The Logger class includes a helper function `withLogger` to execute code blocks with a temporary logger override, which can be useful for testing or specific logging scenarios.
  * 
- * N.B. If you need to use the loggers registered in WorkLogger, you can create a ContextLogger through `WorkLogger.forContext(context)`
+ * N.B. If you need to use the loggers registered in Logger, you can create a ContextLogger through `getContextLogger()`
  */
 export abstract class AbstractLogger implements ILogger {
 
     private logLevel: LogLevel = 'info';
 
-    public setLogLevel(level: LogLevel): void {
+    public setLogLevel(level: LogLevel): this {
         this.logLevel = level;
+        return this;
     }
 
     public canLog(level: LogLevel): boolean {

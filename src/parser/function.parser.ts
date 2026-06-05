@@ -5,7 +5,7 @@ import { ExecutableParser } from "./executable.parser";
 import type { ParserOptions } from "./rule.parser";
 import type { Expression } from "../syntax/expression";
 import { ParserError } from "../rules/exception";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import { parseTypeJson } from "../common.utils";
 import { FunctionFactory } from "./function.factory";
 
@@ -58,7 +58,7 @@ export class FunctionParser {
         if (syntax.match(/\w+\(.*\)\s*{.*}/) || syntax.match(/\w+\(.*\)\s*=\s*.*$/)) {
             defined = this.parseCustomFunction(syntax);
         } else {
-            WorkLogger.debug('Syntax does not pass initial match');
+            Logger.debug('Syntax does not pass initial match');
         }
 
         if (defined) {
@@ -152,7 +152,7 @@ export class FunctionParser {
             return { name, parameters: params, lines: parsed_lines, expression: parsed_return };
 
         } else {
-            WorkLogger.debug('Syntax does not match function pattern, cannot parse as function expression');
+            Logger.debug('Syntax does not match function pattern, cannot parse as function expression');
         }
         throw new ParserError(`Syntax does not match CustomFunction pattern: ${syntax}`);
     }

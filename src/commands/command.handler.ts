@@ -1,5 +1,5 @@
 import { EngineError, RuleException } from "../rules/exception";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import type { ICommandAction, ICommandHandler, CommandHandlerOptions } from "./types";
 
 /**
@@ -80,14 +80,14 @@ export class CommandHandler implements ICommandHandler {
                 action.error = results[hash];
                 this.workingMap.delete(hash);
                 this.deferredMap.set(hash, action);
-                WorkLogger.error(`Error executing plugin action with keyword ${action.keyword}:`, results[hash]);
+                Logger.error(`Error executing plugin action with keyword ${action.keyword}:`, results[hash]);
 
             } else {
                 // If execution was successful, move the action to the completed map
                 action.result = results[hash];
                 this.workingMap.delete(hash);
                 this.completedMap.set(hash, action);
-                WorkLogger.debug(`Successfully executed plugin action with keyword ${action.keyword}. Result:`, results[hash]);
+                Logger.debug(`Successfully executed plugin action with keyword ${action.keyword}. Result:`, results[hash]);
             }
         }
         return results;

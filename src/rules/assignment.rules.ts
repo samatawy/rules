@@ -9,7 +9,7 @@ import type { Workspace } from "../engine/workspace";
 import { OutputAction } from "./executable";
 import { ExecutionError, ParserError } from "./exception";
 import { isAtomicType } from "../parser/type.parser";
-import { WorkLogger } from "../logging/work.logger";
+import { Logger } from "../logging";
 import type { Renderable } from "../rendering/render.types";
 import { FunctionCompiler } from "../parser/function.compiler";
 
@@ -68,7 +68,7 @@ export class OutputRule extends AbstractRule {
             // Check for missing function dependencies before attempting to compile the expression, and log a warning if any are found. 
             // This helps to avoid runtime errors when executing the compiled function.
             if (FunctionCompiler.missingFunctions(this.expression)) {
-                WorkLogger.warn(`Cannot compile OutputRule for key '${this.outputKey}' due to missing function dependencies in the expression`);
+                Logger.warn(`Cannot compile OutputRule for key '${this.outputKey}' due to missing function dependencies in the expression`);
             } else {
                 this.compiled_exec = FunctionCompiler.compileFunction([], `return ${this.expression.toJS()};`);
             }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
-import { WorkLogger } from '../src/logging/work.logger';
-import { PerformanceLogger } from '../src/logging/performance.logger';
+import { Logger, Stopwatch } from '../src/logging';
 
 import inspector from 'node:inspector';
 import fs from 'node:fs';
@@ -57,7 +56,7 @@ describe('Scalability tests', () => {
 
   it('scale with candidate count', async () => {
 
-    WorkLogger.setLogLevel('error'); // Set log level to error to reduce console output during performance test
+    Logger.setLogLevel('error'); // Set log level to error to reduce console output during performance test
 
     const space = new Workspace({ strict_inputs: false, strict_outputs: false });
     const expressionParser = new ExpressionParser({ workspace: space });
@@ -97,7 +96,7 @@ describe('Scalability tests', () => {
       let ctx = space.loadContext({});
       let candidates = generateCandidates(candidateCount);
 
-      let perflog = new PerformanceLogger('error', `Processing with ${candidates.length} candidates for ${iterations} iterations`);
+      let stopwatch = Stopwatch.start('error', `Processing with ${candidates.length} candidates for ${iterations} iterations`);
       for (let i = 0; i < iterations; i++) {
         ctx = space.loadContext({
           Task: {
@@ -110,7 +109,7 @@ describe('Scalability tests', () => {
         });
         space.evaluate('Selected', ctx);
       }
-      console.debug(perflog.checkpoint().message);
+      console.debug(stopwatch.checkpoint().message);
       // console.debug(ctx.getCleanOutput());
       // console.debug(ctx.getOutput().Selected?.length + ' selected');
     }
@@ -119,7 +118,7 @@ describe('Scalability tests', () => {
 
   it('scale with rule count', async () => {
 
-    WorkLogger.setLogLevel('error'); // Set log level to error to reduce console output during performance test
+    Logger.setLogLevel('error'); // Set log level to error to reduce console output during performance test
 
     const space = new Workspace({ strict_inputs: false, strict_outputs: false });
     const expressionParser = new ExpressionParser({ workspace: space });
@@ -141,7 +140,7 @@ describe('Scalability tests', () => {
         space.addRule(`IF Task AND Task.location.contains("${i}") THEN Location${i} = Task.location.contains("${i}")`);
       }
 
-      let perflog = new PerformanceLogger('error', `Processing with ${ruleCount} rules for ${iterations} iterations`);
+      let stopwatch = Stopwatch.start('error', `Processing with ${ruleCount} rules for ${iterations} iterations`);
       let ctx = space.loadContext({});
       for (let i = 0; i < iterations; i++) {
         ctx = space.loadContext({
@@ -155,7 +154,8 @@ describe('Scalability tests', () => {
         });
         space.process(ctx);
       }
-      console.debug(perflog.checkpoint().message);
+      // console.debug(perflog.checkpoint().message);
+      stopwatch.logCheckpoint();
       // console.debug(ctx.getOutput());
     }
 

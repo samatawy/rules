@@ -1,4 +1,4 @@
-import type { ILogger } from "./logging/interfaces";
+import type { ILogger } from "./logging";
 import type { CommandHandler } from "./commands/command.handler";
 import type { AbstractException } from "./rules/exception";
 import type { ArrayType, AtomicType, ObjectType, PropertyType } from "./types";

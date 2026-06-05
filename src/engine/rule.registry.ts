@@ -1,7 +1,7 @@
 import type { AbstractRule } from "../rules/abstract.rule";
 import { EngineError } from "../rules/exception";
 import type { WorkspaceOptions } from "./workspace";
-import type { ILogger } from "../logging/interfaces";
+import type { ILogger } from "../logging";
 import type { TypeChecker, ValidationResult } from "../interfaces";
 
 /**

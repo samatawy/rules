@@ -2,7 +2,7 @@ import { AbstractLogger } from "./abstract.logger";
 import type { LogLevel } from "./interfaces";
 
 /**
- * A simple implementation of WorkLogger that outputs to the console.
+ * Logger implementation that outputs to the console.
  * Write a class similar to this one to connect your preferred logging library, Pino, Winston, Sentry, etc.
  */
 export class ConsoleLogger extends AbstractLogger {
@@ -11,7 +11,7 @@ export class ConsoleLogger extends AbstractLogger {
         console.trace(msg, ...args);
     }
 
-    public debug(msg: string, ...args: any[]): void {
+    public debug(msg: string, ...args: unknown[]): void {
         console.debug(msg, ...args);
     }
 
@@ -19,7 +19,7 @@ export class ConsoleLogger extends AbstractLogger {
         console.info(msg, ...args);
     }
 
-    public warn(msg: string, ...args: any[]): void {
+    public warn(msg: string, ...args: unknown[]): void {
         console.warn(msg, ...args);
     }
 

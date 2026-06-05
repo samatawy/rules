@@ -1,6 +1,6 @@
-import { WorkLogger } from "../logging/work.logger";
 import type { Expression } from "../syntax/expression";
 import type { FunctionDefinition } from "../types";
+import { Logger } from "../logging";
 
 export class FunctionCompiler {
 
@@ -36,7 +36,7 @@ export class FunctionCompiler {
         try {
             return new Function(...parts);
         } catch (error) {
-            WorkLogger.error(`Error compiling function ${definition.name}:`, error);
+            Logger.error(`Error compiling function ${definition.name}:`, error);
             return undefined;
         }
     }
@@ -62,7 +62,7 @@ export class FunctionCompiler {
         try {
             return new Function(...parts);
         } catch (error) {
-            WorkLogger.error(`Error compiling built-in function`, error);
+            Logger.error(`Error compiling built-in function`, error);
             return undefined;
         }
     }

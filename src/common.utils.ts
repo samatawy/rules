@@ -1,5 +1,5 @@
 import type { ValidationResult } from "./interfaces";
-import { WorkLogger } from "./logging/work.logger";
+import { Logger } from "./logging";
 import { ExecutionError } from "./rules/exception";
 import JSON5 from "json5";
 
@@ -182,7 +182,7 @@ export function equalsDeep(A: any, B: any): boolean {
         const jsonB = JSON.stringify(B);
         return jsonA == jsonB;
     } catch (e) {
-        WorkLogger.warn(`Could not compare facts: ${A} and ${B}`);
+        Logger.warn(`Could not compare facts: ${A} and ${B}`);
         return false;
     }
 }
