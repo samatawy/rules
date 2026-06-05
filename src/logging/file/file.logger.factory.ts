@@ -21,25 +21,27 @@ export interface FileLoggerOptions {
     maxFiles?: number;
 }
 
-interface FileSystemLogger extends ILogger, UsesFileSystem {
-}
-
 export class FileLoggerFactory {
 
-    public static create(options: FileLoggerOptions, fs?: typeof import('fs')): FileSystemLogger {
-        // if (typeof window !== 'undefined') {
-        //     throw new Error('FileLogger is not supported in browser environments.');
-        // }
-        const logger = this.instantiate(options);
-        if (fs) {
-            logger.withFS(fs);
-        } else {
-            logger.loadFileSystem();    // although async, we don't await it here. The logger will queue logs until the file system is ready.
+    public static create(options: FileLoggerOptions, fs: typeof import('fs')): ILogger & UsesFileSystem {
+        if (!this.isNodeRuntime()) {
+            throw new Error('FileLogger is only supported in Node.js environments.');
         }
+
+        return this.instantiate(options).withFS(fs);
+    }
+
+    public static async createAsync(options: FileLoggerOptions): Promise<ILogger & UsesFileSystem> {
+        if (!this.isNodeRuntime()) {
+            throw new Error('FileLogger is only supported in Node.js environments.');
+        }
+
+        const logger = this.instantiate(options);
+        await logger.loadFileSystem();
         return logger;
     }
 
-    protected static instantiate(options: FileLoggerOptions): FileSystemLogger {
+    protected static instantiate(options: FileLoggerOptions): ILogger & UsesFileSystem {
 
         if (options.rotation) {
             switch (options.rotation.kind) {
@@ -59,5 +61,9 @@ export class FileLoggerFactory {
         } else {
             return new SingleFileLogger(options);
         }
+    }
+
+    protected static isNodeRuntime(): boolean {
+        return typeof process !== 'undefined' && !!process.versions?.node;
     }
 }

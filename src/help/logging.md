@@ -185,9 +185,81 @@ If you no longer want a logger bridge, remove it with `Logger.unregister('app')`
 Built-in logger implementations currently include:
 
 - `ConsoleLogger` for direct console output.
-- `MemoryLogger` for keeping structured log events in memory for tests or diagnostics.
+- `MemoryLogger` for keeping structured log events in memory for tests or diagnostics. Calling `flush()` clears the captured events.
 - `NoopLogger` for explicitly disabling log output.
 - `ContextLogger` for buffered per-context logging.
+
+## File Logging in Node.js
+
+If you run the engine in Node.js, you can write logs to disk with `FileLoggerFactory`.
+
+This feature is intended for the default Node package entry. It should not be used from the browser build because browsers do not provide a file system.
+
+```ts
+import fs from 'node:fs';
+import { FileLoggerFactory, Logger } from '@samatawy/rules';
+
+const fileLogger = FileLoggerFactory.create({
+  directory: './logs',
+  baseName: 'rules',
+  level: 'info',
+  rotation: { kind: 'size', maxBytes: 1_000_000 }
+}, fs);
+
+Logger.register('file', fileLogger);
+
+Logger.info('Rules engine started');
+Logger.flush();
+```
+
+Supported rotation modes are:
+
+- No rotation. A single file created and used.
+- `run` for one file per logger instance.
+- `size` for a new file once the current file would exceed `maxBytes`.
+- `interval` for a new file every `everySeconds` seconds.
+- `boundary` for rollover on `hour`, `day`, `week`, or `month`, with optional `utc: true`.
+
+Generated file names are human-readable and safe for common file systems, using a timestamp such as `rules.2026-06-05_09-58-49.194.log`.
+
+There are two supported creation paths:
+
+- Use `FileLoggerFactory.create(options, fs)` when you already have Node's `fs` module and want synchronous, deterministic setup.
+- Use `await FileLoggerFactory.createAsync(options)` when you want the factory to load the file system module for you.
+
+Both creation paths require a Node.js runtime and will throw if used outside Node.
+
+If you want custom file output, provide a formatter through the `formatter` option. `LoggedEventFormatter` is the built-in helper for templated event formatting:
+
+```ts
+import fs from 'node:fs';
+import { FileLoggerFactory, LoggedEventFormatter, Logger } from '@samatawy/rules';
+
+const fileLogger = FileLoggerFactory.create({
+  directory: './logs',
+  baseName: 'rules',
+  formatter: LoggedEventFormatter.using('{timestamp} [{level}] {message}[? :: {0}]'),
+  rotation: { kind: 'boundary', unit: 'day' }
+}, fs);
+
+Logger.register('file', fileLogger);
+```
+
+The asynchronous creation path looks like this:
+
+```ts
+import { FileLoggerFactory, Logger } from '@samatawy/rules';
+
+const fileLogger = await FileLoggerFactory.createAsync({
+  directory: './logs',
+  baseName: 'rules',
+  rotation: { kind: 'interval', everySeconds: 300 }
+});
+
+Logger.register('file', fileLogger);
+```
+
+`maxFiles` is reserved for retention control, but it is not enforced yet. Current file loggers control when a new file is opened, not how old files are removed.
 
 ## Temporarily Overriding the Logger
 
@@ -274,5 +346,7 @@ The main logging types exposed by the package are:
 - `MemoryLogger` for capturing structured events in memory.
 - `NoopLogger` for explicitly discarding log output.
 - `ContextLogger` for buffered per-context logging.
+- `FileLoggerFactory` for creating Node.js file loggers with run, size, interval, or boundary rotation.
+- `LoggedEventFormatter` for templated file-event formatting.
 - `Stopwatch` for timing and performance diagnostics.
 - `MessageFormatter` for custom stopwatch message formats.

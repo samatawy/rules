@@ -5,6 +5,7 @@ import JSON5 from 'json5';
 import { Workspace, type WorkspaceOptions } from "../engine/workspace";
 import { WorkspaceFilesReader } from "./workspace.files.reader";
 import { RulesEngine } from "../engine/rules.engine";
+import type { UsesFileSystem } from "../node/interfaces";
 
 export interface WorkspaceConfig {
     name: string;
@@ -32,7 +33,7 @@ export interface WorkspaceLoaderOptions {
  * NB: This class relies on Node's 'fs' module for file system access, so it is intended for use in Node.js environments. 
  * In browser environments, file reading should be handled differently; this class will report errors in a browser environment.
  */
-export class ConfigFileReader extends AbstractFileReader {
+export class ConfigFileReader extends AbstractFileReader implements UsesFileSystem {
 
     private fs?: typeof import('fs') | undefined;
 

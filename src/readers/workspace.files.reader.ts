@@ -10,6 +10,7 @@ import { RuleParser } from "../parser/rule.parser";
 import { WorkspaceTransaction } from "./workspace.transaction";
 import { parseTypeJson } from "../common.utils";
 import { Logger } from "../logging";
+import type { UsesFileSystem } from "../node/interfaces";
 
 export interface ComponentResult {
     read: number;
@@ -41,7 +42,7 @@ export interface ComponentResult {
  * NB: This class relies on Node's 'fs' module for file system access, so it is intended for use in Node.js environments. 
  * In browser environments, file reading should be handled differently; this class will report errors in a browser environment.
  */
-export class WorkspaceFilesReader extends AbstractFileReader {
+export class WorkspaceFilesReader extends AbstractFileReader implements UsesFileSystem {
 
     private workspace: Workspace;
 
@@ -121,21 +122,28 @@ export class WorkspaceFilesReader extends AbstractFileReader {
 
     /**
      * Attempt to read all files from a specified folder path and load their content into the workspace. 
+     * N.B. If a folder contains subfolders, the reader will attempt to read files from those subfolders as well.
+     * If a file path is accidentally provided instead of a folder path, the reader will attempt to read that individual file.
+     *
+     * If a folder path is included with the individual file paths, the reader will attempt to read files from that folder as well.
      * The reader will determine the type of each file based on its name and extension, and use the appropriate parsing method. 
      * If any file fails to load and the accept option is set to 'partial', the reader will continue loading the remaining files while logging errors for the failed ones. 
      * If the accept option is set to 'all', the reader will stop loading further files upon encountering an error in any file.
      * 
-     * @param folderPath the path of the folder containing the files to read. The reader will attempt to read all files in this folder.
+     * @param folderPath the path of the folder containing the files to read.
      * @returns true if components were registered successfully (according to 'all' or 'partial' option), otherwise false.
      */
     public readFromFolder(folderPath: string): boolean {
-        const paths = this.readFolderPaths(folderPath);
+        const paths = this.expandInputPaths([folderPath]);
+        // const paths = this.readFolderPaths(folderPath);
 
         return this.readFromFiles(paths || []);
     }
 
     /**
      * Attempt to read all given files and load their contents into the workspace.
+     * If a folder path is included with the individual file paths, the reader will attempt to read files from that folder as well.
+     * 
      * The reader will determine the type of each file based on its name and extension, and use the appropriate parsing method. 
      * If any file fails to load and the accept option is set to 'partial', the reader will continue loading the remaining files while logging errors for the failed ones. 
      * If the accept option is set to 'all', the reader will stop loading further files upon encountering an error in any file.
@@ -144,6 +152,9 @@ export class WorkspaceFilesReader extends AbstractFileReader {
      * @returns true if components were registered successfully (according to 'all' or 'partial' option), otherwise false.
      */
     public readFromFiles(paths: string[]): boolean {
+        paths = this.expandInputPaths(paths);
+
+        // First, read all blocks from all files
         if (paths?.length > 0) {
             for (const path of paths) {
                 const read = this.readBlocksFromFile(path);
@@ -163,8 +174,47 @@ export class WorkspaceFilesReader extends AbstractFileReader {
             : parseResult.passed > 0;
     }
 
+    private expandInputPaths(paths: string[]): string[] {
+        if (!paths?.length) {
+            return [];
+        }
+
+        if (!this.fs) {
+            return [...paths];
+        }
+
+        const pending = [...paths];
+        const expanded: string[] = [];
+
+        while (pending.length > 0) {
+            const path = pending.shift();
+            if (!path) {
+                continue;
+            }
+
+            try {
+                const stats = this.fs.statSync(path);
+                if (stats.isDirectory()) {
+                    const folderPaths = this.readFolderPaths(path);
+                    if (folderPaths?.length) {
+                        pending.push(...folderPaths);
+                    }
+                    continue;
+                }
+            } catch (e) {
+                this.logError(e, `while reading path info: ${path}`);
+                continue;
+            }
+
+            expanded.push(path);
+        }
+
+        return expanded;
+    }
+
     /**
      * Attempt to read a file from a specified path and load its content into the workspace.
+     * If a folder path is included instead of a file path, the reader will fail silently and return false.
      * The reader will determine the type of the file based on its name and extension, and use the appropriate parsing method.
      * 
      * @param path the path of the file to read.

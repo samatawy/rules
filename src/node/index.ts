@@ -1,5 +1,6 @@
 // Core classes and types
 export * from '../index';
+export * from './interfaces';
 
 // Reader classes
 export * from '../readers/abstract.file.reader';
@@ -14,3 +15,6 @@ export * from '../readers/workspace.transaction';
 // Node-specific classes
 export * from '../readers/workspace.files.reader';
 export * from '../readers/config.file.reader';
+
+// Node-specific logging
+export * from '../logging/file';
