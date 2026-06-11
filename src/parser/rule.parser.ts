@@ -111,15 +111,15 @@ export class RuleParser {
         // cloned.name = original.name;
         // cloned.hint = original.hint;
         for (const key in original.getAnnotations()) {
-            if (!cloned.isAnnotated(key)) {
-                cloned.annotate(key, original.getAnnotation(key));
-            }
+            // if (!cloned.isAnnotated(key)) {
+            cloned.annotate(key, original.getAnnotation(key));
+            // }
         }
         cloned.setSalience(original.getSalience());
         return cloned;
     }
 
-    protected parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
+    private parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
         given.syntax = given.syntax?.trim() || '';
         const annotation = readLeadingAnnotation(given.syntax);
         if (!annotation) {

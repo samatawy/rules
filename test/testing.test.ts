@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Workspace } from '../src/engine/workspace';
 import { TestParser } from '../src/parser/test.parser';
+import { RulesEngine } from '../src/engine/rules.engine';
 
 describe('Test Cases tests', () => {
 
@@ -129,6 +130,24 @@ describe('Test Cases tests', () => {
     expect(result4.passed).toBe(true);
     expect(result4.name).toEqual(case4.name);
     expect(result4.hint).toEqual(case4.hint);
+  });
+
+  it('matches array annotations on test cases by element and subset', async () => {
+    const space = new Workspace({ strict_inputs: false, strict_outputs: false });
+    const annotationName = `teams_${Date.now()}`;
+    RulesEngine.annotationRegistry().register(annotationName, 'string[]');
+
+    const parser = new TestParser({ workspace: space });
+    const testCase = parser.parseTestCase(`
+      @${annotationName}(["pricing", "qa", "risk"])
+      TEST { value: 1 }
+      EXPECT { value: 1 }
+    `);
+
+    expect(testCase.isAnnotated(annotationName)).toBe(true);
+    expect(testCase.isAnnotated(annotationName, 'qa')).toBe(true);
+    expect(testCase.isAnnotated(annotationName, ['pricing', 'risk'])).toBe(true);
+    expect(testCase.isAnnotated(annotationName, ['pricing', 'missing'])).toBe(false);
   });
 
 });

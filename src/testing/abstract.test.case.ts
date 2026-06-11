@@ -1,6 +1,7 @@
 import type { HasAnnotations } from "../interfaces";
 import type { Workspace } from "../engine/workspace";
 import type { TestCaseResult } from "./test.case.result";
+import { containsAllValues } from "../common.utils";
 
 /**
  * Abstract base class for all test cases in the system, providing common properties and methods for managing test case data and state. 
@@ -99,19 +100,14 @@ export abstract class AbstractTestCase implements HasAnnotations {
     public isAnnotated(annotation: string, value?: unknown): boolean {
         switch (annotation) {
             case 'hint':
-                return this.hint !== undefined && (value === undefined || this.hint === value);
+                return containsAllValues(this.hint, value);
 
             case 'disabled':
-                return this.disabled !== undefined && (value === undefined || this.disabled === value);
+                return containsAllValues(this.disabled, value);
 
             default:
-                if (this.custom_annotations && this.custom_annotations[annotation] !== undefined) {
-                    if (value === undefined || this.custom_annotations[annotation] === value) {
-                        return true;
-                    }
-                }
+                return containsAllValues(this.custom_annotations?.[annotation], value);
         }
-        return false;
     }
 
     public getAnnotation(annotation: string): unknown {

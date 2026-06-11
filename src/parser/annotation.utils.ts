@@ -1,5 +1,6 @@
 import { RulesEngine } from "../engine/rules.engine";
 import { ParserError } from "../rules/exception";
+import { containsAllValues } from "../common.utils";
 
 export interface LeadingAnnotation {
     name: string;
@@ -89,11 +90,10 @@ export function isAnnotated(target: unknown, annotation: string, value?: unknown
         const annotations = (target as any).annotations;
         if (annotations && typeof annotations === 'object') {
             if (annotation in annotations) {
-                if (value === undefined || annotations[annotation] === value) {
-                    return true;
-                }
+                return containsAllValues(annotations[annotation], value);
             }
         }
     }
     return false;
 }
+

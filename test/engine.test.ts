@@ -7,6 +7,8 @@ import { RuleParser } from '../src/parser/rule.parser';
 import { CustomFunctionExpression } from '../src/functions/custom.function';
 import { FunctionParser } from '../src/parser/function.parser';
 import { RulesEngine } from '../src/engine/rules.engine';
+import { isAnnotated } from '../src/parser/annotation.utils';
+import { containsAllValues } from '../src/common.utils';
 
 describe('Engine tests', () => {
 
@@ -228,6 +230,39 @@ describe('Engine tests', () => {
       .parse(`@${annotationName}(platform) IF ready THEN result = true`);
 
     expect(rule!.getAnnotation(annotationName)).toBe('platform');
+  });
+
+  it('matches annotated arrays by element and subset', async () => {
+    const annotationName = `tags_${Date.now()}`;
+    RulesEngine.annotationRegistry().register(annotationName, 'string[]');
+
+    const rule = new RuleParser({ workspace: RulesEngine.defaultSpace() })
+      .parse(`@${annotationName}(["pricing", "finance", "review"]) IF ready THEN result = true`)!;
+
+    expect(rule.isAnnotated(annotationName)).toBe(true);
+    expect(rule.isAnnotated(annotationName, 'pricing')).toBe(true);
+    expect(rule.isAnnotated(annotationName, ['pricing', 'finance'])).toBe(true);
+    expect(rule.isAnnotated(annotationName, ['pricing', 'missing'])).toBe(false);
+
+    const func = new FunctionParser({ workspace: RulesEngine.defaultSpace() })
+      .parse(`@${annotationName}(["pricing", "finance", "review"]) double(n: number) = n * 2`)!;
+    RulesEngine.defaultSpace().addFunction(func);
+
+    expect(isAnnotated(func, annotationName, 'finance')).toBe(true);
+    expect(isAnnotated(func, annotationName, ['pricing', 'review'])).toBe(true);
+    expect(isAnnotated(func, annotationName, ['pricing', 'missing'])).toBe(false);
+
+    const matched = Object.keys(RulesEngine.defaultSpace().functionRegistry().getFunctionsAnnotated(annotationName, ['pricing', 'finance']));
+    expect(matched).toContain('double');
+    expect(RulesEngine.defaultSpace().functionRegistry().getFunctionsAnnotated(annotationName, ['pricing', 'missing']).double).toBeUndefined();
+  });
+
+  it('treats the second containsAllValues argument as the requested values', async () => {
+    expect(containsAllValues(['pricing', 'finance', 'review'], ['pricing', 'finance'])).toBe(true);
+    expect(containsAllValues(['pricing', 'finance'], ['pricing', 'finance', 'review'])).toBe(false);
+    expect(containsAllValues(['pricing', 'finance'], 'pricing')).toBe(true);
+    expect(containsAllValues('pricing', ['pricing', 'finance'])).toBe(false);
+    expect(containsAllValues('pricing', 'pricing')).toBe(true);
   });
 
 });

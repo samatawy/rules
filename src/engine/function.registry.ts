@@ -7,6 +7,7 @@ import { ParserError } from "../rules/exception";
 import { FunctionFactory } from "../parser/function.factory";
 import { FunctionCompiler } from "../parser/function.compiler";
 import { Logger } from "../logging";
+import { containsAllValues } from "../common.utils";
 
 /**
  * FunctionRegistry is responsible for storing and managing function definitions within the working context. 
@@ -127,10 +128,8 @@ export class FunctionRegistry {
     public getFunctionsAnnotated(annotation: string, value?: any): Record<string, FunctionDefinition> {
         const result: Record<string, FunctionDefinition> = {};
         for (const [key, func] of this.functions.entries()) {
-            if (func.annotations && func.annotations[annotation] !== undefined) {
-                if (value === undefined || func.annotations[annotation] === value) {
-                    result[key] = func;
-                }
+            if (containsAllValues(func.annotations?.[annotation], value)) {
+                result[key] = func;
             }
         }
         return result;

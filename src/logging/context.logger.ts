@@ -40,7 +40,7 @@ export class ContextLogger extends AbstractLogger {
 
     protected addEvent(level: LogLevel, msg: string, ...args: unknown[]): void {
         this.events.push({
-            timestamp: new Date().getTime(),
+            timestamp: Date.now(),
             level,
             message: msg,
             args

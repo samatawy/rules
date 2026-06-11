@@ -1,6 +1,6 @@
 {
     "name": "@samatawy/rules",
-    "version": "0.3.5",
+    "version": "0.4.5",
     "description": "TypeScript declarative rule engine and DSL utilities for parsing, validating, and executing business rules.",
     "type": "module",
     "main": "./dist/node/index.cjs",
@@ -51,9 +51,9 @@
     },
     "scripts": {
         "clean": "rimraf dist",
-        "build": "tsup src/browser/index.ts src/autocomplete/index.ts src/node/index.ts src/rendering/index.ts --format esm,cjs --dts --clean",
+        "build": "tsup src/browser/index.ts src/autocomplete/index.ts src/node/index.ts src/rendering/index.ts src/testing/index.ts --format esm,cjs --dts --clean",
         "postbuild": "node ./scripts/strip-dist-comments.mjs",
-        "dev": "tsup src/browser/index.ts src/autocomplete/index.ts src/node/index.ts src/rendering/index.ts --format esm,cjs --dts --watch",
+        "dev": "tsup src/browser/index.ts src/autocomplete/index.ts src/node/index.ts src/rendering/index.ts src/testing/index.ts --format esm,cjs --dts --watch",
         "lint": "tsc --noEmit -p tsconfig.json",
         "test": "NODE_OPTIONS=\"--expose-gc\" vitest run",
         "test:watch": "vitest",

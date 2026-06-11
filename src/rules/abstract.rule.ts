@@ -2,6 +2,7 @@ import type { ArrayType, AtomicType, ObjectType } from "../types";
 import type { WorkingContext, Evaluator, RuleEffect, Executor, HasValidity, ValidationResult, TypeChecker, HasAnnotations } from "../interfaces";
 import type { Expression } from "../syntax/expression";
 import type { Renderable } from "../rendering/render.types";
+import { containsAllValues } from "../common.utils";
 
 /**
  * Abstract base class for all rules in the system, providing common properties and methods for evaluating and executing rules. 
@@ -124,17 +125,13 @@ export abstract class AbstractRule implements Evaluator, Executor, HasValidity, 
     public isAnnotated(annotation: string, value?: unknown): boolean {
         switch (annotation) {
             case 'hint':
-                return this.hint !== undefined && (value === undefined || this.hint === value);
+                return containsAllValues(this.hint, value);
 
             case 'disabled':
-                return this.disabled !== undefined && (value === undefined || this.disabled === value);
+                return containsAllValues(this.disabled, value);
 
             default:
-                if (this.custom_annotations && this.custom_annotations[annotation] !== undefined) {
-                    if (value === undefined || this.custom_annotations[annotation] === value) {
-                        return true;
-                    }
-                }
+                return containsAllValues(this.custom_annotations?.[annotation], value);
         }
         return false;
     }

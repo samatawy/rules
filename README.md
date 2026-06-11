@@ -29,6 +29,7 @@ The engine is designed for cases where the decision logic changes more often tha
 - rule salience and conflict handling for overlapping or competing rules
 - detection/prevention of invalid syntax, invalid data types, cyclic dependencies, etc.
 - flexible declaration loading through parsers and file readers, including markdown-backed rule documentation
+- automated testing support
 
 ## Installation
 
@@ -49,6 +50,7 @@ Optional features are exposed as subpath imports so consumers do not need to pul
 
 - Node runtime including core, string readers, and file-system readers: `@samatawy/rules`
 - Browser core engine, syntax, rules, and parsers: `@samatawy/rules/browser`
+- Testing automation support: `@samatawy/rules/testing`
 - Autocomplete helpers: `@samatawy/rules/autocomplete`
 - Rendering and visualization helpers: `@samatawy/rules/render`
 
@@ -83,7 +85,8 @@ console.log(context.getOutput('invoice.review'));
 
 - Since version `0.4.0`
   - automated testing capability with saved test cases
-  - additional functions
+  - additional functions including unit conversion
+  - support for custom annotations
 - Since version `0.3.5`
   - performance optimizations.
 - Since version `0.3.0`:
@@ -103,6 +106,8 @@ console.log(context.getOutput('invoice.review'));
 - You can enable or disable dynamic compilation by importing `FunctionCompiler` from `@samatawy/rules` and setting `FunctionCompiler.enabled = true` or `FunctionCompiler.enabled = false`.
 
 ## Documentation
+
+Read full documentation at [samatawy.github.io/rules/](https://samatawy.github.io/rules/)
 
 The package includes Typedoc API output plus authored guides from [src/help/index.md](src/help/index.md).
 

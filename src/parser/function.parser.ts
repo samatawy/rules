@@ -161,7 +161,7 @@ export class FunctionParser {
         throw new ParserError(`Syntax does not match CustomFunction pattern: ${syntax}`);
     }
 
-    protected parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
+    private parseAnnotations(given: AnnotatedSyntax): AnnotatedSyntax {
         given.syntax = given.syntax?.trim() || '';
         const annotation = readLeadingAnnotation(given.syntax);
         if (!annotation) {

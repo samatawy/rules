@@ -11,6 +11,8 @@ export * from '../readers/markdown.file.reader';
 export * from '../readers/rules.file.reader';
 export * from '../readers/types.file.reader';
 export * from '../readers/workspace.transaction';
+// copied from testing/index.ts
+export * from '../testing/tests.file.reader';
 
 // Node-specific classes
 export * from '../readers/workspace.files.reader';
@@ -18,3 +20,4 @@ export * from '../readers/config.file.reader';
 
 // Node-specific logging
 export * from '../logging/file';
+

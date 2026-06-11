@@ -173,6 +173,20 @@ export function setPathValue(context: any, key: string, value: any): any {
     return context;
 }
 
+export function containsAllValues(existing: unknown, requested?: unknown): boolean {
+    if (requested === undefined) {
+        return existing !== undefined;
+    }
+    if (existing === undefined) {
+        return false;
+    }
+
+    const actualValues = Array.isArray(existing) ? existing : [existing];
+    const expectedValues = Array.isArray(requested) ? requested : [requested];
+
+    return expectedValues.every(expected => actualValues.some(actual => actual === expected));
+}
+
 // Use withLogger to wrap the equalsDeep function, so that it can log any issues encountered during deep equality checks 
 // without needing to modify the original function logic. 
 export function equalsDeep(A: any, B: any): boolean {
