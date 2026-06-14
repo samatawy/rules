@@ -83,6 +83,8 @@ console.log(context.getOutput('invoice.review'));
 
 ## Version History
 
+- Since version `0.4.5`
+  - custom annotations to support teams, tags, lifecycle, etc.
 - Since version `0.4.0`
   - automated testing capability with saved test cases
   - additional functions including unit conversion
