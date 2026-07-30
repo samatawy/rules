@@ -11,6 +11,7 @@ import { WorkspaceTransaction } from "./workspace.transaction";
 import { parseTypeJson } from "../common.utils";
 import { Logger } from "../logging";
 import type { UsesFileSystem } from "../node/interfaces";
+import { MarkdownFileReader } from "./markdown.file.reader";
 
 export interface ComponentResult {
     read: number;
@@ -295,23 +296,37 @@ export class WorkspaceFilesReader extends AbstractFileReader implements UsesFile
     }
 
     protected readBlocksFromFile(path: string): string[] {
-        const read: string[] = [];
+        if (path.endsWith('.md')) {
+            // Markdown files are read differently, as they may contain multiple code blocks. 
+            // Use the MarkdownFileReader to extract code blocks from the file content.
+            const content = this.readFileContents(path);
+            if (content) {
+                const reader = new MarkdownFileReader({ workspace: this.workspace, accept: this.accept });
+                const code_blocks = reader.extractCodeBlocks(content);
+                return code_blocks.map(block => this.splitBlocks(block)).flat();
+            } else {
+                return [];
+            }
+        }
+
+        // const read: string[] = [];
         if (this.fs) {
             try {
                 const fileContent = this.fs.readFileSync(path, 'utf8');
-                let origin = fileContent.trim();
-                let remainder = origin;
+                return this.splitBlocks(fileContent);
+                // let origin = fileContent.trim();
+                // let remainder = origin;
 
-                // Read blocks until done
-                while (remainder.length > 0) {
-                    const { line, remainder: newRemainder } = this.readBlock(remainder);
+                // // Read blocks until done
+                // while (remainder.length > 0) {
+                //     const { line, remainder: newRemainder } = this.readBlock(remainder);
 
-                    if (line.length > 0) {
-                        read.push(line);
-                    }
-                    remainder = newRemainder;
-                }
-                return read;
+                //     if (line.length > 0) {
+                //         read.push(line);
+                //     }
+                //     remainder = newRemainder;
+                // }
+                // return read;
             } catch (e) {
                 // const message = (e instanceof Error) ? e.message : `${String(e)}`;
                 this.logError(e, `while reading ${path}`);
@@ -321,6 +336,23 @@ export class WorkspaceFilesReader extends AbstractFileReader implements UsesFile
             this.logError('File system access requested but fs module is not available', `while reading ${path}`);
             return [];
         }
+    }
+
+    protected splitBlocks(content: string): string[] {
+        const read: string[] = [];
+        let origin = content.trim();
+        let remainder = origin;
+
+        // Read blocks until done
+        while (remainder.length > 0) {
+            const { line, remainder: newRemainder } = this.readBlock(remainder);
+
+            if (line.length > 0) {
+                read.push(line);
+            }
+            remainder = newRemainder;
+        }
+        return read;
     }
 
     protected parseAll(): GeneralReaderResult {

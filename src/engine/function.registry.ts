@@ -108,6 +108,23 @@ export class FunctionRegistry {
     }
 
     /**
+     * Replace an existing function definition in the registry with a new one.
+     * 
+     * N.B. This is dangerous and should be used with caution, as it may lead to unexpected behavior 
+     * if the new function definition is not compatible with existing rules or other functions that depend on it.
+     * - A full workspace check should be performed after replacing a function to ensure that all rules and functions are still valid.
+     * 
+     * @param func The new function definition to replace the existing one.
+     */
+    public replaceFunction(func: FunctionDefinition): void {
+        if (!this.functions.has(func.name)) {
+            throw new ParserError(`Function with name ${func.name} does not exist`);
+        }
+        this.functions.delete(func.name);
+        this.addFunction(func);
+    }
+
+    /**
      * Retrieve all function definitions stored in the registry.
      * @returns A record of all function definitions, keyed by their names.
      */

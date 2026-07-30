@@ -57,7 +57,7 @@ export class MarkdownFileReader extends GeneralFileReader {
         return super.parse(codeBlocks.join('\n\n'));
     }
 
-    protected extractCodeBlocks(content: string): string[] {
+    public extractCodeBlocks(content: string): string[] {
         const codeBlockRegex = /```([\w-]*)\n([\s\S]*?)```/g;
         const codeBlocks: string[] = [];
         let match;

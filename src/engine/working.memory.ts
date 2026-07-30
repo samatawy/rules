@@ -12,7 +12,12 @@ import { CommandHandler } from "../commands/command.handler";
  */
 export interface LoggedRule {
 
-    rule: AbstractRule;
+    rule: {
+        syntax: string;
+        salience: number;
+        requirements: string[];
+        changeTargets: Record<string, unknown>;
+    };
 
     effect: RuleEffect;
 }
@@ -184,7 +189,14 @@ export class WorkingMemory implements WorkingContext {
      * @param effect the effect it had on this context.
      */
     public addToLog(rule: AbstractRule, effect: RuleEffect): void {
-        this.auditLog.push({ rule, effect });
+        this.auditLog.push({
+            rule: {
+                syntax: rule.getSyntax(),
+                salience: rule.getSalience(),
+                requirements: Array.from(rule.required()),
+                changeTargets: rule.typedChanges(this.workspace.typeChecker()),
+            }, effect
+        });
     }
 
     /**

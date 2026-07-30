@@ -6,6 +6,7 @@ import { Workspace, type WorkspaceOptions } from "../engine/workspace";
 import { WorkspaceFilesReader } from "./workspace.files.reader";
 import { RulesEngine } from "../engine/rules.engine";
 import type { UsesFileSystem } from "../node/interfaces";
+import path from "path";
 
 export interface WorkspaceConfig {
     name: string;
@@ -36,6 +37,8 @@ export interface WorkspaceLoaderOptions {
 export class ConfigFileReader extends AbstractFileReader implements UsesFileSystem {
 
     private fs?: typeof import('fs') | undefined;
+
+    public root?: string;
 
     /**
      * Create a new reader instance for loading workspaces and file paths.
@@ -74,6 +77,7 @@ export class ConfigFileReader extends AbstractFileReader implements UsesFileSyst
      * @throws Will throw an error if the file cannot be read or if its content cannot be parsed as valid JSON5. Errors will also be logged using the Logger.
      */
     public readFromFile(path: string): ConfigFileResult {
+        this.root = path;
         if (this.fs) {
             try {
                 const fileContent = this.fs.readFileSync(path, 'utf8');
@@ -127,8 +131,14 @@ export class ConfigFileReader extends AbstractFileReader implements UsesFileSyst
 
         // Third, read the workspace files transactionally - if any file fails to load, the workspace will be left unchanged
         const workspace = RulesEngine.getWorkspace(name)!;
-        const reader = new WorkspaceFilesReader(workspace, readerMode || 'all');
-        return reader.readFromFiles(files);
+        const reader = new WorkspaceFilesReader(workspace, readerMode || 'all').withFS(this.fs!);
+
+        if (this.root) {
+            const resolved = files.map(file => path.resolve(path.dirname(this.root!), file));
+            return reader.readFromFiles(resolved);
+        } else {
+            return reader.readFromFiles(files);
+        }
     }
 
     /**
