@@ -105,6 +105,8 @@ describe('Readers Tests', () => {
     expect(space.getConstant('YEAR')).toBe('365');
     expect(space.getConstant('AVOGADRO')).toBe('6.022e23');
     expect(space.getConstant('PI')).toBe('3.14159');
+
+    // console.debug('Workspace constants:', space.getConstants());
   });
 
 

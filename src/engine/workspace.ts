@@ -12,7 +12,7 @@ import { FunctionParser } from "../parser/function.parser";
 import { TypeRegistry } from "./type.registry";
 import { EngineError, EngineException, ParserError, TypeException } from "../rules/exception";
 import { RulesEngine } from "./rules.engine";
-import * as commonConstants from "./common.constants";
+import { constants as commonConstants } from "./common.constants";
 import { Logger, withLogger } from "../logging";
 import { ContextLogger } from "../logging";
 import { CommandRegistry } from "../commands/command.registry";

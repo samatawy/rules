@@ -1,4 +1,4 @@
-const constants = {
+export const constants = {
     ZERO: 0,
     TRUE: true,
     FALSE: false,
@@ -26,4 +26,4 @@ const constants = {
     DEC: 12,
 }
 
-export default constants;
+// export default constants;

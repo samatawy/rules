@@ -101,9 +101,25 @@ export class RulesEngine {
     }
 
     /**
+     * Get an ensured workspace by name from the global registry. 
+     * If the workspace does not exist, a new instance will be created with default options and added to the registry.
+     * 
+     * @param name The name of the workspace to retrieve.
+     * @returns The Workspace instance associated with the given name, or undefined if not found.
+     */
+    public static workspace(name: string): Workspace {
+        let found = this.getWorkspace(name);
+        if (!found) {
+            this.addWorkspace(name, new Workspace()); // Create a new workspace instance if not found
+            found = this.getWorkspace(name)!;
+        }
+        return found;
+    }
+
+    /**
      * Add a workspace to this engine with the given name. If a workspace with the same name already exists, an error will be thrown.
      * 
-     * N.B. To reuse a name, get the workspace instance using getWorkspace() and call clear() to reset it.
+     * N.B. To reuse a name, you can get the workspace instance using getWorkspace() and call clear() to reset it.
      * 
      * @param name The name of the workspace.
      * @param workspace The Workspace instance to add.
@@ -114,6 +130,28 @@ export class RulesEngine {
             throw new EngineError(`Workspace with name "${name}" already exists.`);
         }
         this.workspaces.set(name, workspace);
+    }
+
+    /**
+     * Remove a workspace by name from this engine. If the workspace does not exist, an error will be thrown. 
+     * @param name The name of the workspace to remove.
+     */
+    public removeWorkspace(name: string): void {
+        if (!this.workspaces.has(name)) {
+            throw new EngineError(`Workspace with name "${name}" does not exist.`);
+        }
+        this.getWorkspace(name)?.clearSpace(); // Clear the workspace before removing it
+        this.workspaces.delete(name);
+    }
+
+    /**
+     * Clear all workspaces from this engine. This will remove all workspaces and their associated rules, constants, types, and functions.
+     */
+    public clearWorkspaces(): void {
+        for (const workspace of this.workspaces.values()) {
+            workspace.clearSpace();
+        }
+        this.workspaces.clear();
     }
 
     public annotationRegistry(): AnnotationRegistry {

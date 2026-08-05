@@ -68,7 +68,8 @@ describe('Autocomplete Test', () => {
 
         suggested = autocomplete.getSuggestionsAt(5, 'x = max(Person.age, ');
         // console.debug('After m in "x = max(Person.age, "', autocomplete.getSuggestionsAt(5, 'x = max(Person.age, '));
-        expect(suggested.every(s => s.value.startsWith('m'))).toBe(true);
+
+        expect(suggested.every(s => s.value.toLowerCase().startsWith('m'))).toBe(true);
 
         // console.debug('In function argument "greet("', autocomplete.getSuggestionsAt(6, 'greet('));
         // console.debug('In function argument "max(12, "', autocomplete.getSuggestionsAt(8, 'max(12, '));
